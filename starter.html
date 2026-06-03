@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตัวอย่างการใช้ theme.css</title>
+
+<!-- แปะธีมไฟล์เดียวจบ -->
+<link rel="stylesheet" href="theme.css">
+
+<!-- ฟอนต์ไทย Sarabun (ออปชัน ถ้ามีเน็ต) -->
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<!-- เพิ่ม class="light" ที่ body เพื่อสลับเป็นธีมสว่าง -->
+<body>
+
+  <h1>📊 ชื่อ Dashboard ของคุณ</h1>
+  <div class="sub">คำบรรยายใต้หัวข้อ · แหล่งข้อมูล · ช่วงเวลา</div>
+
+  <!-- แถบตัวกรอง (sticky) -->
+  <div class="bar">
+    <span class="lab">ตัวกรอง:</span>
+    <span class="chip on">ทั้งหมด</span>
+    <span class="chip">ตัวเลือก A</span>
+    <span class="chip">ตัวเลือก B</span>
+    <span class="sep"></span>
+    <span class="chip">↺ ล้างตัวกรอง</span>
+  </div>
+
+  <!-- การ์ด KPI 4 ใบ -->
+  <div class="kpis">
+    <div class="kpi"><div class="t">จำนวนรายการ</div><div class="v">638,147</div></div>
+    <div class="kpi"><div class="t">ยอดเงินรวม</div><div class="v">3.06 พันล้าน</div><div class="u">บาท</div></div>
+    <div class="kpi"><div class="t">จำนวนหน่วย</div><div class="v">125</div></div>
+    <div class="kpi"><div class="t">เฉลี่ย/รายการ</div><div class="v">4,801</div><div class="u">บาท</div></div>
+  </div>
+
+  <!-- หัวข้อ section -->
+  <h2 class="sec">ภาพรวมหลายมิติ</h2>
+
+  <!-- การ์ดในกริด 12 คอลัมน์ -->
+  <div class="grid">
+    <div class="card c4">
+      <h3>การ์ดเล็ก (span 4)</h3>
+      <div class="hint">คำอธิบายกราฟ</div>
+      <div class="med">[ วางกราฟตรงนี้ ]</div>
+    </div>
+
+    <div class="card c8">
+      <h3>การ์ดกว้าง (span 8)</h3>
+      <div class="tall">[ วางกราฟตรงนี้ ]</div>
+    </div>
+
+    <div class="card c12">
+      <h3>ตารางตัวอย่าง</h3>
+      <table>
+        <tr><th>หน่วยบริการ</th><th class="n">จำนวน</th><th class="n">เงิน (บาท)</th></tr>
+        <tr><td>รพ.ตัวอย่าง A</td><td class="n">23,929</td><td class="n">64,262,498</td></tr>
+        <tr><td>รพ.ตัวอย่าง B</td><td class="n">23,439</td><td class="n">62,781,330</td></tr>
+        <tr><td>รพ.ตัวอย่าง C</td><td class="n">19,794</td><td class="n">53,533,416</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="foot">สร้างด้วย theme.css · ปรับสีแบรนด์ได้ที่ :root ในไฟล์ธีม</div>
+
+</body>
+</html>
