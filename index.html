@@ -149,6 +149,7 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
   <h1>&#127963; Dashboard ข้อมูล สปสช. คืนเขตสุขภาพที่ 1</h1>
   <div class="sub">คณะทำงาน M&amp;E &middot; 5 ประเด็นเฝ้าระวังคุณภาพ/การเงิน &middot; ปีงบ 66&ndash;69 &middot; 8 จังหวัดภาคเหนือตอนบน</div>
   <div class="kpis" id="homeKpi"></div>
+  <div id="narrative-insight-home"></div>
   <h2 class="sec">เลือกหัวข้อที่ต้องการดู</h2>
   <div id="portal" style="width:100%"></div>
   <div class="foot">คลิกการ์ดเพื่อเข้าดูรายละเอียดแต่ละประเด็น &middot; สร้างจาก combined_fact.csv (638,147 แถว)</div>
@@ -482,6 +483,51 @@ function mkTrendText(yrs,lastYr){
   const streakTxt=streak>=2?word+' '+streak+' ปีติด':word+' YoY';
   return arr+' '+streakTxt+' '+abs+'%'+(isLast?' *':'');
 }
+
+/* ===== NARRATIVE INSIGHT HOME ===== */
+function renderNarrativeInsightHome(){
+  var el=document.getElementById('narrative-insight-home');
+  if(!el)return;
+  // ---- รวมเคส+บาทรายประเด็น ----
+  var issKeys=['adjlow','refer','psych','nb','tka'];
+  var issTot=issKeys.reduce(function(s,k){return s+BI[k].total.rows;},0);
+  var issBaht=issKeys.reduce(function(s,k){return s+BI[k].total.baht;},0);
+  // ---- ประเด็นที่ใช้เงินมากสุด ----
+  var topKey=issKeys.reduce(function(a,b){return BI[b].total.baht>BI[a].total.baht?b:a;});
+  var topPct=(BI[topKey].total.baht/issBaht*100).toFixed(1);
+  // ---- latestYr ----
+  var latestYr=M.years[M.years.length-1];
+  var allYrs=[].concat(M.years).sort();
+  var ovTot={};allYrs.forEach(function(y){ovTot[y]={c:0,b:0}});
+  DB.main.forEach(function(r){if(ovTot[r.yr]){ovTot[r.yr].c+=r.cases;ovTot[r.yr].b+=r.baht;}});
+  var latC=ovTot[latestYr]?ovTot[latestYr].c:0;
+  var latB=ovTot[latestYr]?ovTot[latestYr].b:0;
+  // ---- ส่งต่อออก ----
+  var refBaht=BI.refer.total.baht;
+  // ---- NB ----
+  var nbLow=BI.nb.lowLevelTotal||0;
+  // ---- adjRW ----
+  var adjTop=BI.adjlow.byHosp&&BI.adjlow.byHosp[0]?BI.adjlow.byHosp[0]:null;
+  // ---- TKA ผ่าซ้ำ ----
+  var tkaRev=BI.tka.revTotal?BI.tka.revTotal.rev:0;
+  // ---- สร้าง HTML ----
+  var lines=[];
+  lines.push('<b>ข้อมูลสะสมปีงบ '+allYrs[0]+'–'+latestYr+'</b>: รวม '+fmt(issTot)+' เคส ยอดเงิน '+fmtB(issBaht)+' บาท ผู้ป่วยไม่ซ้ำ '+fmt(M.personsTotal)+' คน');
+  lines.push('ปีงบ '+latestYr+'* '+fmt(latC)+' เคส ยอดเงิน '+fmtB(latB)+' บาท');
+  lines.push('ประเด็นเงินสูงสุด: '+ICON[topKey]+' '+TITLE[topKey]+' ('+topPct+'% ของยอดรวม '+fmtB(BI[topKey].total.baht)+' บาท)');
+  var warns=[];
+  if(nbLow>0) warns.push('👶 NB: ทารก &lt;1,500g ในหน่วย F2/F3 <b>'+fmt(nbLow)+'</b> เคส');
+  warns.push('🔁 ส่งต่อออก สป.สธ.: <b>'+fmtB(refBaht)+'</b> บาท');
+  if(tkaRev>0) warns.push('🦵 TKA ผ่าซ้ำ: <b>'+fmt(tkaRev)+'</b> รายการ');
+  if(adjTop) warns.push('📉 adjRW&lt;0.5 สูงสุด: <b>'+adjTop.hosp+'</b> '+fmt(adjTop.cases)+' เคส');
+  el.innerHTML=
+    '<div style="background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.3);border-left:4px solid #22d3ee;border-radius:12px;padding:12px 16px;margin:10px 0 14px;font-size:13px;line-height:1.7">'+
+    '<div style="font-weight:700;color:#22d3ee;margin-bottom:6px;font-size:13.5px">&#128200; สรุปภาพรวม Dashboard</div>'+
+    '<div style="color:#e2e8f0">'+lines.join('<br>')+'</div>'+
+    (warns.length?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(34,211,238,.2);color:#cbd5e1;font-size:12px"><span style="color:#fbbf24;font-weight:600">&#9888;&#65039; เฝ้าระวัง: </span>'+warns.join(' &nbsp;|&nbsp; ')+'</div>':'')+
+    '</div>';
+}
+
 function renderHome(){
   // data date from latest year in data
   const latestYr=M.years[M.years.length-1];const beYear='25'+latestYr;
@@ -596,6 +642,7 @@ function renderHome(){
   });
 
   C('portal').innerHTML='<div class="homerow1">'+alertHtml+cmpHtml+'</div><div class="phome">'+h+'</div>';
+  renderNarrativeInsightHome();
 }
 
 /* ===== OVERVIEW ===== */
