@@ -121,9 +121,12 @@ tbody tr:hover td{background:var(--surface2)}
 .ibar-fill{height:100%;background:var(--accent);border-radius:3px}
 .fn{font-size:10px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);line-height:1.7}
 
-/* BACK BUTTON */
-.back-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;color:var(--muted);background:var(--surface2);text-decoration:none;transition:.15s;margin-bottom:12px;border:1px solid var(--border)}
-.back-btn:hover{color:var(--text);background:var(--border)}
+/* NAV BAR */
+.df-nav{position:sticky;top:0;z-index:20;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:#0b1220;padding:10px;border-radius:0 0 12px 12px;margin-bottom:0}
+.df-navbtn{cursor:pointer;padding:6px 12px;border-radius:8px;font-size:13px;color:var(--muted);transition:.15s;user-select:none;text-decoration:none;display:inline-block}
+.df-navbtn:hover{color:var(--text);background:var(--surface2)}
+.df-navbtn.home{background:var(--surface2);color:var(--text)}
+.df-navbtn.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
 
 /* National share bars in hero */
 .hero-share-label{font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.5;margin-bottom:6px;font-weight:500}
@@ -181,8 +184,16 @@ tbody tr:hover td{background:var(--surface2)}
 <body>
 <div id="trendTip"></div>
 
+<nav class="df-nav">
+  <a class="df-navbtn home" href="index.html">&#8962; Home</a>
+  <a class="df-navbtn on" href="#">TKA</a>
+  <a class="df-navbtn" href="index.html">NB &lt;1,500g</a>
+  <a class="df-navbtn" href="index.html">ส่งต่อออกนอก</a>
+  <a class="df-navbtn" href="index.html">จิตเวช</a>
+  <a class="df-navbtn" href="index.html">adjRW&lt;0.5</a>
+</nav>
+
 <div class="hdr">
-  <a href="index.html" class="back-btn">&#8592; กลับหน้าหลัก</a>
   <div class="hdr-top">
     <div>
       <div class="hdr-eyebrow">เขตสุขภาพที่ 1 · กองทุน TKA · สปสช.</div>
