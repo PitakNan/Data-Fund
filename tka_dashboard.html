@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard TKA — เขตสุขภาพที่ 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#F2F5F7;--surface:#fff;--text:#17222C;--muted:#5B7080;
+  --border:#D8E2E8;--accent:#0A6B6F;--alight:#E0F2F2;
+  --a2:#C17A2A;--a2l:#FEF3E0;--dark:#17222C;--danger:#B83232;
+  --r:10px;--sh:0 1px 3px rgba(23,34,44,.07),0 1px 8px rgba(23,34,44,.04);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun','Leelawadee UI',system-ui,sans-serif;background:var(--ground);color:var(--text);font-size:15px;line-height:1.6;font-weight:400}
+
+/* HEADER */
+.hdr{background:var(--accent);color:#fff;padding:18px 24px 0}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.hdr-eyebrow{font-size:13px;letter-spacing:.1em;text-transform:uppercase;opacity:.65;margin-bottom:5px;font-weight:500}
+.hdr-name{font-size:34px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.hdr-meta{font-size:11px;opacity:.55;text-align:right;line-height:1.7}
+
+.hero{display:flex;align-items:center;gap:24px;margin-bottom:16px}
+.hero-kpi{display:flex;flex-direction:column;min-width:140px}
+.hero-num{font-family:'IBM Plex Mono','Cascadia Code','Consolas',monospace;font-size:48px;font-weight:700;letter-spacing:-.02em;line-height:1;transition:all .3s}
+.hero-lbl{font-size:10px;opacity:.6;margin-top:4px;letter-spacing:.06em}
+.hero-sep{width:1px;height:48px;background:rgba(255,255,255,.22);flex-shrink:0}
+.hero-right{flex:1;display:flex;flex-direction:column;gap:6px}
+.hero-row{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;opacity:.7}
+.hero-pct{font-family:'IBM Plex Mono','Cascadia Code','Consolas',monospace;font-weight:700;font-size:15px;color:#9FE8E5}
+.hero-track{height:6px;background:rgba(255,255,255,.18);border-radius:3px;position:relative}
+.hero-fill{height:100%;border-radius:3px;background:#9FE8E5;transition:width .6s cubic-bezier(.16,1,.3,1)}
+.hero-marker{position:absolute;top:-4px;width:2px;height:14px;background:rgba(255,255,255,.5);border-radius:1px}
+.hero-sub{display:flex;gap:20px}
+.hero-sub-item{display:flex;flex-direction:column}
+.hero-sub-num{font-family:'IBM Plex Mono','Cascadia Code','Consolas',monospace;font-size:17px;font-weight:700}
+.hero-sub-lbl{font-size:10px;opacity:.55;letter-spacing:.04em}
+
+/* PROVINCE FILTER */
+.prov-filter{display:flex;gap:6px;padding:10px 24px;overflow-x:auto;background:rgba(0,0,0,.15);flex-wrap:wrap}
+.pf-btn{
+  padding:5px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,.25);
+  background:none;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;letter-spacing:.02em;
+}
+.pf-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.pf-btn.active{background:#fff;border-color:#fff;color:var(--accent)}
+
+/* MAIN */
+.main{padding:16px 24px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border)}
+.card-hd{padding:11px 16px 9px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card-bd{padding:12px 16px}
+
+.row2{display:grid;grid-template-columns:300px 1fr;gap:12px}
+
+/* INDICATORS */
+.ind-item{padding:10px 0;border-bottom:1px solid var(--border)}
+.ind-item:last-child{border-bottom:none}
+.ind-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px}
+.ind-id{font-family:monospace;font-size:10px;color:var(--muted)}
+.ind-badge{font-family:'IBM Plex Mono','Cascadia Code','Consolas',monospace;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px}
+.ind-badge.ok{background:var(--alight);color:var(--accent)}
+.ind-badge.warn{background:var(--a2l);color:var(--a2)}
+.ind-badge.na{background:var(--ground);color:var(--muted)}
+.ind-label{font-size:12px;font-weight:500;margin-bottom:6px}
+.ind-nums{display:flex;align-items:baseline;gap:5px;margin-bottom:6px}
+.ind-actual{font-family:'IBM Plex Mono','Cascadia Code','Consolas',monospace;font-size:24px;font-weight:700}
+.ind-of{font-size:11px;color:var(--muted)}
+.ind-target{font-family:monospace;font-size:12px;color:var(--muted)}
+.mbar{position:relative;height:8px;background:var(--ground);border-radius:4px;overflow:visible}
+.mbar-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.16,1,.3,1)}
+.mbar-fill.ok{background:var(--accent)}
+.mbar-fill.warn{background:var(--a2)}
+.mbar-fill.na{background:var(--muted);opacity:.4}
+.mbar-100{position:absolute;top:-4px;left:100%;width:2px;height:16px;background:rgba(23,34,44,.15);border-radius:1px;transform:translateX(-50%)}
+.mbar-note{font-size:10px;color:var(--muted);margin-top:3px;font-style:italic}
+
+/* DEMOGRAPHICS */
+.demo-group{margin-bottom:12px}
+.demo-group:last-child{margin-bottom:0}
+.demo-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.demo-item{display:grid;grid-template-columns:54px 1fr 34px 34px;gap:5px;align-items:center;margin-bottom:4px}
+.demo-name{font-size:12px}
+.demo-track{height:6px;background:var(--ground);border-radius:3px;overflow:hidden}
+.demo-fill{height:100%;border-radius:3px;transition:width .5s}
+.demo-val{font-family:monospace;font-size:11px;text-align:right}
+.demo-pct{font-size:10px;color:var(--muted);text-align:right}
+
+/* DARK TREND */
+.trend-card{background:var(--dark);border-radius:var(--r);border:none;overflow:hidden}
+.trend-hd{padding:11px 16px 9px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between}
+.trend-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.trend-avg{font-family:monospace;font-size:11px;color:rgba(255,255,255,.3)}
+.trend-bd{padding:12px 16px 16px}
+
+
+/* TABS */
+.tab-bar{display:flex;padding:0 16px;border-bottom:1px solid var(--border)}
+.tab-btn{padding:9px 14px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--muted);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-pane{display:none;padding:12px 16px}
+.tab-pane.active{display:block}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{text-align:left;padding:5px 8px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+tbody td{padding:6px 8px;border-bottom:1px solid var(--ground)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--ground)}
+.td-r{text-align:right;font-family:'IBM Plex Mono','Cascadia Code','Consolas',monospace}
+.badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700}
+.b-s{background:#E3EFFF;color:#1A55A8}.b-m{background:var(--alight);color:var(--accent)}
+.b-c{background:var(--a2l);color:#8F5200}.b-o{background:#F0EAF8;color:#6030A0}
+.ibar-wrap{display:flex;align-items:center;gap:6px}
+.ibar-track{flex:1;height:5px;background:var(--ground);border-radius:3px;overflow:hidden}
+.ibar-fill{height:100%;background:var(--accent);border-radius:3px}
+.fn{font-size:10px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);line-height:1.7}
+
+/* National share bars in hero */
+.hero-share-label{font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.5;margin-bottom:6px;font-weight:500}
+.hbar-legend{display:flex;gap:18px;font-size:12px;opacity:.5;margin-bottom:18px;letter-spacing:.02em;align-items:center}
+.hbar-legend-dot{display:inline-block;width:12px;height:7px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.hbar-legend-tick{display:inline-block;width:2px;height:13px;background:rgba(255,255,255,.55);border-radius:1px;margin-right:5px;vertical-align:middle}
+.hbar-row{display:grid;grid-template-columns:110px 1fr auto;align-items:center;gap:10px 14px;margin-bottom:28px}
+.hbar-row:last-child{margin-bottom:0}
+.hbar-annual{font-family:'IBM Plex Mono','Cascadia Code','Consolas',monospace;font-size:13px;font-weight:600;white-space:nowrap;opacity:.65;text-align:right}
+.hbar-lbl{font-size:13px;opacity:.65;line-height:1.4;font-weight:500}
+.hbar-wrap{position:relative;padding-top:30px}
+.hbar-track{position:relative;height:11px;background:rgba(255,255,255,.1);border-radius:6px;overflow:visible}
+.hbar-fill{height:100%;border-radius:6px;transition:width .5s cubic-bezier(.16,1,.3,1)}
+.hbar-marker{position:absolute;top:-6px;width:2.5px;height:23px;background:rgba(255,255,255,.65);border-radius:2px;transform:translateX(-50%)}
+.hbar-tag{position:absolute;top:-26px;font-family:'IBM Plex Mono','Cascadia Code','Consolas',monospace;font-size:13px;font-weight:700;white-space:nowrap;transform:translateX(-50%)}
+.hbar-tag.target{color:rgba(255,255,255,.55);font-size:12px;font-weight:400}
+/* Province mode notice */
+.prov-mode-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:12px}
+/* Trend Tooltip */
+#trendTip{position:fixed;display:none;z-index:999;background:#0D1A22;border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:14px 16px;font-family:'Sarabun','Leelawadee UI',sans-serif;font-size:13px;color:rgba(255,255,255,.85);min-width:240px;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+.tt-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.tt-hd{font-weight:700;font-size:14px;color:#9FE8E5;margin-bottom:0}
+.tt-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;line-height:1;cursor:pointer;padding:0 0 0 8px;transition:color .15s}
+.tt-close:hover{color:#fff}
+.tt-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:4px;font-size:13px}
+.tt-row span:last-child{font-family:'IBM Plex Mono','Consolas',monospace;font-weight:600}
+.tt-div{height:1px;background:rgba(255,255,255,.1);margin:8px 0}
+.tt-sub{font-size:10px;text-transform:uppercase;letter-spacing:.07em;opacity:.4;margin-bottom:7px}
+.tt-prow{display:flex;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:12px}
+.tt-prow .tp-num{font-family:'IBM Plex Mono','Consolas',monospace;font-size:11px;opacity:.7;white-space:nowrap}
+.tt-bar{height:3px;border-radius:2px;background:rgba(159,232,229,.4);margin-top:2px;margin-bottom:6px}
+.tt-clickable{cursor:pointer;margin:-2px -4px;padding:2px 4px;border-radius:4px;transition:background .12s}
+.tt-clickable:hover{background:rgba(159,232,229,.12)}
+.tt-link{color:#9FE8E5}
+.tt-back{background:none;border:none;color:rgba(159,232,229,.6);font-size:11px;cursor:pointer;padding:0;margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.tt-back:hover{color:#9FE8E5}
+.tt-age-cols{display:flex;gap:8px;margin-bottom:4px}
+.tt-age-col{flex:1;background:rgba(255,255,255,.05);border-radius:7px;padding:8px 10px}
+.tt-age-lbl{font-size:10px;opacity:.45;letter-spacing:.05em;margin-bottom:5px}
+.tt-age-num{font-family:'IBM Plex Mono','Consolas',monospace;font-weight:700;font-size:20px;line-height:1;margin-bottom:2px}
+.tt-age-pct{font-size:11px;opacity:.5;margin-bottom:6px}
+.tt-age-bar{height:3px;border-radius:2px}
+.tt-age-lt .tt-age-bar{background:rgba(255,180,100,.7)}
+.tt-age-ge .tt-age-bar{background:rgba(159,232,229,.7)}
+.tt-pdx-hdr{display:grid;grid-template-columns:1fr 34px 34px 46px;gap:4px;font-size:10px;opacity:.38;letter-spacing:.05em;margin-bottom:5px}
+.tt-pdx-hdr span{text-align:right}.tt-pdx-hdr span:first-child{text-align:left}
+.tt-pdx-row{display:grid;grid-template-columns:1fr 34px 34px 46px;gap:4px;align-items:baseline;margin-bottom:2px;font-size:12px}
+.tt-pdx-name{color:rgba(255,255,255,.82);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt-pdx-n{font-family:'IBM Plex Mono','Consolas',monospace;font-size:11px;text-align:right;opacity:.7}
+.tt-pdx-lt{color:rgba(255,180,100,.85)}
+.tt-pdx-ge{color:rgba(159,232,229,.85)}
+.tt-pdx-pct{font-family:'IBM Plex Mono','Consolas',monospace;font-size:10px;text-align:right;opacity:.4}
+</style>
+</head>
+<body>
+<div id="trendTip"></div>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-eyebrow">เขตสุขภาพที่ 1 · กองทุน TKA · สปสช.</div>
+      <div class="hdr-name">ผ่าตัดข้อเข่าเทียม (TKA)</div>
+    </div>
+    <div class="hdr-meta">
+      ข้อมูลถึง เม.ย. 2569<br>
+      แหล่งข้อมูล: สปสช. คืนรายRecord<br>
+      อัปเดต 23 มิ.ย. 2569
+    </div>
+  </div>
+
+  <div class="hero" id="heroWrap">
+    <div class="hero-kpi" id="heroKpi" style="display:none">
+      <div class="hero-num" id="heroNum">2,114</div>
+      <div class="hero-lbl" id="heroLbl">DISTINCT PID · ราย · ทั้งเขตฯ</div>
+    </div>
+    <div class="hero-sep" id="heroSep" style="display:none"></div>
+    <div class="hero-right" id="heroRight">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- Province Filter -->
+  <div class="prov-filter" id="provFilter"></div>
+</div>
+
+<div class="main">
+
+  <div class="row2">
+    <!-- LEFT -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">ตัวชี้วัด</span>
+          <span style="font-size:10px;color:var(--muted)" id="indSubtitle">เป้าเขตฯ ถึง เม.ย. 69</span>
+        </div>
+        <div class="card-bd" style="padding-top:4px;padding-bottom:4px" id="indPanel"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><span class="card-title">ลักษณะผู้ป่วย</span></div>
+        <div class="card-bd" id="demoPanel"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: dark trend -->
+    <div class="trend-card">
+      <div class="trend-hd">
+        <span class="trend-title">เทรนด์รายเดือน · จำนวน & มูลค่า</span>
+        <span class="trend-avg" id="trendAvg"></span>
+      </div>
+      <div class="trend-bd"><canvas id="trendChart" height="280"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab(this,'tab-pdx')">รายโรค (pdx)</button>
+      <button class="tab-btn" onclick="switchTab(this,'tab-hosp')">รายหน่วยบริการ</button>
+    </div>
+    <div id="tab-pdx" class="tab-pane active"><table><thead><tr><th>รหัส</th><th>คำวินิจฉัย</th><th style="text-align:right">ราย</th><th style="width:180px">สัดส่วน</th></tr></thead><tbody id="pdxTbody"></tbody></table><div class="fn">M17x = ข้อเข่าเสื่อม · T84x = ภาวะแทรกซ้อนจากข้อเทียม · นับ distinct PID</div></div>
+    <div id="tab-hosp" class="tab-pane"><table><thead><tr><th id="hospProvCol">จังหวัด</th><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right">ราย</th><th style="width:150px">สัดส่วน</th></tr></thead><tbody id="hospTbody"></tbody></table><div class="fn">นับ distinct PID per หน่วยบริการ</div></div>
+  </div>
+
+</div>
+
+<script>
+// ══ DATA ══
+const ALL_MONTHS = ['ก.ย.68','ต.ค.68','พ.ย.68','ธ.ค.68','ม.ค.69','ก.พ.69','มี.ค.69','เม.ย.69'];
+const PROVINCES  = ['เชียงราย','เชียงใหม่','ลำปาง','น่าน','ลำพูน','พะเยา','แพร่','แม่ฮ่องสอน'];
+const PROV_DATA  = {"ทั้งหมด":{"total":2114,"lt55":37,"a5559":223,"ge60":1855,"ge55":2078,"male":489,"female":1625,"revision":40,"monthly":[{"label":"ก.ย.68","cases":145},{"label":"ต.ค.68","cases":294},{"label":"พ.ย.68","cases":301},{"label":"ธ.ค.68","cases":277},{"label":"ม.ค.69","cases":257},{"label":"ก.พ.69","cases":268},{"label":"มี.ค.69","cases":326},{"label":"เม.ย.69","cases":276}],"hospitals":[{"hosp":"รพ.เชียงรายประชานุเคราะห์","htype":"รพศ.","cases":287},{"hosp":"รพ.ลำปาง","htype":"รพศ.","cases":268},{"hosp":"รพ.ลำพูน","htype":"รพท.","cases":236},{"hosp":"รพ.นครพิงค์","htype":"รพศ.","cases":173},{"hosp":"รพ.น่าน","htype":"รพท.","cases":154},{"hosp":"รพ.แพร่","htype":"รพท.","cases":148},{"hosp":"รพ.พะเยา","htype":"รพท.","cases":129},{"hosp":"รพ.สันป่าตอง","htype":"รพช./รพร.","cases":89},{"hosp":"รพ.แม่จัน","htype":"รพช./รพร.","cases":87},{"hosp":"รพ.ฝาง","htype":"รพท.","cases":80},{"hosp":"รพร.ปัว","htype":"รพช./รพร.","cases":69},{"hosp":"รพ.เชียงคำ","htype":"รพท.","cases":66},{"hosp":"รพ.สันทราย","htype":"รพท.","cases":64},{"hosp":"รพ.จอมทอง","htype":"รพท.","cases":44},{"hosp":"รพ.พาน","htype":"รพช./รพร.","cases":41},{"hosp":"รพ.สูงเม่น","htype":"รพช./รพร.","cases":39},{"hosp":"รพ.แม่สาย","htype":"รพท.","cases":36},{"hosp":"รพ.เวียงสา","htype":"รพช./รพร.","cases":31},{"hosp":"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง","htype":"รพ.อื่น","cases":26},{"hosp":"รพ.ศรีสังวาลย์","htype":"รพท.","cases":18},{"hosp":"รพ.มหาราชนครเชียงใหม่ มช.","htype":"รพ.อื่น","cases":16},{"hosp":"รพ.ศิริเวช ลำพูน","htype":"รพ.อื่น","cases":10},{"hosp":"รพ.มหาวิทยาลัยพะเยา","htype":"รพ.อื่น","cases":4},{"hosp":"รพ.เชียงใหม่ใกล้หมอ","htype":"รพ.อื่น","cases":2}],"pdx":[{"code":"M171","name":"ข้อเข่าเสื่อมปฐมภูมิ สองข้าง","cases":1669},{"code":"M170","name":"ข้อเข่าเสื่อมปฐมภูมิ","cases":335},{"code":"M175","name":"ข้อเข่าเสื่อมปฐมภูมิ อื่นๆ","cases":37},{"code":"M179","name":"ข้อเข่าเสื่อม ไม่ระบุ","cases":23},{"code":"T845","name":"ภาวะแทรกซ้อนจากข้อเทียม","cases":14},{"code":"T840","name":"ภาวะแทรกซ้อนจากข้อเทียม (internal)","cases":11},{"code":"M173","name":"ข้อเข่าเสื่อมหลังบาดเจ็บ ซ้าย","cases":3},{"code":"M174","name":"ข้อเข่าเสื่อมหลังบาดเจ็บ ขวา","cases":2},{"code":"อื่นๆ","name":"รหัสอื่น","cases":24}]},"พะเยา":{"total":199,"lt55":3,"a5559":19,"ge60":177,"ge55":196,"male":50,"female":149,"revision":9,"monthly":[{"label":"ก.ย.68","cases":15},{"label":"ต.ค.68","cases":30},{"label":"พ.ย.68","cases":20},{"label":"ธ.ค.68","cases":17},{"label":"ม.ค.69","cases":32},{"label":"ก.พ.69","cases":28},{"label":"มี.ค.69","cases":31},{"label":"เม.ย.69","cases":27}],"hospitals":[{"hosp":"รพ.พะเยา","htype":"รพท.","cases":129},{"hosp":"รพ.เชียงคำ","htype":"รพท.","cases":66},{"hosp":"รพ.มหาวิทยาลัยพะเยา","htype":"รพ.อื่น","cases":4}],"pdx":[{"code":"M171","name":"ข้อเข่าเสื่อมปฐมภูมิ สองข้าง","cases":164},{"code":"M170","name":"ข้อเข่าเสื่อมปฐมภูมิ","cases":24},{"code":"T845","name":"ภาวะแทรกซ้อนจากข้อเทียม","cases":3},{"code":"T847","name":"ภาวะแทรกซ้อนจากข้อเทียม อื่นๆ","cases":2},{"code":"อื่นๆ","name":"รหัสอื่น","cases":6}]},"เชียงราย":{"total":477,"lt55":9,"a5559":37,"ge60":431,"ge55":468,"male":105,"female":372,"revision":7,"monthly":[{"label":"ก.ย.68","cases":38},{"label":"ต.ค.68","cases":50},{"label":"พ.ย.68","cases":77},{"label":"ธ.ค.68","cases":48},{"label":"ม.ค.69","cases":68},{"label":"ก.พ.69","cases":53},{"label":"มี.ค.69","cases":87},{"label":"เม.ย.69","cases":59}],"hospitals":[{"hosp":"รพ.เชียงรายประชานุเคราะห์","htype":"รพศ.","cases":287},{"hosp":"รพ.แม่จัน","htype":"รพช./รพร.","cases":87},{"hosp":"รพ.พาน","htype":"รพช./รพร.","cases":41},{"hosp":"รพ.แม่สาย","htype":"รพท.","cases":36},{"hosp":"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง","htype":"รพ.อื่น","cases":26}],"pdx":[{"code":"M171","name":"ข้อเข่าเสื่อมปฐมภูมิ สองข้าง","cases":326},{"code":"M170","name":"ข้อเข่าเสื่อมปฐมภูมิ","cases":130},{"code":"M179","name":"ข้อเข่าเสื่อม ไม่ระบุ","cases":11},{"code":"T840","name":"ภาวะแทรกซ้อนจากข้อเทียม (internal)","cases":3},{"code":"อื่นๆ","name":"รหัสอื่น","cases":7}]},"ลำพูน":{"total":246,"lt55":1,"a5559":34,"ge60":212,"ge55":246,"male":56,"female":190,"revision":1,"monthly":[{"label":"ก.ย.68","cases":21},{"label":"ต.ค.68","cases":45},{"label":"พ.ย.68","cases":35},{"label":"ธ.ค.68","cases":31},{"label":"ม.ค.69","cases":26},{"label":"ก.พ.69","cases":37},{"label":"มี.ค.69","cases":36},{"label":"เม.ย.69","cases":19}],"hospitals":[{"hosp":"รพ.ลำพูน","htype":"รพท.","cases":236},{"hosp":"รพ.ศิริเวช ลำพูน","htype":"รพ.อื่น","cases":10}],"pdx":[{"code":"M171","name":"ข้อเข่าเสื่อมปฐมภูมิ สองข้าง","cases":212},{"code":"M170","name":"ข้อเข่าเสื่อมปฐมภูมิ","cases":26},{"code":"M175","name":"ข้อเข่าเสื่อมปฐมภูมิ อื่นๆ","cases":4},{"code":"M179","name":"ข้อเข่าเสื่อม ไม่ระบุ","cases":2},{"code":"อื่นๆ","name":"รหัสอื่น","cases":2}]},"เชียงใหม่":{"total":467,"lt55":11,"a5559":41,"ge60":415,"ge55":456,"male":101,"female":366,"revision":17,"monthly":[{"label":"ก.ย.68","cases":23},{"label":"ต.ค.68","cases":68},{"label":"พ.ย.68","cases":78},{"label":"ธ.ค.68","cases":75},{"label":"ม.ค.69","cases":48},{"label":"ก.พ.69","cases":50},{"label":"มี.ค.69","cases":71},{"label":"เม.ย.69","cases":66}],"hospitals":[{"hosp":"รพ.นครพิงค์","htype":"รพศ.","cases":173},{"hosp":"รพ.สันป่าตอง","htype":"รพช./รพร.","cases":89},{"hosp":"รพ.ฝาง","htype":"รพท.","cases":80},{"hosp":"รพ.สันทราย","htype":"รพท.","cases":64},{"hosp":"รพ.จอมทอง","htype":"รพท.","cases":44},{"hosp":"รพ.มหาราชนครเชียงใหม่ มช.","htype":"รพ.อื่น","cases":16},{"hosp":"รพ.เชียงใหม่ใกล้หมอ","htype":"รพ.อื่น","cases":2}],"pdx":[{"code":"M171","name":"ข้อเข่าเสื่อมปฐมภูมิ สองข้าง","cases":363},{"code":"M170","name":"ข้อเข่าเสื่อมปฐมภูมิ","cases":68},{"code":"M179","name":"ข้อเข่าเสื่อม ไม่ระบุ","cases":8},{"code":"T845","name":"ภาวะแทรกซ้อนจากข้อเทียม","cases":8},{"code":"M175","name":"ข้อเข่าเสื่อมปฐมภูมิ อื่นๆ","cases":7},{"code":"อื่นๆ","name":"รหัสอื่น","cases":13}]},"แพร่":{"total":187,"lt55":4,"a5559":13,"ge60":170,"ge55":183,"male":48,"female":139,"revision":0,"monthly":[{"label":"ก.ย.68","cases":10},{"label":"ต.ค.68","cases":28},{"label":"พ.ย.68","cases":20},{"label":"ธ.ค.68","cases":27},{"label":"ม.ค.69","cases":22},{"label":"ก.พ.69","cases":29},{"label":"มี.ค.69","cases":28},{"label":"เม.ย.69","cases":25}],"hospitals":[{"hosp":"รพ.แพร่","htype":"รพท.","cases":148},{"hosp":"รพ.สูงเม่น","htype":"รพช./รพร.","cases":39}],"pdx":[{"code":"M171","name":"ข้อเข่าเสื่อมปฐมภูมิ สองข้าง","cases":153},{"code":"M170","name":"ข้อเข่าเสื่อมปฐมภูมิ","cases":33},{"code":"M175","name":"ข้อเข่าเสื่อมปฐมภูมิ อื่นๆ","cases":1}]},"น่าน":{"total":252,"lt55":2,"a5559":38,"ge60":212,"ge55":250,"male":63,"female":189,"revision":1,"monthly":[{"label":"ก.ย.68","cases":10},{"label":"ต.ค.68","cases":45},{"label":"พ.ย.68","cases":28},{"label":"ธ.ค.68","cases":40},{"label":"ม.ค.69","cases":26},{"label":"ก.พ.69","cases":27},{"label":"มี.ค.69","cases":38},{"label":"เม.ย.69","cases":43}],"hospitals":[{"hosp":"รพ.น่าน","htype":"รพท.","cases":154},{"hosp":"รพร.ปัว","htype":"รพช./รพร.","cases":69},{"hosp":"รพ.เวียงสา","htype":"รพช./รพร.","cases":31}],"pdx":[{"code":"M171","name":"ข้อเข่าเสื่อมปฐมภูมิ สองข้าง","cases":208},{"code":"M170","name":"ข้อเข่าเสื่อมปฐมภูมิ","cases":39},{"code":"M175","name":"ข้อเข่าเสื่อมปฐมภูมิ อื่นๆ","cases":4},{"code":"อื่นๆ","name":"รหัสอื่น","cases":1}]},"ลำปาง":{"total":268,"lt55":7,"a5559":36,"ge60":225,"ge55":261,"male":64,"female":204,"revision":5,"monthly":[{"label":"ก.ย.68","cases":28},{"label":"ต.ค.68","cases":28},{"label":"พ.ย.68","cases":37},{"label":"ธ.ค.68","cases":39},{"label":"ม.ค.69","cases":35},{"label":"ก.พ.69","cases":32},{"label":"มี.ค.69","cases":35},{"label":"เม.ย.69","cases":37}],"hospitals":[{"hosp":"รพ.ลำปาง","htype":"รพศ.","cases":268}],"pdx":[{"code":"M171","name":"ข้อเข่าเสื่อมปฐมภูมิ สองข้าง","cases":230},{"code":"M175","name":"ข้อเข่าเสื่อมปฐมภูมิ อื่นๆ","cases":20},{"code":"M170","name":"ข้อเข่าเสื่อมปฐมภูมิ","cases":10},{"code":"อื่นๆ","name":"รหัสอื่น","cases":8}]},"แม่ฮ่องสอน":{"total":18,"lt55":0,"a5559":5,"ge60":13,"ge55":18,"male":2,"female":16,"revision":0,"monthly":[{"label":"พ.ย.68","cases":6},{"label":"ก.พ.69","cases":12}],"hospitals":[{"hosp":"รพ.ศรีสังวาลย์","htype":"รพท.","cases":18}],"pdx":[{"code":"M171","name":"ข้อเข่าเสื่อมปฐมภูมิ สองข้าง","cases":13},{"code":"M170","name":"ข้อเข่าเสื่อมปฐมภูมิ","cases":5}]}};
+
+// province → prov data lookup including province name for hospital table
+const HOSP_PROV = {};
+PROVINCES.forEach(p => {
+  (PROV_DATA[p].hospitals||[]).forEach(h => { HOSP_PROV[h.hosp] = p; });
+});
+
+// Monthly value (ยอดจ่ายชดเชย บาท) per province, aligned to ALL_MONTHS order
+const VAL_MONTHLY = {
+  "ทั้งหมด":     [8607999,16870857,17611651,15873145,15224730,16056400,20004410,15656657],
+  "เชียงราย":   [2500940,3277440,4972700,2826100,4552140,3571480,5816620,3664580],
+  "เชียงใหม่":  [1431259,3977867,4305801,4241845,2809590,2825060,4271910,3437917],
+  "ลำปาง":      [1425600,1369100,1871100,2146500,1952000,1681300,1925190,1955900],
+  "น่าน":       [579400,2438550,1642400,2228700,1432000,1415670,2056340,2365120],
+  "ลำพูน":      [1215500,2429000,2111400,1850700,1480800,2263580,2204300,1155200],
+  "พะเยา":      [825600,1642500,1086350,896800,1736700,1735970,2058130,1661820],
+  "แพร่":       [629700,1736400,1309600,1682500,1261500,1670400,1671920,1416120],
+  "แม่ฮ่องสอน":[0,0,312300,0,0,892940,0,0]
+};
+// Per-hospital per-month PDX + age breakdown (for popup drill-down)
+const HOSP_MONTH_PDX = {"รพ.เชียงใหม่ใกล้หมอ":{"ต.ค.68":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]}},"รพ.จอมทอง":{"ต.ค.68":{"total":6,"lt55":0,"ge55":6,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6}]},"พ.ย.68":{"total":10,"lt55":1,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":10,"lt55":1,"ge55":9}]},"ธ.ค.68":{"total":13,"lt55":1,"ge55":12,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":13,"lt55":1,"ge55":12}]},"ม.ค.69":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":4,"lt55":0,"ge55":4},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"มี.ค.69":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"เม.ย.69":{"total":9,"lt55":0,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":9,"lt55":0,"ge55":9}]}},"รพ.ศิริเวช ลำพูน":{"ก.ย.68":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"พ.ย.68":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":2,"lt55":0,"ge55":2,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":2,"lt55":0,"ge55":2}]},"ม.ค.69":{"total":2,"lt55":0,"ge55":2,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1},{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":4,"lt55":0,"ge55":4,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":4,"lt55":0,"ge55":4}]}},"รพ.นครพิงค์":{"ก.ย.68":{"total":11,"lt55":0,"ge55":11,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":10,"lt55":0,"ge55":10},{"code":"T840","name":"ภาวะแทรกซ้อน: ข้อเทียมแตกหัก","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":31,"lt55":1,"ge55":30,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":27,"lt55":1,"ge55":26},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2},{"code":"M172","name":"เข่าเสื่อมทุติยภูมิ ทวิภาคี","cases":2,"lt55":0,"ge55":2}]},"พ.ย.68":{"total":24,"lt55":0,"ge55":24,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":23,"lt55":0,"ge55":23},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":25,"lt55":1,"ge55":24,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":20,"lt55":0,"ge55":20},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1},{"code":"M173","name":"เข่าเสื่อมทุติยภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1},{"code":"M2428","name":"M2428","cases":1,"lt55":1,"ge55":0},{"code":"T842","name":"T842","cases":1,"lt55":0,"ge55":1},{"code":"T845","name":"ภาวะแทรกซ้อน: ข้อเทียม (ติดเชื้อ/อักเสบ)","cases":1,"lt55":0,"ge55":1}]},"ม.ค.69":{"total":11,"lt55":1,"ge55":10,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":9,"lt55":0,"ge55":9},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1},{"code":"S7241","name":"กระดูกต้นขาหัก ส่วนปลาย","cases":1,"lt55":1,"ge55":0}]},"ก.พ.69":{"total":21,"lt55":0,"ge55":21,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":18,"lt55":0,"ge55":18},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3}]},"มี.ค.69":{"total":30,"lt55":1,"ge55":29,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":25,"lt55":1,"ge55":24},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3},{"code":"T845","name":"ภาวะแทรกซ้อน: ข้อเทียม (ติดเชื้อ/อักเสบ)","cases":2,"lt55":0,"ge55":2}]},"เม.ย.69":{"total":27,"lt55":0,"ge55":27,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":23,"lt55":0,"ge55":23},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2},{"code":"M173","name":"เข่าเสื่อมทุติยภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1},{"code":"T845","name":"ภาวะแทรกซ้อน: ข้อเทียม (ติดเชื้อ/อักเสบ)","cases":1,"lt55":0,"ge55":1}]}},"รพ.น่าน":{"ก.ย.68":{"total":10,"lt55":0,"ge55":10,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":9,"lt55":0,"ge55":9},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":20,"lt55":0,"ge55":20,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":14,"lt55":0,"ge55":14},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":4,"lt55":0,"ge55":4},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":2,"lt55":0,"ge55":2}]},"พ.ย.68":{"total":18,"lt55":0,"ge55":18,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":15,"lt55":0,"ge55":15},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3}]},"ธ.ค.68":{"total":28,"lt55":1,"ge55":27,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":24,"lt55":1,"ge55":23},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ม.ค.69":{"total":19,"lt55":1,"ge55":18,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":17,"lt55":1,"ge55":16},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"ก.พ.69":{"total":16,"lt55":0,"ge55":16,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":14,"lt55":0,"ge55":14},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"มี.ค.69":{"total":21,"lt55":0,"ge55":21,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":17,"lt55":0,"ge55":17},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":4,"lt55":0,"ge55":4}]},"เม.ย.69":{"total":23,"lt55":0,"ge55":23,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":20,"lt55":0,"ge55":20},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2},{"code":"T845","name":"ภาวะแทรกซ้อน: ข้อเทียม (ติดเชื้อ/อักเสบ)","cases":1,"lt55":0,"ge55":1}]}},"รพ.ฝาง":{"ก.ย.68":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":4,"lt55":0,"ge55":4},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":14,"lt55":0,"ge55":14,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":11,"lt55":0,"ge55":11},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3}]},"พ.ย.68":{"total":9,"lt55":0,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":8,"lt55":0,"ge55":8},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":13,"lt55":3,"ge55":10,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":2,"lt55":2,"ge55":0},{"code":"M6006","name":"M6006","cases":1,"lt55":1,"ge55":0}]},"ม.ค.69":{"total":8,"lt55":0,"ge55":8,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"ก.พ.69":{"total":11,"lt55":0,"ge55":11,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":8,"lt55":0,"ge55":8},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3}]},"มี.ค.69":{"total":9,"lt55":0,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"เม.ย.69":{"total":11,"lt55":0,"ge55":11,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":11,"lt55":0,"ge55":11}]}},"รพ.พะเยา":{"ก.ย.68":{"total":9,"lt55":0,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2},{"code":"T847","name":"ภาวะแทรกซ้อน: ข้อเทียม อื่นๆ","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":19,"lt55":0,"ge55":19,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":17,"lt55":0,"ge55":17},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"พ.ย.68":{"total":13,"lt55":1,"ge55":12,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":9,"lt55":0,"ge55":9},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":1,"lt55":0,"ge55":1},{"code":"M8098","name":"M8098","cases":1,"lt55":0,"ge55":1},{"code":"S7241","name":"กระดูกต้นขาหัก ส่วนปลาย","cases":1,"lt55":1,"ge55":0}]},"ธ.ค.68":{"total":10,"lt55":0,"ge55":10,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":10,"lt55":0,"ge55":10}]},"ม.ค.69":{"total":24,"lt55":0,"ge55":24,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":20,"lt55":0,"ge55":20},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2},{"code":"M174","name":"เข่าเสื่อมทุติยภูมิ อื่นๆ","cases":1,"lt55":0,"ge55":1},{"code":"T847","name":"ภาวะแทรกซ้อน: ข้อเทียม อื่นๆ","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":21,"lt55":1,"ge55":20,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":13,"lt55":0,"ge55":13},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":8,"lt55":1,"ge55":7}]},"มี.ค.69":{"total":17,"lt55":0,"ge55":17,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":11,"lt55":0,"ge55":11},{"code":"T845","name":"ภาวะแทรกซ้อน: ข้อเทียม (ติดเชื้อ/อักเสบ)","cases":3,"lt55":0,"ge55":3},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2},{"code":"T840","name":"ภาวะแทรกซ้อน: ข้อเทียมแตกหัก","cases":1,"lt55":0,"ge55":1}]},"เม.ย.69":{"total":17,"lt55":1,"ge55":16,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":12,"lt55":0,"ge55":12},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":4,"lt55":0,"ge55":4},{"code":"T841","name":"ภาวะแทรกซ้อน: ข้อเทียมเคลื่อน","cases":1,"lt55":1,"ge55":0}]}},"รพ.พาน":{"ก.ย.68":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":4,"lt55":0,"ge55":4},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3}]},"พ.ย.68":{"total":6,"lt55":0,"ge55":6,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6}]},"ธ.ค.68":{"total":5,"lt55":1,"ge55":4,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":4,"lt55":0,"ge55":4},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":1,"ge55":0}]},"ม.ค.69":{"total":10,"lt55":0,"ge55":10,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":8,"lt55":0,"ge55":8},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"ก.พ.69":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"มี.ค.69":{"total":11,"lt55":1,"ge55":10,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":9,"lt55":1,"ge55":8},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]}},"รพ.มหาราชนครเชียงใหม่ มช.":{"ก.ย.68":{"total":2,"lt55":0,"ge55":2,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"ต.ค.68":{"total":3,"lt55":2,"ge55":1,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1},{"code":"T840","name":"ภาวะแทรกซ้อน: ข้อเทียมแตกหัก","cases":1,"lt55":1,"ge55":0},{"code":"T845","name":"ภาวะแทรกซ้อน: ข้อเทียม (ติดเชื้อ/อักเสบ)","cases":1,"lt55":1,"ge55":0}]},"พ.ย.68":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":2,"lt55":0,"ge55":2},{"code":"T845","name":"ภาวะแทรกซ้อน: ข้อเทียม (ติดเชื้อ/อักเสบ)","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":2,"lt55":0,"ge55":2,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1},{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ม.ค.69":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"มี.ค.69":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"เม.ย.69":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"T845","name":"ภาวะแทรกซ้อน: ข้อเทียม (ติดเชื้อ/อักเสบ)","cases":2,"lt55":0,"ge55":2},{"code":"S8241","name":"กระดูกสะบ้าหัก","cases":1,"lt55":0,"ge55":1}]}},"รพ.มหาวิทยาลัยพะเยา":{"ต.ค.68":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ม.ค.69":{"total":2,"lt55":0,"ge55":2,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":2,"lt55":0,"ge55":2}]},"มี.ค.69":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]}},"รพ.ลำปาง":{"ก.ย.68":{"total":28,"lt55":1,"ge55":27,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":27,"lt55":1,"ge55":26},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":28,"lt55":3,"ge55":25,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":22,"lt55":1,"ge55":21},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":3,"lt55":1,"ge55":2},{"code":"T840","name":"ภาวะแทรกซ้อน: ข้อเทียมแตกหัก","cases":2,"lt55":0,"ge55":2},{"code":"C402","name":"C402","cases":1,"lt55":1,"ge55":0}]},"พ.ย.68":{"total":37,"lt55":2,"ge55":35,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":29,"lt55":0,"ge55":29},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":5,"lt55":1,"ge55":4},{"code":"M4807","name":"M4807","cases":1,"lt55":1,"ge55":0},{"code":"M512","name":"M512","cases":1,"lt55":0,"ge55":1},{"code":"T848","name":"T848","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":39,"lt55":0,"ge55":39,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":33,"lt55":0,"ge55":33},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":3,"lt55":0,"ge55":3}]},"ม.ค.69":{"total":35,"lt55":1,"ge55":34,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":30,"lt55":0,"ge55":30},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":3,"lt55":1,"ge55":2},{"code":"T840","name":"ภาวะแทรกซ้อน: ข้อเทียมแตกหัก","cases":1,"lt55":0,"ge55":1},{"code":"T845","name":"ภาวะแทรกซ้อน: ข้อเทียม (ติดเชื้อ/อักเสบ)","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":32,"lt55":0,"ge55":32,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":29,"lt55":0,"ge55":29},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":2,"lt55":0,"ge55":2},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"มี.ค.69":{"total":35,"lt55":0,"ge55":35,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":29,"lt55":0,"ge55":29},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":4,"lt55":0,"ge55":4},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":1,"lt55":0,"ge55":1}]},"เม.ย.69":{"total":37,"lt55":0,"ge55":37,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":33,"lt55":0,"ge55":33},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":2,"lt55":0,"ge55":2}]}},"รพ.ลำพูน":{"ก.ย.68":{"total":20,"lt55":0,"ge55":20,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":19,"lt55":0,"ge55":19},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":44,"lt55":0,"ge55":44,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":42,"lt55":0,"ge55":42},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":1,"lt55":0,"ge55":1}]},"พ.ย.68":{"total":34,"lt55":1,"ge55":33,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":27,"lt55":0,"ge55":27},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":4,"lt55":0,"ge55":4},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":2,"lt55":1,"ge55":1},{"code":"N170","name":"N170","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":29,"lt55":0,"ge55":29,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":26,"lt55":0,"ge55":26},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2},{"code":"T840","name":"ภาวะแทรกซ้อน: ข้อเทียมแตกหัก","cases":1,"lt55":0,"ge55":1}]},"ม.ค.69":{"total":24,"lt55":0,"ge55":24,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":21,"lt55":0,"ge55":21},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":33,"lt55":0,"ge55":33,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":26,"lt55":0,"ge55":26},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":6,"lt55":0,"ge55":6},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"มี.ค.69":{"total":36,"lt55":0,"ge55":36,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":30,"lt55":0,"ge55":30},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":6,"lt55":0,"ge55":6}]},"เม.ย.69":{"total":19,"lt55":0,"ge55":19,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":16,"lt55":0,"ge55":16},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3}]}},"รพ.ศรีสังวาลย์":{"พ.ย.68":{"total":6,"lt55":0,"ge55":6,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6}]},"ก.พ.69":{"total":12,"lt55":0,"ge55":12,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":5,"lt55":0,"ge55":5}]}},"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง":{"ก.ย.68":{"total":2,"lt55":0,"ge55":2,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":2,"lt55":0,"ge55":2}]},"ต.ค.68":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3}]},"ธ.ค.68":{"total":1,"lt55":0,"ge55":1,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ม.ค.69":{"total":8,"lt55":0,"ge55":8,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":8,"lt55":0,"ge55":8}]},"ก.พ.69":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":5,"lt55":0,"ge55":5}]},"มี.ค.69":{"total":5,"lt55":1,"ge55":4,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1},{"code":"M173","name":"เข่าเสื่อมทุติยภูมิ ข้างเดียว","cases":1,"lt55":1,"ge55":0}]},"เม.ย.69":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3}]}},"รพ.สันทราย":{"ก.ย.68":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"ต.ค.68":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3},{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1},{"code":"M711","name":"M711","cases":1,"lt55":0,"ge55":1}]},"พ.ย.68":{"total":14,"lt55":0,"ge55":14,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":4,"lt55":0,"ge55":4},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":2,"lt55":0,"ge55":2},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":7,"lt55":0,"ge55":7,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2},{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":2,"lt55":0,"ge55":2},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":2,"lt55":0,"ge55":2},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ม.ค.69":{"total":8,"lt55":0,"ge55":8,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3},{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3},{"code":"M165","name":"M165","cases":1,"lt55":0,"ge55":1},{"code":"T840","name":"ภาวะแทรกซ้อน: ข้อเทียมแตกหัก","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":10,"lt55":0,"ge55":10,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":1,"lt55":0,"ge55":1}]},"มี.ค.69":{"total":9,"lt55":0,"ge55":9,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":4,"lt55":0,"ge55":4},{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":2,"lt55":0,"ge55":2}]},"เม.ย.69":{"total":9,"lt55":0,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":5,"lt55":0,"ge55":5},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":1,"lt55":0,"ge55":1},{"code":"Z501","name":"Z501","cases":1,"lt55":0,"ge55":1}]}},"รพ.สันป่าตอง":{"ต.ค.68":{"total":8,"lt55":0,"ge55":8,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":8,"lt55":0,"ge55":8}]},"พ.ย.68":{"total":18,"lt55":0,"ge55":18,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":16,"lt55":0,"ge55":16},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"ธ.ค.68":{"total":15,"lt55":0,"ge55":15,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":13,"lt55":0,"ge55":13},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"ม.ค.69":{"total":15,"lt55":0,"ge55":15,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":11,"lt55":0,"ge55":11},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":4,"lt55":0,"ge55":4}]},"ก.พ.69":{"total":6,"lt55":0,"ge55":6,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6}]},"มี.ค.69":{"total":21,"lt55":0,"ge55":21,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":13,"lt55":0,"ge55":13},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":8,"lt55":0,"ge55":8}]},"เม.ย.69":{"total":7,"lt55":0,"ge55":7,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7}]}},"รพ.สูงเม่น":{"ก.ย.68":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3}]},"ต.ค.68":{"total":8,"lt55":0,"ge55":8,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":8,"lt55":0,"ge55":8}]},"พ.ย.68":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3}]},"ธ.ค.68":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3}]},"ม.ค.69":{"total":7,"lt55":0,"ge55":7,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7}]},"ก.พ.69":{"total":6,"lt55":0,"ge55":6,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6}]},"มี.ค.69":{"total":6,"lt55":0,"ge55":6,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6}]},"เม.ย.69":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":5,"lt55":0,"ge55":5}]}},"รพ.เชียงคำ":{"ก.ย.68":{"total":6,"lt55":0,"ge55":6,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6}]},"ต.ค.68":{"total":10,"lt55":0,"ge55":10,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":10,"lt55":0,"ge55":10}]},"พ.ย.68":{"total":7,"lt55":0,"ge55":7,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":7,"lt55":0,"ge55":7,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7}]},"ม.ค.69":{"total":6,"lt55":0,"ge55":6,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6}]},"ก.พ.69":{"total":7,"lt55":0,"ge55":7,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7}]},"มี.ค.69":{"total":13,"lt55":0,"ge55":13,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":12,"lt55":0,"ge55":12},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"เม.ย.69":{"total":10,"lt55":0,"ge55":10,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":10,"lt55":0,"ge55":10}]}},"รพ.เชียงรายประชานุเคราะห์":{"ก.ย.68":{"total":18,"lt55":1,"ge55":17,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":10,"lt55":0,"ge55":10},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":7,"lt55":1,"ge55":6},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":32,"lt55":0,"ge55":32,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":17,"lt55":0,"ge55":17},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":13,"lt55":0,"ge55":13},{"code":"A180","name":"วัณโรคกระดูกและข้อ","cases":1,"lt55":0,"ge55":1},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":1,"lt55":0,"ge55":1}]},"พ.ย.68":{"total":49,"lt55":3,"ge55":46,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":24,"lt55":0,"ge55":24},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":20,"lt55":3,"ge55":17},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":4,"lt55":0,"ge55":4},{"code":"M4806","name":"M4806","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":25,"lt55":0,"ge55":25,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":18,"lt55":0,"ge55":18},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":7,"lt55":0,"ge55":7}]},"ม.ค.69":{"total":35,"lt55":0,"ge55":35,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":22,"lt55":0,"ge55":22},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":12,"lt55":0,"ge55":12},{"code":"T840","name":"ภาวะแทรกซ้อน: ข้อเทียมแตกหัก","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":35,"lt55":0,"ge55":35,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":19,"lt55":0,"ge55":19},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":12,"lt55":0,"ge55":12},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":3,"lt55":0,"ge55":3},{"code":"S054","name":"S054","cases":1,"lt55":0,"ge55":1}]},"มี.ค.69":{"total":54,"lt55":0,"ge55":54,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":30,"lt55":0,"ge55":30},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":20,"lt55":0,"ge55":20},{"code":"M179","name":"เข่าเสื่อม ไม่ระบุ","cases":2,"lt55":0,"ge55":2},{"code":"T840","name":"ภาวะแทรกซ้อน: ข้อเทียมแตกหัก","cases":2,"lt55":0,"ge55":2}]},"เม.ย.69":{"total":40,"lt55":0,"ge55":40,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":30,"lt55":0,"ge55":30},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":10,"lt55":0,"ge55":10}]}},"รพ.เวียงสา":{"พ.ย.68":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":2,"lt55":0,"ge55":2},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":4,"lt55":0,"ge55":4,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ม.ค.69":{"total":2,"lt55":0,"ge55":2,"pdx":[{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1},{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":4,"lt55":0,"ge55":4},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"มี.ค.69":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"เม.ย.69":{"total":12,"lt55":0,"ge55":12,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":10,"lt55":0,"ge55":10},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]}},"รพ.แพร่":{"ก.ย.68":{"total":7,"lt55":0,"ge55":7,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":5,"lt55":0,"ge55":5},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"ต.ค.68":{"total":20,"lt55":1,"ge55":19,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":14,"lt55":1,"ge55":13},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":6,"lt55":0,"ge55":6}]},"พ.ย.68":{"total":17,"lt55":0,"ge55":17,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":12,"lt55":0,"ge55":12},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":5,"lt55":0,"ge55":5}]},"ธ.ค.68":{"total":24,"lt55":1,"ge55":23,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":18,"lt55":1,"ge55":17},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":6,"lt55":0,"ge55":6}]},"ม.ค.69":{"total":15,"lt55":0,"ge55":15,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":12,"lt55":0,"ge55":12},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3}]},"ก.พ.69":{"total":23,"lt55":1,"ge55":22,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":19,"lt55":1,"ge55":18},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":4,"lt55":0,"ge55":4}]},"มี.ค.69":{"total":22,"lt55":1,"ge55":21,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":16,"lt55":0,"ge55":16},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":5,"lt55":0,"ge55":5},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":1,"ge55":0}]},"เม.ย.69":{"total":20,"lt55":0,"ge55":20,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":18,"lt55":0,"ge55":18},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]}},"รพ.แม่จัน":{"ก.ย.68":{"total":9,"lt55":0,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":5,"lt55":0,"ge55":5},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":10,"lt55":0,"ge55":10,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":8,"lt55":0,"ge55":8},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"พ.ย.68":{"total":17,"lt55":1,"ge55":16,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":14,"lt55":1,"ge55":13},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3}]},"ธ.ค.68":{"total":9,"lt55":0,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6},{"code":"M0085","name":"M0085","cases":1,"lt55":0,"ge55":1},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1},{"code":"T845","name":"ภาวะแทรกซ้อน: ข้อเทียม (ติดเชื้อ/อักเสบ)","cases":1,"lt55":0,"ge55":1}]},"ม.ค.69":{"total":10,"lt55":1,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":8,"lt55":0,"ge55":8},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":1,"ge55":1}]},"ก.พ.69":{"total":9,"lt55":0,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"มี.ค.69":{"total":14,"lt55":0,"ge55":14,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":11,"lt55":0,"ge55":11},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":3,"lt55":0,"ge55":3}]},"เม.ย.69":{"total":9,"lt55":0,"ge55":9,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]}},"รพ.แม่สาย":{"ก.ย.68":{"total":4,"lt55":0,"ge55":4,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ต.ค.68":{"total":2,"lt55":0,"ge55":2,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":2,"lt55":0,"ge55":2}]},"พ.ย.68":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":4,"lt55":0,"ge55":4},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":8,"lt55":0,"ge55":8,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":8,"lt55":0,"ge55":8}]},"ม.ค.69":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":4,"lt55":0,"ge55":4},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3}]},"มี.ค.69":{"total":3,"lt55":0,"ge55":3,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":3,"lt55":0,"ge55":3}]},"เม.ย.69":{"total":7,"lt55":0,"ge55":7,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":7,"lt55":0,"ge55":7}]}},"รพร.ปัว":{"ต.ค.68":{"total":25,"lt55":0,"ge55":25,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":18,"lt55":0,"ge55":18},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":7,"lt55":0,"ge55":7}]},"พ.ย.68":{"total":7,"lt55":0,"ge55":7,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":1,"lt55":0,"ge55":1}]},"ธ.ค.68":{"total":8,"lt55":0,"ge55":8,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":6,"lt55":0,"ge55":6},{"code":"M170","name":"เข่าเสื่อม (ไม่จำแนก)","cases":2,"lt55":0,"ge55":2}]},"ม.ค.69":{"total":5,"lt55":0,"ge55":5,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":4,"lt55":0,"ge55":4},{"code":"M174","name":"เข่าเสื่อมทุติยภูมิ อื่นๆ","cases":1,"lt55":0,"ge55":1}]},"ก.พ.69":{"total":6,"lt55":0,"ge55":6,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":5,"lt55":0,"ge55":5},{"code":"M175","name":"เข่าเสื่อมอื่นๆ ข้างเดียว","cases":1,"lt55":0,"ge55":1}]},"มี.ค.69":{"total":12,"lt55":0,"ge55":12,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":12,"lt55":0,"ge55":12}]},"เม.ย.69":{"total":8,"lt55":0,"ge55":8,"pdx":[{"code":"M171","name":"เข่าเสื่อมปฐมภูมิ ข้างเดียว","cases":8,"lt55":0,"ge55":8}]}}};
+// Hospital-by-month breakdown per province (for tooltip)
+const HOSP_MONTHLY = {"พะเยา":{"ก.ย.68":[{"hosp":"รพ.พะเยา","cases":9},{"hosp":"รพ.เชียงคำ","cases":6}],"ต.ค.68":[{"hosp":"รพ.พะเยา","cases":19},{"hosp":"รพ.เชียงคำ","cases":10},{"hosp":"รพ.มหาวิทยาลัยพะเยา","cases":1}],"พ.ย.68":[{"hosp":"รพ.พะเยา","cases":13},{"hosp":"รพ.เชียงคำ","cases":7}],"ธ.ค.68":[{"hosp":"รพ.พะเยา","cases":10},{"hosp":"รพ.เชียงคำ","cases":7}],"ม.ค.69":[{"hosp":"รพ.พะเยา","cases":24},{"hosp":"รพ.เชียงคำ","cases":6},{"hosp":"รพ.มหาวิทยาลัยพะเยา","cases":2}],"ก.พ.69":[{"hosp":"รพ.พะเยา","cases":21},{"hosp":"รพ.เชียงคำ","cases":7}],"มี.ค.69":[{"hosp":"รพ.พะเยา","cases":17},{"hosp":"รพ.เชียงคำ","cases":13},{"hosp":"รพ.มหาวิทยาลัยพะเยา","cases":1}],"เม.ย.69":[{"hosp":"รพ.พะเยา","cases":17},{"hosp":"รพ.เชียงคำ","cases":10}]},"เชียงราย":{"ก.ย.68":[{"hosp":"รพ.เชียงรายประชานุเคราะห์","cases":18},{"hosp":"รพ.แม่จัน","cases":9},{"hosp":"รพ.พาน","cases":5},{"hosp":"รพ.แม่สาย","cases":4},{"hosp":"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง","cases":2}],"ต.ค.68":[{"hosp":"รพ.เชียงรายประชานุเคราะห์","cases":32},{"hosp":"รพ.แม่จัน","cases":10},{"hosp":"รพ.พาน","cases":3},{"hosp":"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง","cases":3},{"hosp":"รพ.แม่สาย","cases":2}],"พ.ย.68":[{"hosp":"รพ.เชียงรายประชานุเคราะห์","cases":49},{"hosp":"รพ.แม่จัน","cases":17},{"hosp":"รพ.พาน","cases":6},{"hosp":"รพ.แม่สาย","cases":5}],"ธ.ค.68":[{"hosp":"รพ.เชียงรายประชานุเคราะห์","cases":25},{"hosp":"รพ.แม่จัน","cases":9},{"hosp":"รพ.แม่สาย","cases":8},{"hosp":"รพ.พาน","cases":5},{"hosp":"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง","cases":1}],"ม.ค.69":[{"hosp":"รพ.เชียงรายประชานุเคราะห์","cases":35},{"hosp":"รพ.พาน","cases":10},{"hosp":"รพ.แม่จัน","cases":10},{"hosp":"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง","cases":8},{"hosp":"รพ.แม่สาย","cases":5}],"ก.พ.69":[{"hosp":"รพ.เชียงรายประชานุเคราะห์","cases":35},{"hosp":"รพ.แม่จัน","cases":9},{"hosp":"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง","cases":5},{"hosp":"รพ.แม่สาย","cases":3},{"hosp":"รพ.พาน","cases":1}],"มี.ค.69":[{"hosp":"รพ.เชียงรายประชานุเคราะห์","cases":54},{"hosp":"รพ.แม่จัน","cases":14},{"hosp":"รพ.พาน","cases":11},{"hosp":"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง","cases":5},{"hosp":"รพ.แม่สาย","cases":3}],"เม.ย.69":[{"hosp":"รพ.เชียงรายประชานุเคราะห์","cases":40},{"hosp":"รพ.แม่จัน","cases":9},{"hosp":"รพ.แม่สาย","cases":7},{"hosp":"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง","cases":3}]},"ลำพูน":{"ก.ย.68":[{"hosp":"รพ.ลำพูน","cases":20},{"hosp":"รพ.ศิริเวช ลำพูน","cases":1}],"ต.ค.68":[{"hosp":"รพ.ลำพูน","cases":44},{"hosp":"รพ.ศิริเวช ลำพูน","cases":1}],"พ.ย.68":[{"hosp":"รพ.ลำพูน","cases":34},{"hosp":"รพ.ศิริเวช ลำพูน","cases":1}],"ธ.ค.68":[{"hosp":"รพ.ลำพูน","cases":29},{"hosp":"รพ.ศิริเวช ลำพูน","cases":2}],"ม.ค.69":[{"hosp":"รพ.ลำพูน","cases":24},{"hosp":"รพ.ศิริเวช ลำพูน","cases":2}],"ก.พ.69":[{"hosp":"รพ.ลำพูน","cases":33},{"hosp":"รพ.ศิริเวช ลำพูน","cases":4}],"มี.ค.69":[{"hosp":"รพ.ลำพูน","cases":36}],"เม.ย.69":[{"hosp":"รพ.ลำพูน","cases":19}]},"เชียงใหม่":{"ก.ย.68":[{"hosp":"รพ.นครพิงค์","cases":11},{"hosp":"รพ.ฝาง","cases":5},{"hosp":"รพ.สันทราย","cases":5},{"hosp":"รพ.มหาราชนครเชียงใหม่ มช.","cases":2}],"ต.ค.68":[{"hosp":"รพ.นครพิงค์","cases":31},{"hosp":"รพ.ฝาง","cases":14},{"hosp":"รพ.สันป่าตอง","cases":8},{"hosp":"รพ.จอมทอง","cases":6},{"hosp":"รพ.สันทราย","cases":5},{"hosp":"รพ.มหาราชนครเชียงใหม่ มช.","cases":3},{"hosp":"รพ.เชียงใหม่ใกล้หมอ","cases":1}],"พ.ย.68":[{"hosp":"รพ.นครพิงค์","cases":24},{"hosp":"รพ.สันป่าตอง","cases":18},{"hosp":"รพ.สันทราย","cases":14},{"hosp":"รพ.จอมทอง","cases":10},{"hosp":"รพ.ฝาง","cases":9},{"hosp":"รพ.มหาราชนครเชียงใหม่ มช.","cases":3}],"ธ.ค.68":[{"hosp":"รพ.นครพิงค์","cases":25},{"hosp":"รพ.สันป่าตอง","cases":15},{"hosp":"รพ.จอมทอง","cases":13},{"hosp":"รพ.ฝาง","cases":13},{"hosp":"รพ.สันทราย","cases":7},{"hosp":"รพ.มหาราชนครเชียงใหม่ มช.","cases":2}],"ม.ค.69":[{"hosp":"รพ.สันป่าตอง","cases":15},{"hosp":"รพ.นครพิงค์","cases":11},{"hosp":"รพ.สันทราย","cases":8},{"hosp":"รพ.ฝาง","cases":8},{"hosp":"รพ.จอมทอง","cases":5},{"hosp":"รพ.มหาราชนครเชียงใหม่ มช.","cases":1}],"ก.พ.69":[{"hosp":"รพ.นครพิงค์","cases":21},{"hosp":"รพ.ฝาง","cases":11},{"hosp":"รพ.สันทราย","cases":10},{"hosp":"รพ.สันป่าตอง","cases":6},{"hosp":"รพ.เชียงใหม่ใกล้หมอ","cases":1},{"hosp":"รพ.มหาราชนครเชียงใหม่ มช.","cases":1}],"มี.ค.69":[{"hosp":"รพ.นครพิงค์","cases":30},{"hosp":"รพ.สันป่าตอง","cases":21},{"hosp":"รพ.สันทราย","cases":9},{"hosp":"รพ.ฝาง","cases":9},{"hosp":"รพ.จอมทอง","cases":1},{"hosp":"รพ.มหาราชนครเชียงใหม่ มช.","cases":1}],"เม.ย.69":[{"hosp":"รพ.นครพิงค์","cases":27},{"hosp":"รพ.ฝาง","cases":11},{"hosp":"รพ.จอมทอง","cases":9},{"hosp":"รพ.สันทราย","cases":9},{"hosp":"รพ.สันป่าตอง","cases":7},{"hosp":"รพ.มหาราชนครเชียงใหม่ มช.","cases":3}]},"แพร่":{"ก.ย.68":[{"hosp":"รพ.แพร่","cases":7},{"hosp":"รพ.สูงเม่น","cases":3}],"ต.ค.68":[{"hosp":"รพ.แพร่","cases":20},{"hosp":"รพ.สูงเม่น","cases":8}],"พ.ย.68":[{"hosp":"รพ.แพร่","cases":17},{"hosp":"รพ.สูงเม่น","cases":3}],"ธ.ค.68":[{"hosp":"รพ.แพร่","cases":24},{"hosp":"รพ.สูงเม่น","cases":3}],"ม.ค.69":[{"hosp":"รพ.แพร่","cases":15},{"hosp":"รพ.สูงเม่น","cases":7}],"ก.พ.69":[{"hosp":"รพ.แพร่","cases":23},{"hosp":"รพ.สูงเม่น","cases":6}],"มี.ค.69":[{"hosp":"รพ.แพร่","cases":22},{"hosp":"รพ.สูงเม่น","cases":6}],"เม.ย.69":[{"hosp":"รพ.แพร่","cases":20},{"hosp":"รพ.สูงเม่น","cases":5}]},"น่าน":{"ก.ย.68":[{"hosp":"รพ.น่าน","cases":10}],"ต.ค.68":[{"hosp":"รพร.ปัว","cases":25},{"hosp":"รพ.น่าน","cases":20}],"พ.ย.68":[{"hosp":"รพ.น่าน","cases":18},{"hosp":"รพร.ปัว","cases":7},{"hosp":"รพ.เวียงสา","cases":3}],"ธ.ค.68":[{"hosp":"รพ.น่าน","cases":28},{"hosp":"รพร.ปัว","cases":8},{"hosp":"รพ.เวียงสา","cases":4}],"ม.ค.69":[{"hosp":"รพ.น่าน","cases":19},{"hosp":"รพร.ปัว","cases":5},{"hosp":"รพ.เวียงสา","cases":2}],"ก.พ.69":[{"hosp":"รพ.น่าน","cases":16},{"hosp":"รพร.ปัว","cases":6},{"hosp":"รพ.เวียงสา","cases":5}],"มี.ค.69":[{"hosp":"รพ.น่าน","cases":21},{"hosp":"รพร.ปัว","cases":12},{"hosp":"รพ.เวียงสา","cases":5}],"เม.ย.69":[{"hosp":"รพ.น่าน","cases":23},{"hosp":"รพ.เวียงสา","cases":12},{"hosp":"รพร.ปัว","cases":8}]},"ลำปาง":{"ก.ย.68":[{"hosp":"รพ.ลำปาง","cases":28}],"ต.ค.68":[{"hosp":"รพ.ลำปาง","cases":28}],"พ.ย.68":[{"hosp":"รพ.ลำปาง","cases":37}],"ธ.ค.68":[{"hosp":"รพ.ลำปาง","cases":39}],"ม.ค.69":[{"hosp":"รพ.ลำปาง","cases":35}],"ก.พ.69":[{"hosp":"รพ.ลำปาง","cases":32}],"มี.ค.69":[{"hosp":"รพ.ลำปาง","cases":35}],"เม.ย.69":[{"hosp":"รพ.ลำปาง","cases":37}]},"แม่ฮ่องสอน":{"พ.ย.68":[{"hosp":"รพ.ศรีสังวาลย์","cases":6}],"ก.พ.69":[{"hosp":"รพ.ศรีสังวาลย์","cases":12}]}};
+const TOTAL_ALL = 2114;
+const TARGET_YEAR = 3200, TARGET_APR = 1768;
+// Row 30 — จำนวน (เข่า:ครั้ง)
+const NATIONAL_QTY = 26500;
+// Row 29 — มูลค่า (บาท)
+const NATIONAL_VAL = 1300000000;
+const R1_VAL_TARGET = 156981132;   // สัดส่วน 12.07% ของประเทศ
+const R1_VAL_ACTUAL = 105415140;   // ผลงานจาก Sheet H col L
+
+let currentProv = 'ทั้งหมด';
+
+// ── PROVINCE FILTER BUTTONS ──
+function buildFilter() {
+  const el = document.getElementById('provFilter');
+  const all = ['ทั้งหมด', ...PROVINCES];
+  el.innerHTML = all.map(p =>
+    `<button class="pf-btn${p==='ทั้งหมด'?' active':''}" onclick="selectProv('${p}',this)">${p}</button>`
+  ).join('');
+}
+
+function selectProv(prov, btn) {
+  currentProv = prov;
+  document.querySelectorAll('.pf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+// ── NORMALIZE MONTHLY (fill missing months with 0) ──
+function normMonthly(monthly, prov) {
+  const map = {};
+  monthly.forEach(m => map[m.label] = m.cases);
+  const vals = VAL_MONTHLY[prov] || Array(8).fill(0);
+  return ALL_MONTHS.map((lbl, i) => ({ label: lbl, cases: map[lbl] || 0, value: vals[i] }));
+}
+
+// ── MAIN RENDER ──
+function render() {
+  const d = PROV_DATA[currentProv];
+  const isAll = currentProv === 'ทั้งหมด';
+
+  renderHero(d, isAll);
+  renderIndicators(d, isAll);
+  renderDemo(d);
+  renderTrend(normMonthly(d.monthly, currentProv));
+  renderPdx(d);
+  renderHosp(d, isAll);
+}
+
+// ── HERO ──
+function renderHero(d, isAll) {
+  const kpi = document.getElementById('heroKpi');
+  const sep = document.getElementById('heroSep');
+  const right = document.getElementById('heroRight');
+
+  if (isAll) {
+    // hide number block — show only share bars
+    kpi.style.display = 'none';
+    sep.style.display = 'none';
+
+    const qtyTarget = TARGET_YEAR / NATIONAL_QTY;
+    const qtyActual = d.total / NATIONAL_QTY;
+    const valTarget = R1_VAL_TARGET / NATIONAL_VAL;
+    const valActual = R1_VAL_ACTUAL / NATIONAL_VAL;
+    const BAR_MAX = qtyTarget / 0.75;
+    const bPct = v => Math.min(v / BAR_MAX * 100, 100).toFixed(1);
+
+    // Bar scale: 0 → annual target (เขต 1)
+    // Marker: proportional target ณ เม.ย.69 = 55.25% of annual
+    const APR_RATIO = TARGET_APR / TARGET_YEAR;             // 1768/3200 = 55.25%
+    const APR_VAL   = R1_VAL_TARGET * APR_RATIO;            // ~86.7 ล.บ.
+    const qtyFill   = (d.total / TARGET_YEAR * 100).toFixed(1);
+    const markPct   = (APR_RATIO * 100).toFixed(1);         // same ratio both bars
+    const valFill   = (R1_VAL_ACTUAL / R1_VAL_TARGET * 100).toFixed(1);
+
+    right.innerHTML = `
+      <div class="hero-share-label">ความก้าวหน้าเทียบเป้าเขต 1 (ปี 2569)</div>
+      <div class="hbar-legend">
+        <span><span class="hbar-legend-dot" style="background:#C17A2A"></span>ผลงานจริง</span>
+        <span><span class="hbar-legend-tick"></span>เป้า ณ เม.ย.69</span>
+        <span style="opacity:.5">ปลายแถบ = เป้าทั้งปี</span>
+      </div>
+      <div class="hbar-row">
+        <span class="hbar-lbl">มูลค่า (บาท)</span>
+        <div class="hbar-wrap">
+          <div class="hbar-track">
+            <div class="hbar-fill" style="width:${valFill}%;background:#C17A2A"></div>
+            <span class="hbar-tag" style="left:${valFill}%;color:#E8C07A">${(R1_VAL_ACTUAL/1e6).toFixed(1)} ล.บ.</span>
+            <div class="hbar-marker" style="left:${markPct}%"></div>
+            <span class="hbar-tag target" style="left:${markPct}%">${(APR_VAL/1e6).toFixed(1)} ล.บ.</span>
+          </div>
+        </div>
+        <span class="hbar-annual">${(R1_VAL_TARGET/1e6).toFixed(1)} ล.บ.</span>
+      </div>
+      <div class="hbar-row">
+        <span class="hbar-lbl">จำนวน (เข่า:ครั้ง)</span>
+        <div class="hbar-wrap">
+          <div class="hbar-track">
+            <div class="hbar-fill" style="width:${qtyFill}%;background:#9FE8E5"></div>
+            <span class="hbar-tag" style="left:${qtyFill}%;color:#9FE8E5">${d.total.toLocaleString()} ครั้ง</span>
+            <div class="hbar-marker" style="left:${markPct}%"></div>
+            <span class="hbar-tag target" style="left:${markPct}%">${TARGET_APR.toLocaleString()} ครั้ง</span>
+          </div>
+        </div>
+        <span class="hbar-annual">${TARGET_YEAR.toLocaleString()} ครั้ง</span>
+      </div>`;
+
+  } else {
+    kpi.style.display = 'flex';
+    sep.style.display = 'block';
+    document.getElementById('heroNum').textContent = d.total.toLocaleString();
+    document.getElementById('heroLbl').textContent = `DISTINCT PID · ราย · จ.${currentProv}`;
+
+    const sharePct = (d.total / TOTAL_ALL * 100).toFixed(1);
+    const fillPct = Math.min(d.total / PROV_DATA['เชียงราย'].total * 100, 100).toFixed(1);
+    right.innerHTML = `
+      <div class="hero-row"><span>สัดส่วนของเขตฯ 1 ทั้งหมด</span><span class="hero-pct">${sharePct}%</span></div>
+      <div class="hero-track"><div class="hero-fill" style="width:${fillPct}%"></div></div>
+      <div class="hero-sub">
+        <div class="hero-sub-item"><div class="hero-sub-num">${d.hospitals.length}</div><div class="hero-sub-lbl">หน่วยบริการ</div></div>
+        <div class="hero-sub-item"><div class="hero-sub-num">${(d.female/d.total*100).toFixed(0)}%</div><div class="hero-sub-lbl">หญิง</div></div>
+        <div class="hero-sub-item"><div class="hero-sub-num">${(d.ge60/d.total*100).toFixed(0)}%</div><div class="hero-sub-lbl">≥60 ปี</div></div>
+      </div>`;
+  }
+}
+
+// ── INDICATORS ──
+function renderIndicators(d, isAll) {
+  document.getElementById('indSubtitle').textContent = isAll ? 'เป้าเขตฯ ถึง เม.ย. 69' : `จ.${currentProv} (ไม่มีเป้ารายจังหวัด)`;
+
+  const inds = isAll ? [
+    { id:'7.2.1', label:'TKA รวม (เข่า:ครั้ง)', target:TARGET_APR, actual:d.total, note:'' },
+    { id:'7.2.2', label:'TKA อายุ < 55 ปี', target:39, actual:d.lt55, note:'* เป้าประมาณการ (320 × 12.1%)' },
+    { id:'7.2.3', label:'TKA อายุ ≥ 55 ปี', target:1950, actual:d.ge55, note:'* เป้าประมาณการ (16,148 × 12.1%)' },
+  ] : [
+    { id:'7.2.1', label:'TKA รวม', target:null, actual:d.total, note:'' },
+    { id:'7.2.2', label:'TKA < 55 ปี', target:null, actual:d.lt55, note:'' },
+    { id:'7.2.3', label:'TKA ≥ 55 ปี', target:null, actual:d.ge55, note:'' },
+  ];
+
+  document.getElementById('indPanel').innerHTML = inds.map(ind => {
+    const hasTarget = ind.target !== null;
+    const pct = hasTarget ? ind.actual / ind.target * 100 : null;
+    const cls = !hasTarget ? 'na' : pct >= 100 ? 'ok' : pct >= 85 ? 'warn' : 'low';
+    const fillW = hasTarget ? Math.min(pct, 100).toFixed(1) : (ind.actual > 0 ? 60 : 0);
+    const badge = hasTarget ? `${pct.toFixed(1)}%` : `${ind.actual} ราย`;
+    const targetStr = hasTarget ? `/ เป้า ${ind.target.toLocaleString()}` : `(${(ind.actual/d.total*100).toFixed(1)}% ของจังหวัด)`;
+    return `
+    <div class="ind-item">
+      <div class="ind-top"><span class="ind-id">${ind.id}</span><span class="ind-badge ${cls}">${badge}</span></div>
+      <div class="ind-label">${ind.label}</div>
+      <div class="ind-nums">
+        <span class="ind-actual">${ind.actual.toLocaleString()}</span>
+        <span class="ind-of">${targetStr}</span>
+      </div>
+      <div class="mbar"><div class="mbar-fill ${cls}" style="width:${fillW}%">${hasTarget && pct>=100?'<div class="mbar-100"></div>':''}</div></div>
+      ${ind.note ? `<div class="mbar-note">${ind.note}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── DEMOGRAPHICS ──
+function renderDemo(d) {
+  const t = d.total || 1;
+  const pct = v => (v/t*100).toFixed(1);
+  document.getElementById('demoPanel').innerHTML = `
+    <div class="demo-group">
+      <div class="demo-lbl">เพศ</div>
+      <div class="demo-item"><span class="demo-name">หญิง</span><div class="demo-track"><div class="demo-fill" style="width:${pct(d.female)}%;background:var(--accent)"></div></div><span class="demo-val">${d.female.toLocaleString()}</span><span class="demo-pct">${pct(d.female)}%</span></div>
+      <div class="demo-item"><span class="demo-name">ชาย</span><div class="demo-track"><div class="demo-fill" style="width:${pct(d.male)}%;background:var(--a2)"></div></div><span class="demo-val">${d.male.toLocaleString()}</span><span class="demo-pct">${pct(d.male)}%</span></div>
+    </div>
+    <div class="demo-group">
+      <div class="demo-lbl">กลุ่มอายุ</div>
+      <div class="demo-item"><span class="demo-name" style="font-size:11px">≥ 60 ปี</span><div class="demo-track"><div class="demo-fill" style="width:${pct(d.ge60)}%;background:var(--accent)"></div></div><span class="demo-val">${d.ge60.toLocaleString()}</span><span class="demo-pct">${pct(d.ge60)}%</span></div>
+      <div class="demo-item"><span class="demo-name" style="font-size:11px">55–59 ปี</span><div class="demo-track"><div class="demo-fill" style="width:${pct(d.a5559)}%;background:#4BA8AD"></div></div><span class="demo-val">${d.a5559}</span><span class="demo-pct">${pct(d.a5559)}%</span></div>
+      <div class="demo-item"><span class="demo-name" style="font-size:11px">< 55 ปี</span><div class="demo-track"><div class="demo-fill" style="width:${pct(d.lt55)}%;background:var(--a2)"></div></div><span class="demo-val">${d.lt55}</span><span class="demo-pct">${pct(d.lt55)}%</span></div>
+    </div>
+    <div class="demo-group" style="margin-bottom:0">
+      <div class="demo-lbl">Revision</div>
+      <div class="demo-item"><span class="demo-name" style="font-size:11px">ปกติ</span><div class="demo-track"><div class="demo-fill" style="width:${pct(t-d.revision)}%;background:var(--accent)"></div></div><span class="demo-val">${(t-d.revision).toLocaleString()}</span><span class="demo-pct">${pct(t-d.revision)}%</span></div>
+      <div class="demo-item"><span class="demo-name" style="font-size:11px">Revision</span><div class="demo-track"><div class="demo-fill" style="width:${pct(d.revision)}%;background:var(--danger)"></div></div><span class="demo-val">${d.revision}</span><span class="demo-pct">${pct(d.revision)}%</span></div>
+    </div>`;
+}
+
+// ── TREND CHART ──
+let _chartGeo = null;
+function renderTrend(monthly) {
+  const canvas = document.getElementById('trendChart');
+  const wrap = canvas.parentElement;
+  const W = wrap.clientWidth - 32, H = 300;
+  _chartGeo = null;
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+
+  const pad = {t:64,r:16,b:32,l:30};
+  const cW = W-pad.l-pad.r, cH = H-pad.t-pad.b;
+  const n = monthly.length;
+  const bW = (cW/n)*0.52;
+  const xC = i => pad.l + (i+.5)*(cW/n);
+
+  const cases = monthly.map(m=>m.cases);
+  const vals  = monthly.map(m=>m.value);
+  const maxC  = Math.max(...cases, 1);
+  const yMaxC = Math.ceil(maxC/50)*50 + 50;
+  const yC = v => pad.t + cH - (v/yMaxC)*cH;
+
+  // grid
+  const gridStep = yMaxC <= 200 ? 50 : 100;
+  for(let v=gridStep; v<=yMaxC; v+=gridStep) {
+    ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,yC(v)); ctx.lineTo(pad.l+cW,yC(v)); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.2)'; ctx.font='9px IBM Plex Mono,Cascadia Code,Consolas,monospace'; ctx.textAlign='right';
+    ctx.fillText(v, pad.l-4, yC(v)+3);
+  }
+
+  // bars
+  monthly.forEach((m,i) => {
+    if(!m.cases) return;
+    const x=xC(i)-bW/2, bh=(m.cases/yMaxC)*cH, y=yC(m.cases);
+    const grad=ctx.createLinearGradient(0,y,0,yC(0));
+    grad.addColorStop(0,'rgba(10,107,111,.6)'); grad.addColorStop(1,'rgba(10,107,111,.1)');
+    ctx.fillStyle=grad;
+    ctx.beginPath(); ctx.roundRect(x,y,bW,bh,3); ctx.fill();
+  });
+
+  // line (cases)
+  const pts = monthly.map((m,i)=>({x:xC(i),y:yC(m.cases),c:m.cases,v:m.value}));
+  const nz  = pts.filter(p=>p.c>0);
+  if(nz.length>1){
+    ctx.beginPath(); nz.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+    ctx.strokeStyle='#9FE8E5'; ctx.lineWidth=1.5; ctx.lineJoin='round'; ctx.stroke();
+  }
+
+  // dual labels above each bar
+  const maxCase = Math.max(...cases);
+  pts.forEach((p,i) => {
+    if(!p.c) return;
+    const isPeak = p.c === maxCase;
+    // dot
+    ctx.beginPath(); ctx.arc(p.x,p.y,isPeak?4:2.5,0,Math.PI*2);
+    ctx.fillStyle=isPeak?'#C17A2A':'#9FE8E5'; ctx.fill();
+
+    // จำนวน label (line 1)
+    ctx.fillStyle=isPeak?'#C17A2A':'rgba(255,255,255,.9)';
+    ctx.font=`${isPeak?'bold ':''}15px IBM Plex Mono,Cascadia Code,Consolas,monospace`;
+    ctx.textAlign='center';
+    ctx.fillText(p.c, p.x, p.y-26);
+
+    // มูลค่า label (line 2) — gold
+    if(p.v>0){
+      ctx.fillStyle='rgba(193,122,42,.9)';
+      ctx.font='12px IBM Plex Mono,Cascadia Code,Consolas,monospace';
+      ctx.fillText((p.v/1e6).toFixed(1)+'M', p.x, p.y-10);
+    }
+  });
+
+  // x labels
+  monthly.forEach((m,i) => {
+    ctx.fillStyle='rgba(255,255,255,.28)'; ctx.font='10px Sarabun,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(m.label, xC(i), pad.t+cH+16);
+  });
+
+  // summary
+  const nzC = cases.filter(v=>v>0), nzV = vals.filter(v=>v>0);
+  const avgC = nzC.length ? Math.round(nzC.reduce((a,b)=>a+b,0)/nzC.length) : 0;
+  const avgV = nzV.length ? nzV.reduce((a,b)=>a+b,0)/nzV.length : 0;
+  document.getElementById('trendAvg').textContent =
+    `เฉลี่ย ${avgC} ราย · ${(avgV/1e6).toFixed(1)} ล.บ./เดือน`;
+
+  // cache geometry for tooltip hit-test
+  _chartGeo = { monthly, n, pad, cW, cH, xC };
+}
+
+// ── PDX TABLE ──
+function renderPdx(d) {
+  const total = d.pdx.reduce((s,p)=>s+p.cases,0)||1;
+  const max = d.pdx[0]?.cases||1;
+  document.getElementById('pdxTbody').innerHTML = d.pdx.map(p => `
+    <tr>
+      <td><code style="font-size:11px;color:var(--accent)">${p.code}</code></td>
+      <td>${p.name||'—'}</td>
+      <td class="td-r">${p.cases.toLocaleString()}</td>
+      <td><div class="ibar-wrap"><div class="ibar-track"><div class="ibar-fill" style="width:${(p.cases/max*100).toFixed(0)}%"></div></div><span style="font-family:monospace;font-size:10px;color:var(--muted);width:34px;text-align:right">${(p.cases/total*100).toFixed(1)}%</span></div></td>
+    </tr>`).join('');
+}
+
+// ── HOSPITAL TABLE ──
+function renderHosp(d, isAll) {
+  const bmap = {'รพศ.':'b-s','รพท.':'b-m','รพช./รพร.':'b-c','รพ.อื่น':'b-o'};
+  const max = d.hospitals[0]?.cases||1;
+  const total = d.total||1;
+  document.getElementById('hospProvCol').style.display = isAll ? '' : 'none';
+  document.getElementById('hospTbody').innerHTML = d.hospitals.map(h => `
+    <tr>
+      ${isAll ? `<td>${HOSP_PROV[h.hosp]||'—'}</td>` : ''}
+      <td>${h.hosp}</td>
+      <td><span class="badge ${bmap[h.htype]||'b-o'}">${h.htype}</span></td>
+      <td class="td-r">${h.cases.toLocaleString()}</td>
+      <td><div class="ibar-wrap"><div class="ibar-track"><div class="ibar-fill" style="width:${(h.cases/max*100).toFixed(0)}%"></div></div><span style="font-family:monospace;font-size:10px;color:var(--muted);width:34px;text-align:right">${(h.cases/total*100).toFixed(1)}%</span></div></td>
+    </tr>`).join('');
+}
+
+// ── TABS ──
+function switchTab(btn, id) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// ── AGE CARDS HTML BUILDER ──
+function buildAgeHtml(lt55, ge55) {
+  const total = lt55 + ge55;
+  const lt55Pct = total ? (lt55 / total * 100).toFixed(1) : '0.0';
+  const ge55Pct = total ? (ge55 / total * 100).toFixed(1) : '0.0';
+  const lt55W = total ? (lt55 / total * 100).toFixed(0) : 0;
+  const ge55W = total ? (ge55 / total * 100).toFixed(0) : 0;
+  return `<div class="tt-div"></div><div class="tt-sub">กลุ่มอายุ</div><div class="tt-age-cols"><div class="tt-age-col tt-age-lt"><div class="tt-age-lbl">&lt; 55 ปี</div><div class="tt-age-num">${lt55||'-'}</div><div class="tt-age-pct">${lt55Pct}%</div><div class="tt-age-bar" style="width:${lt55W}%"></div></div><div class="tt-age-col tt-age-ge"><div class="tt-age-lbl">≥ 55 ปี</div><div class="tt-age-num">${ge55||'-'}</div><div class="tt-age-pct">${ge55Pct}%</div><div class="tt-age-bar" style="width:${ge55W}%"></div></div></div>`;
+}
+
+// ── TOOLTIP ──
+function initTooltip() {
+  const canvas = document.getElementById('trendChart');
+  const tip    = document.getElementById('trendTip');
+
+  // Cursor feedback on hover
+  canvas.addEventListener('mousemove', e => {
+    if (!_chartGeo) return;
+    const { monthly, n, pad, cW } = _chartGeo;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const col = Math.floor((mx - pad.l) / (cW / n));
+    const valid = col >= 0 && col < n && mx >= pad.l && mx <= pad.l + cW && monthly[col].cases > 0;
+    canvas.style.cursor = valid ? 'pointer' : 'default';
+  });
+
+  // Click to open/update popup
+  canvas.addEventListener('click', e => {
+    if (!_chartGeo) return;
+    const { monthly, n, pad, cW } = _chartGeo;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const colW = cW / n;
+    const col  = Math.floor((mx - pad.l) / colW);
+    if (col < 0 || col >= n || mx < pad.l || mx > pad.l + cW) return;
+    const m = monthly[col];
+    if (!m.cases) return;
+
+    const isAll = currentProv === 'ทั้งหมด';
+    let html = `<div class="tt-top"><div class="tt-hd">${m.label}</div><button class="tt-close" onclick="document.getElementById('trendTip').style.display='none'">×</button></div>`;
+    html += `<div class="tt-row"><span>จำนวน</span><span>${m.cases} ราย</span></div>`;
+    if (m.value) html += `<div class="tt-row"><span>มูลค่า</span><span>${(m.value/1e6).toFixed(2)} ล.บ.</span></div>`;
+
+    if (isAll) {
+      let aLt55 = 0, aGe55 = 0;
+      PROVINCES.forEach(p => { const hl = (HOSP_MONTHLY[p]||{})[m.label]||[]; hl.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp]||{})[m.label]; if(hd){aLt55+=hd.lt55;aGe55+=hd.ge55;} }); });
+      html += buildAgeHtml(aLt55, aGe55);
+      const breakdown = PROVINCES.map(p => {
+        const found = PROV_DATA[p].monthly.find(x => x.label === m.label);
+        return { prov: p, cases: found ? found.cases : 0 };
+      }).filter(d => d.cases > 0).sort((a,b) => b.cases - a.cases);
+      if (breakdown.length) {
+        html += '<div class="tt-div"></div><div class="tt-sub">แยกจังหวัด · คลิกเพื่อดูรายรพ.</div>';
+        html += '<div class="tt-pdx-hdr"><span>จังหวัด</span><span>&lt;55</span><span>≥55</span><span>สัดส่วน</span></div>';
+        breakdown.forEach(d => {
+          const pct = (d.cases / m.cases * 100).toFixed(1);
+          const barW = (d.cases / breakdown[0].cases * 100).toFixed(0);
+          const lbl = m.label;
+          const hospList = (HOSP_MONTHLY[d.prov] || {})[lbl] || [];
+          let pLt55 = 0, pGe55 = 0;
+          hospList.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp] || {})[lbl]; if (hd) { pLt55 += hd.lt55; pGe55 += hd.ge55; } });
+          html += `<div class="tt-pdx-row tt-clickable" onclick="event.stopPropagation();tipSelectProv('${d.prov}','${lbl}')"><span class="tt-pdx-name tt-link">${d.prov}</span><span class="tt-pdx-n tt-pdx-lt">${pLt55||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${pGe55||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
+        });
+      }
+    } else {
+      const hospBreakdown = (HOSP_MONTHLY[currentProv] || {})[m.label] || [];
+      let hLt55 = 0, hGe55 = 0;
+      hospBreakdown.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp]||{})[m.label]; if(hd){hLt55+=hd.lt55;hGe55+=hd.ge55;} });
+      html += buildAgeHtml(hLt55, hGe55);
+      if (hospBreakdown.length) {
+        html += '<div class="tt-div"></div><div class="tt-sub">แยกหน่วยบริการ · คลิกเพื่อดูโรค</div>';
+        html += '<div class="tt-pdx-hdr"><span>รพ.</span><span>&lt;55</span><span>≥55</span><span>สัดส่วน</span></div>';
+        hospBreakdown.forEach(h => {
+          const pct = (h.cases / m.cases * 100).toFixed(1);
+          const barW = (h.cases / hospBreakdown[0].cases * 100).toFixed(0);
+          const hd = (HOSP_MONTH_PDX[h.hosp] || {})[m.label];
+          const lt55 = hd ? hd.lt55 : 0;
+          const ge55 = hd ? hd.ge55 : 0;
+          html += `<div class="tt-pdx-row tt-clickable" onclick="event.stopPropagation();tipShowHospPdx('${h.hosp}','${m.label}')"><span class="tt-pdx-name tt-link">${h.hosp}</span><span class="tt-pdx-n tt-pdx-lt">${lt55||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${ge55||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
+        });
+      }
+    }
+
+    tip.innerHTML = html;
+    tip.style.display = 'block';
+
+    // Position near the clicked bar column, anchored to canvas top
+    const barCenterX = rect.left + pad.l + col * colW + colW / 2;
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    let tx = barCenterX + 14;
+    let ty = rect.top + 20;
+    if (tx + tw > window.innerWidth - 8) tx = barCenterX - tw - 14;
+    if (ty < 8) ty = 8;
+    if (ty + th > window.innerHeight - 8) ty = window.innerHeight - th - 8;
+    tip.style.left = tx + 'px';
+    tip.style.top = ty + 'px';
+  });
+
+  // Click outside canvas & popup to close
+  document.addEventListener('click', e => {
+    if (!canvas.contains(e.target) && !tip.contains(e.target)) {
+      tip.style.display = 'none';
+    }
+  });
+}
+
+// ── POPUP DRILL-DOWN: province click → show hospital breakdown ──
+function tipSelectProv(prov, monthLabel) {
+  // Switch province filter
+  const idx = PROVINCES.indexOf(prov);
+  const btn = document.querySelectorAll('.pf-btn')[idx + 1];
+  selectProv(prov, btn); // updates currentProv, calls render()
+
+  // Rebuild popup for this province × month
+  const tip = document.getElementById('trendTip');
+  const provMonthly = normMonthly(PROV_DATA[prov].monthly, prov);
+  const m = provMonthly.find(x => x.label === monthLabel);
+  if (!m || !m.cases) { tip.style.display = 'none'; return; }
+
+  const hospBreakdown = (HOSP_MONTHLY[prov] || {})[monthLabel] || [];
+  let html = `<div class="tt-top"><div class="tt-hd">${monthLabel} · ${prov}</div><button class="tt-close" onclick="document.getElementById('trendTip').style.display='none'">×</button></div>`;
+  html += `<div class="tt-row"><span>จำนวน</span><span>${m.cases} ราย</span></div>`;
+  if (m.value) html += `<div class="tt-row"><span>มูลค่า</span><span>${(m.value/1e6).toFixed(2)} ล.บ.</span></div>`;
+  let sLt55 = 0, sGe55 = 0;
+  hospBreakdown.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp]||{})[monthLabel]; if(hd){sLt55+=hd.lt55;sGe55+=hd.ge55;} });
+  html += buildAgeHtml(sLt55, sGe55);
+  if (hospBreakdown.length) {
+    html += '<div class="tt-div"></div><div class="tt-sub">แยกหน่วยบริการ · คลิกเพื่อดูโรค</div>';
+    html += '<div class="tt-pdx-hdr"><span>รพ.</span><span>&lt;55</span><span>≥55</span><span>สัดส่วน</span></div>';
+    hospBreakdown.forEach(h => {
+      const pct = (h.cases / m.cases * 100).toFixed(1);
+      const barW = (h.cases / hospBreakdown[0].cases * 100).toFixed(0);
+      const hd = (HOSP_MONTH_PDX[h.hosp] || {})[monthLabel];
+      const lt55 = hd ? hd.lt55 : 0;
+      const ge55 = hd ? hd.ge55 : 0;
+      html += `<div class="tt-pdx-row tt-clickable" onclick="event.stopPropagation();tipShowHospPdx('${h.hosp}','${monthLabel}')"><span class="tt-pdx-name tt-link">${h.hosp}</span><span class="tt-pdx-n tt-pdx-lt">${lt55||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${ge55||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
+    });
+  }
+  tip.innerHTML = html;
+  tip.style.display = 'block';
+}
+
+// ── POPUP DRILL-DOWN: hospital click → show PDX breakdown + age groups (specific month) ──
+function tipShowHospPdx(hospName, monthLabel) {
+  const tip = document.getElementById('trendTip');
+  const data = (HOSP_MONTH_PDX[hospName] || {})[monthLabel];
+  if (!data) return;
+
+  const max = data.pdx[0]?.cases || 1;
+  const lt55Pct = data.total ? (data.lt55 / data.total * 100).toFixed(1) : '0.0';
+  const ge55Pct = data.total ? (data.ge55 / data.total * 100).toFixed(1) : '0.0';
+  const lt55BarW = data.total ? (data.lt55 / data.total * 100).toFixed(0) : 0;
+  const ge55BarW = data.total ? (data.ge55 / data.total * 100).toFixed(0) : 0;
+
+  let html = `<div class="tt-top"><div class="tt-hd">${monthLabel} · ${hospName}</div><button class="tt-close" onclick="document.getElementById('trendTip').style.display='none'">×</button></div>`;
+  html += `<div class="tt-row"><span>จำนวนเดือนนี้</span><span>${data.total.toLocaleString()} ราย</span></div>`;
+
+  // Age groups — 2 column cards
+  html += '<div class="tt-div"></div><div class="tt-sub">กลุ่มอายุ</div>';
+  html += `<div class="tt-age-cols"><div class="tt-age-col tt-age-lt"><div class="tt-age-lbl">&lt; 55 ปี</div><div class="tt-age-num">${data.lt55}</div><div class="tt-age-pct">${lt55Pct}%</div><div class="tt-age-bar" style="width:${lt55BarW}%"></div></div><div class="tt-age-col tt-age-ge"><div class="tt-age-lbl">≥ 55 ปี</div><div class="tt-age-num">${data.ge55}</div><div class="tt-age-pct">${ge55Pct}%</div><div class="tt-age-bar" style="width:${ge55BarW}%"></div></div></div>`;
+
+  // PDX with age columns
+  html += '<div class="tt-div"></div><div class="tt-sub">วินิจฉัยโรคหลัก (PDX)</div>';
+  html += '<div class="tt-pdx-hdr"><span>โรค</span><span>&lt;55</span><span>≥55</span><span>สัดส่วน</span></div>';
+  data.pdx.forEach(p => {
+    const pct = (p.cases / data.total * 100).toFixed(1);
+    const barW = (p.cases / max * 100).toFixed(0);
+    const lt55 = p.lt55 ?? 0;
+    const ge55 = p.ge55 ?? 0;
+    html += `<div class="tt-pdx-row"><span class="tt-pdx-name" title="${p.name}">${p.name}</span><span class="tt-pdx-n tt-pdx-lt">${lt55||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${ge55||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
+  });
+  tip.innerHTML = html;
+  tip.style.display = 'block';
+}
+
+// ── INIT ──
+window.addEventListener('load', () => { buildFilter(); render(); initTooltip(); });
+window.addEventListener('resize', () => {
+  renderTrend(normMonthly(PROV_DATA[currentProv].monthly, currentProv));
+});
+if (window.matchMedia('(prefers-reduced-motion:reduce)').matches) {
+  document.querySelectorAll('.mbar-fill,.demo-fill,.hero-fill').forEach(el => el.style.transition='none');
+}
+</script>
+</body>
+</html>
