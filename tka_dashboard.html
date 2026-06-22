@@ -246,8 +246,8 @@ tbody tr:hover td{background:var(--surface2)}
       <button class="tab-btn active" onclick="switchTab(this,'tab-pdx')">รายโรค (pdx)</button>
       <button class="tab-btn" onclick="switchTab(this,'tab-hosp')">รายหน่วยบริการ</button>
     </div>
-    <div id="tab-pdx" class="tab-pane active"><table><thead><tr><th>รหัส</th><th>คำวินิจฉัย</th><th style="text-align:right;color:var(--a2)">&lt;55</th><th style="text-align:right;color:var(--accent)">≥55</th><th style="width:180px">สัดส่วน</th></tr></thead><tbody id="pdxTbody"></tbody></table><div class="fn">M17x = ข้อเข่าเสื่อม · T84x = ภาวะแทรกซ้อนจากข้อเทียม · นับ distinct PID</div></div>
-    <div id="tab-hosp" class="tab-pane"><table><thead><tr><th id="hospProvCol">จังหวัด</th><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right;color:var(--a2)">&lt;55</th><th style="text-align:right;color:var(--accent)">≥55</th><th style="width:150px">สัดส่วน</th></tr></thead><tbody id="hospTbody"></tbody></table><div class="fn">นับ distinct PID per หน่วยบริการ</div></div>
+    <div id="tab-pdx" class="tab-pane active"><table><thead><tr><th>รหัส</th><th>คำวินิจฉัย</th><th style="text-align:right;color:var(--a2)">&lt;55</th><th style="text-align:right;color:var(--accent)">≥55</th><th style="width:180px">เทียบสัดส่วนต่อทั้งหมด</th></tr></thead><tbody id="pdxTbody"></tbody></table><div class="fn">M17x = ข้อเข่าเสื่อม · T84x = ภาวะแทรกซ้อนจากข้อเทียม · นับ distinct PID</div></div>
+    <div id="tab-hosp" class="tab-pane"><table><thead><tr><th id="hospProvCol">จังหวัด</th><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right;color:var(--a2)">&lt;55</th><th style="text-align:right;color:var(--accent)">≥55</th><th style="width:150px">เทียบสัดส่วนต่อทั้งหมด</th></tr></thead><tbody id="hospTbody"></tbody></table><div class="fn">นับ distinct PID per หน่วยบริการ</div></div>
   </div>
 
 </div>
@@ -668,7 +668,7 @@ function initTooltip() {
       }).filter(d => d.cases > 0).sort((a,b) => b.cases - a.cases);
       if (breakdown.length) {
         html += '<div class="tt-div"></div><div class="tt-sub">แยกจังหวัด · คลิกเพื่อดูรายรพ.</div>';
-        html += '<div class="tt-pdx-hdr"><span>จังหวัด</span><span>&lt;55</span><span>≥55</span><span>สัดส่วน</span></div>';
+        html += '<div class="tt-pdx-hdr"><span>จังหวัด</span><span>&lt;55</span><span>≥55</span><span>%</span></div>';
         breakdown.forEach(d => {
           const pct = (d.cases / m.cases * 100).toFixed(1);
           const barW = (d.cases / breakdown[0].cases * 100).toFixed(0);
@@ -686,7 +686,7 @@ function initTooltip() {
       html += buildAgeHtml(hLt55, hGe55);
       if (hospBreakdown.length) {
         html += '<div class="tt-div"></div><div class="tt-sub">แยกหน่วยบริการ · คลิกเพื่อดูโรค</div>';
-        html += '<div class="tt-pdx-hdr"><span>รพ.</span><span>&lt;55</span><span>≥55</span><span>สัดส่วน</span></div>';
+        html += '<div class="tt-pdx-hdr"><span>รพ.</span><span>&lt;55</span><span>≥55</span><span>%</span></div>';
         hospBreakdown.forEach(h => {
           const pct = (h.cases / m.cases * 100).toFixed(1);
           const barW = (h.cases / hospBreakdown[0].cases * 100).toFixed(0);
@@ -743,7 +743,7 @@ function tipSelectProv(prov, monthLabel) {
   html += buildAgeHtml(sLt55, sGe55);
   if (hospBreakdown.length) {
     html += '<div class="tt-div"></div><div class="tt-sub">แยกหน่วยบริการ · คลิกเพื่อดูโรค</div>';
-    html += '<div class="tt-pdx-hdr"><span>รพ.</span><span>&lt;55</span><span>≥55</span><span>สัดส่วน</span></div>';
+    html += '<div class="tt-pdx-hdr"><span>รพ.</span><span>&lt;55</span><span>≥55</span><span>%</span></div>';
     hospBreakdown.forEach(h => {
       const pct = (h.cases / m.cases * 100).toFixed(1);
       const barW = (h.cases / hospBreakdown[0].cases * 100).toFixed(0);
@@ -778,7 +778,7 @@ function tipShowHospPdx(hospName, monthLabel) {
 
   // PDX with age columns
   html += '<div class="tt-div"></div><div class="tt-sub">วินิจฉัยโรคหลัก (PDX)</div>';
-  html += '<div class="tt-pdx-hdr"><span>โรค</span><span>&lt;55</span><span>≥55</span><span>สัดส่วน</span></div>';
+  html += '<div class="tt-pdx-hdr"><span>โรค</span><span>&lt;55</span><span>≥55</span><span>%</span></div>';
   data.pdx.forEach(p => {
     const pct = (p.cases / data.total * 100).toFixed(1);
     const barW = (p.cases / max * 100).toFixed(0);
