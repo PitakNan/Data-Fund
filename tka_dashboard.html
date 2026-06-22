@@ -242,7 +242,7 @@ tbody tr:hover td{background:var(--ground)}
       <button class="tab-btn" onclick="switchTab(this,'tab-hosp')">รายหน่วยบริการ</button>
     </div>
     <div id="tab-pdx" class="tab-pane active"><table><thead><tr><th>รหัส</th><th>คำวินิจฉัย</th><th style="text-align:right">ราย</th><th style="width:180px">สัดส่วน</th></tr></thead><tbody id="pdxTbody"></tbody></table><div class="fn">M17x = ข้อเข่าเสื่อม · T84x = ภาวะแทรกซ้อนจากข้อเทียม · นับ distinct PID</div></div>
-    <div id="tab-hosp" class="tab-pane"><table><thead><tr><th id="hospProvCol">จังหวัด</th><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right">ราย</th><th style="width:150px">สัดส่วน</th></tr></thead><tbody id="hospTbody"></tbody></table><div class="fn">นับ distinct PID per หน่วยบริการ</div></div>
+    <div id="tab-hosp" class="tab-pane"><table><thead><tr><th id="hospProvCol">จังหวัด</th><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right;color:var(--a2)">&lt;55</th><th style="text-align:right;color:var(--accent)">≥55</th><th style="width:150px">สัดส่วน</th></tr></thead><tbody id="hospTbody"></tbody></table><div class="fn">นับ distinct PID per หน่วยบริการ</div></div>
   </div>
 
 </div>
@@ -568,14 +568,20 @@ function renderHosp(d, isAll) {
   const max = d.hospitals[0]?.cases||1;
   const total = d.total||1;
   document.getElementById('hospProvCol').style.display = isAll ? '' : 'none';
-  document.getElementById('hospTbody').innerHTML = d.hospitals.map(h => `
+  document.getElementById('hospTbody').innerHTML = d.hospitals.map(h => {
+    const mdata = HOSP_MONTH_PDX[h.hosp] || {};
+    let hLt55 = 0, hGe55 = 0;
+    Object.values(mdata).forEach(m => { hLt55 += m.lt55; hGe55 += m.ge55; });
+    return `
     <tr>
       ${isAll ? `<td>${HOSP_PROV[h.hosp]||'—'}</td>` : ''}
       <td>${h.hosp}</td>
       <td><span class="badge ${bmap[h.htype]||'b-o'}">${h.htype}</span></td>
-      <td class="td-r">${h.cases.toLocaleString()}</td>
+      <td class="td-r" style="color:var(--a2);font-weight:600">${hLt55||'-'}</td>
+      <td class="td-r" style="color:var(--accent);font-weight:600">${hGe55||'-'}</td>
       <td><div class="ibar-wrap"><div class="ibar-track"><div class="ibar-fill" style="width:${(h.cases/max*100).toFixed(0)}%"></div></div><span style="font-family:monospace;font-size:10px;color:var(--muted);width:34px;text-align:right">${(h.cases/total*100).toFixed(1)}%</span></div></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 // ── TABS ──
