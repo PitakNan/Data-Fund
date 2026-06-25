@@ -138,7 +138,7 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
 <div class="nav" id="nav">
   <span class="navbtn home" onclick="go('home')">&#8962; Home</span>
   <span class="navbtn" id="nav-overview" data-pg="overview" onclick="go('overview')">ภาพรวม</span>
-  <span class="navbtn" data-pg="tka" onclick="location.href='tka_dashboard.html'">TKA</span>
+  <span class="navbtn" data-pg="tka" onclick="location.href='_TKA/tka_dashboard.html'">TKA</span>
   <span class="navbtn" data-pg="nb" onclick="go('nb')">NB &lt;1,500g</span>
   <span class="navbtn" data-pg="refer" onclick="go('refer')">ส่งต่อออกนอก</span>
   <span class="navbtn" data-pg="psych" onclick="go('psych')">จิตเวช</span>
@@ -629,7 +629,7 @@ function renderHome(){
     const yrs=[...d.yearly].sort((a,b)=>a.yr>b.yr?1:-1);
     const yrMin='ปีงบ '+yrs[0].yr,yrMax='ปีงบ '+yrs[yrs.length-1].yr;
     const spk=mkSparkSVG(yrs.map(r=>r.cases),ICOL[k]);
-    h+='<div class="pcard" style="--cc:'+ICOL[k]+'" onclick="go(\''+k+'\')">'+
+    h+='<div class="pcard" style="--cc:'+ICOL[k]+'" onclick="'+(k==='tka'?"location.href=\'_TKA/tka_dashboard.html\'":"go(\'"+k+"\')")+'">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
         '<div><div class="ic">'+ICON[k]+'</div><h3>'+TITLE[k]+'</h3></div>'+
         '<div style="font-size:11px;color:var(--mut);text-align:right">'+yrMin+'–'+yrMax+'</div>'+
