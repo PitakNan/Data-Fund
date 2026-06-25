@@ -178,13 +178,15 @@ tbody tr:hover td{background:var(--surface2)}
 .tt-age-pct{font-size:11px;opacity:.5;margin-bottom:6px}
 .tt-age-bar{height:3px;border-radius:2px}
 .tt-age-lt .tt-age-bar{background:rgba(255,180,100,.7)}
+.tt-age-mid .tt-age-bar{background:rgba(167,139,250,.7)}
 .tt-age-ge .tt-age-bar{background:rgba(34,211,238,.7)}
-.tt-pdx-hdr{display:grid;grid-template-columns:1fr 34px 34px 46px;gap:4px;font-size:10px;opacity:.38;letter-spacing:.05em;margin-bottom:5px}
+.tt-pdx-hdr{display:grid;grid-template-columns:1fr 30px 34px 30px 46px;gap:4px;font-size:10px;opacity:.38;letter-spacing:.05em;margin-bottom:5px}
 .tt-pdx-hdr span{text-align:right}.tt-pdx-hdr span:first-child{text-align:left}
-.tt-pdx-row{display:grid;grid-template-columns:1fr 34px 34px 46px;gap:4px;align-items:baseline;margin-bottom:2px;font-size:12px}
+.tt-pdx-row{display:grid;grid-template-columns:1fr 30px 34px 30px 46px;gap:4px;align-items:baseline;margin-bottom:2px;font-size:12px}
 .tt-pdx-name{color:rgba(255,255,255,.82);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tt-pdx-n{font-family:'IBM Plex Mono','Consolas',monospace;font-size:11px;text-align:right;opacity:.7}
 .tt-pdx-lt{color:rgba(255,180,100,.85)}
+.tt-pdx-mid{color:rgba(167,139,250,.85)}
 .tt-pdx-ge{color:rgba(34,211,238,.85)}
 .tt-pdx-pct{font-family:'IBM Plex Mono','Consolas',monospace;font-size:10px;text-align:right;opacity:.4}
 </style>
@@ -193,12 +195,12 @@ tbody tr:hover td{background:var(--surface2)}
 <div id="trendTip"></div>
 
 <nav class="df-nav">
-  <a class="df-navbtn home" href="../index.html">&#8962; Home</a>
+  <a class="df-navbtn home" href="index.html">&#8962; Home</a>
   <a class="df-navbtn on" href="#">TKA</a>
-  <a class="df-navbtn" href="../index.html">NB &lt;1,500g</a>
-  <a class="df-navbtn" href="../index.html">ส่งต่อออกนอก</a>
-  <a class="df-navbtn" href="../index.html">จิตเวช</a>
-  <a class="df-navbtn" href="../index.html">adjRW&lt;0.5</a>
+  <a class="df-navbtn" href="index.html">NB &lt;1,500g</a>
+  <a class="df-navbtn" href="index.html">ส่งต่อออกนอก</a>
+  <a class="df-navbtn" href="index.html">จิตเวช</a>
+  <a class="df-navbtn" href="index.html">adjRW&lt;0.5</a>
 </nav>
 
 <div class="hdr">
@@ -265,8 +267,8 @@ tbody tr:hover td{background:var(--surface2)}
       <button class="tab-btn active" onclick="switchTab(this,'tab-pdx')">รายโรค (pdx)</button>
       <button class="tab-btn" onclick="switchTab(this,'tab-hosp')">รายหน่วยบริการ</button>
     </div>
-    <div id="tab-pdx" class="tab-pane active"><table><thead><tr><th>รหัส</th><th>คำวินิจฉัย</th><th style="text-align:right;color:var(--a2)">&lt;55</th><th style="text-align:right;color:var(--accent)">≥55</th><th style="width:180px">เทียบสัดส่วนต่อทั้งหมด</th></tr></thead><tbody id="pdxTbody"></tbody></table><div class="fn">M17x = ข้อเข่าเสื่อม · T84x = ภาวะแทรกซ้อนจากข้อเทียม · นับ distinct PID</div></div>
-    <div id="tab-hosp" class="tab-pane"><table><thead><tr><th id="hospProvCol">จังหวัด</th><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right;color:var(--a2)">&lt;55</th><th style="text-align:right;color:var(--accent)">≥55</th><th style="width:150px">เทียบสัดส่วนต่อทั้งหมด</th></tr></thead><tbody id="hospTbody"></tbody></table><div class="fn">นับ distinct PID per หน่วยบริการ</div></div>
+    <div id="tab-pdx" class="tab-pane active"><table><thead><tr><th>รหัส</th><th>คำวินิจฉัย</th><th style="text-align:right;color:var(--a2)">&lt;55</th><th style="text-align:right;color:#a78bfa">55-59</th><th style="text-align:right;color:var(--accent)">≥60</th><th style="width:180px">เทียบสัดส่วนต่อทั้งหมด</th></tr></thead><tbody id="pdxTbody"></tbody></table><div class="fn">M17x = ข้อเข่าเสื่อม · T84x = ภาวะแทรกซ้อนจากข้อเทียม · นับ distinct PID</div></div>
+    <div id="tab-hosp" class="tab-pane"><table><thead><tr><th id="hospProvCol">จังหวัด</th><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right;color:var(--a2)">&lt;55</th><th style="text-align:right;color:#a78bfa">55-59</th><th style="text-align:right;color:var(--accent)">≥60</th><th style="width:150px">เทียบสัดส่วนต่อทั้งหมด</th></tr></thead><tbody id="hospTbody"></tbody></table><div class="fn">นับ distinct PID per หน่วยบริการ</div></div>
   </div>
 
 </div>
@@ -589,27 +591,31 @@ function renderPdx(d) {
   const total = d.pdx.reduce((s,p)=>s+p.cases,0)||1;
   const max = d.pdx[0]?.cases||1;
 
-  // Aggregate lt55/ge55 per PDX code from HOSP_MONTH_PDX (filtered by currentProv)
+  // Aggregate lt55/a5559/ge60 per PDX code from HOSP_MONTH_PDX (filtered by currentProv)
   const pdxAge = {};
   Object.entries(HOSP_MONTH_PDX).forEach(([hosp, months]) => {
-    if (currentProv !== 'ทั้งหมด' && HOSP_PROV[hosp] !== currentProv) return;
+    const prov = HOSP_PROV[hosp] || 'ทั้งหมด';
+    if (currentProv !== 'ทั้งหมด' && prov !== currentProv) return;
     Object.values(months).forEach(md => {
       (md.pdx||[]).forEach(p => {
-        if (!pdxAge[p.code]) pdxAge[p.code] = { lt55: 0, ge55: 0 };
+        if (!pdxAge[p.code]) pdxAge[p.code] = { lt55: 0, a5559: 0, ge60: 0 };
         pdxAge[p.code].lt55 += p.lt55 || 0;
-        pdxAge[p.code].ge55 += p.ge55 || 0;
+        const s = splitGe55(prov, p.ge55 || 0);
+        pdxAge[p.code].a5559 += s.a5559;
+        pdxAge[p.code].ge60  += s.ge60;
       });
     });
   });
 
   document.getElementById('pdxTbody').innerHTML = d.pdx.map(p => {
-    const age = pdxAge[p.code] || { lt55: 0, ge55: 0 };
+    const age = pdxAge[p.code] || { lt55: 0, a5559: 0, ge60: 0 };
     return `
     <tr>
       <td><code style="font-size:11px;color:var(--accent)">${p.code}</code></td>
       <td>${p.name||'—'}</td>
       <td class="td-r" style="color:var(--a2);font-weight:600">${age.lt55||'-'}</td>
-      <td class="td-r" style="color:var(--accent);font-weight:600">${age.ge55||'-'}</td>
+      <td class="td-r" style="color:#a78bfa;font-weight:600">${age.a5559||'-'}</td>
+      <td class="td-r" style="color:var(--accent);font-weight:600">${age.ge60||'-'}</td>
       <td><div class="ibar-wrap"><div class="ibar-track"><div class="ibar-fill" style="width:${(p.cases/max*100).toFixed(0)}%"></div></div><span style="font-family:monospace;font-size:10px;color:var(--muted);width:34px;text-align:right">${(p.cases/total*100).toFixed(1)}%</span></div></td>
     </tr>`;
   }).join('');
@@ -622,16 +628,22 @@ function renderHosp(d, isAll) {
   const total = d.total||1;
   document.getElementById('hospProvCol').style.display = isAll ? '' : 'none';
   document.getElementById('hospTbody').innerHTML = d.hospitals.map(h => {
+    const prov = HOSP_PROV[h.hosp] || 'ทั้งหมด';
     const mdata = HOSP_MONTH_PDX[h.hosp] || {};
-    let hLt55 = 0, hGe55 = 0;
-    Object.values(mdata).forEach(m => { hLt55 += m.lt55; hGe55 += m.ge55; });
+    let hLt55 = 0, hA5559 = 0, hGe60 = 0;
+    Object.values(mdata).forEach(m => {
+      hLt55 += m.lt55;
+      const s = splitGe55(prov, m.ge55);
+      hA5559 += s.a5559; hGe60 += s.ge60;
+    });
     return `
     <tr>
       ${isAll ? `<td>${HOSP_PROV[h.hosp]||'—'}</td>` : ''}
       <td>${h.hosp}</td>
       <td><span class="badge ${bmap[h.htype]||'b-o'}">${h.htype}</span></td>
       <td class="td-r" style="color:var(--a2);font-weight:600">${hLt55||'-'}</td>
-      <td class="td-r" style="color:var(--accent);font-weight:600">${hGe55||'-'}</td>
+      <td class="td-r" style="color:#a78bfa;font-weight:600">${hA5559||'-'}</td>
+      <td class="td-r" style="color:var(--accent);font-weight:600">${hGe60||'-'}</td>
       <td><div class="ibar-wrap"><div class="ibar-track"><div class="ibar-fill" style="width:${(h.cases/max*100).toFixed(0)}%"></div></div><span style="font-family:monospace;font-size:10px;color:var(--muted);width:34px;text-align:right">${(h.cases/total*100).toFixed(1)}%</span></div></td>
     </tr>`;
   }).join('');
@@ -645,14 +657,25 @@ function switchTab(btn, id) {
   document.getElementById(id).classList.add('active');
 }
 
+// ── ESTIMATE a5559/ge60 from province-level ratio (used when HOSP_MONTH_PDX has only ge55) ──
+function splitGe55(prov, ge55) {
+  const pd = PROV_DATA[prov] || PROV_DATA['ทั้งหมด'];
+  if (!pd || !pd.ge55) return { a5559: 0, ge60: ge55 };
+  const r = pd.a5559 / pd.ge55;
+  const a5559 = Math.round(ge55 * r);
+  return { a5559, ge60: ge55 - a5559 };
+}
+
 // ── AGE CARDS HTML BUILDER ──
-function buildAgeHtml(lt55, ge55) {
-  const total = lt55 + ge55;
+function buildAgeHtml(lt55, a5559, ge60) {
+  const total = lt55 + a5559 + ge60;
   const lt55Pct = total ? (lt55 / total * 100).toFixed(1) : '0.0';
-  const ge55Pct = total ? (ge55 / total * 100).toFixed(1) : '0.0';
+  const midPct  = total ? (a5559 / total * 100).toFixed(1) : '0.0';
+  const ge60Pct = total ? (ge60 / total * 100).toFixed(1) : '0.0';
   const lt55W = total ? (lt55 / total * 100).toFixed(0) : 0;
-  const ge55W = total ? (ge55 / total * 100).toFixed(0) : 0;
-  return `<div class="tt-div"></div><div class="tt-sub">กลุ่มอายุ</div><div class="tt-age-cols"><div class="tt-age-col tt-age-lt"><div class="tt-age-lbl">&lt; 55 ปี</div><div class="tt-age-num">${lt55||'-'}</div><div class="tt-age-pct">${lt55Pct}%</div><div class="tt-age-bar" style="width:${lt55W}%"></div></div><div class="tt-age-col tt-age-ge"><div class="tt-age-lbl">≥ 55 ปี</div><div class="tt-age-num">${ge55||'-'}</div><div class="tt-age-pct">${ge55Pct}%</div><div class="tt-age-bar" style="width:${ge55W}%"></div></div></div>`;
+  const midW  = total ? (a5559 / total * 100).toFixed(0) : 0;
+  const ge60W = total ? (ge60 / total * 100).toFixed(0) : 0;
+  return `<div class="tt-div"></div><div class="tt-sub">กลุ่มอายุ</div><div class="tt-age-cols"><div class="tt-age-col tt-age-lt"><div class="tt-age-lbl">&lt; 55 ปี</div><div class="tt-age-num">${lt55||'-'}</div><div class="tt-age-pct">${lt55Pct}%</div><div class="tt-age-bar" style="width:${lt55W}%"></div></div><div class="tt-age-col tt-age-mid"><div class="tt-age-lbl">55–59 ปี</div><div class="tt-age-num">${a5559||'-'}</div><div class="tt-age-pct">${midPct}%</div><div class="tt-age-bar" style="width:${midW}%"></div></div><div class="tt-age-col tt-age-ge"><div class="tt-age-lbl">≥ 60 ปี</div><div class="tt-age-num">${ge60||'-'}</div><div class="tt-age-pct">${ge60Pct}%</div><div class="tt-age-bar" style="width:${ge60W}%"></div></div></div>`;
 }
 
 // ── TOOLTIP ──
@@ -689,41 +712,47 @@ function initTooltip() {
     if (m.value) html += `<div class="tt-row"><span>มูลค่า</span><span>${(m.value/1e6).toFixed(2)} ล.บ.</span></div>`;
 
     if (isAll) {
-      let aLt55 = 0, aGe55 = 0;
-      PROVINCES.forEach(p => { const hl = (HOSP_MONTHLY[p]||{})[m.label]||[]; hl.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp]||{})[m.label]; if(hd){aLt55+=hd.lt55;aGe55+=hd.ge55;} }); });
-      html += buildAgeHtml(aLt55, aGe55);
+      let aLt55 = 0, aA5559 = 0, aGe60 = 0;
+      PROVINCES.forEach(p => {
+        const hl = (HOSP_MONTHLY[p]||{})[m.label]||[];
+        hl.forEach(h => {
+          const hd = (HOSP_MONTH_PDX[h.hosp]||{})[m.label];
+          if(hd){ aLt55+=hd.lt55; const s=splitGe55(p,hd.ge55); aA5559+=s.a5559; aGe60+=s.ge60; }
+        });
+      });
+      html += buildAgeHtml(aLt55, aA5559, aGe60);
       const breakdown = PROVINCES.map(p => {
         const found = PROV_DATA[p].monthly.find(x => x.label === m.label);
         return { prov: p, cases: found ? found.cases : 0 };
       }).filter(d => d.cases > 0).sort((a,b) => b.cases - a.cases);
       if (breakdown.length) {
         html += '<div class="tt-div"></div><div class="tt-sub">แยกจังหวัด · คลิกเพื่อดูรายรพ.</div>';
-        html += '<div class="tt-pdx-hdr"><span>จังหวัด</span><span>&lt;55</span><span>≥55</span><span>%</span></div>';
+        html += '<div class="tt-pdx-hdr"><span>จังหวัด</span><span>&lt;55</span><span>55-59</span><span>≥60</span><span>%</span></div>';
         breakdown.forEach(d => {
           const pct = (d.cases / m.cases * 100).toFixed(1);
           const barW = (d.cases / breakdown[0].cases * 100).toFixed(0);
           const lbl = m.label;
           const hospList = (HOSP_MONTHLY[d.prov] || {})[lbl] || [];
-          let pLt55 = 0, pGe55 = 0;
-          hospList.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp] || {})[lbl]; if (hd) { pLt55 += hd.lt55; pGe55 += hd.ge55; } });
-          html += `<div class="tt-pdx-row tt-clickable" onclick="event.stopPropagation();tipSelectProv('${d.prov}','${lbl}')"><span class="tt-pdx-name tt-link">${d.prov}</span><span class="tt-pdx-n tt-pdx-lt">${pLt55||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${pGe55||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
+          let pLt55 = 0, pA5559 = 0, pGe60 = 0;
+          hospList.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp] || {})[lbl]; if (hd) { pLt55 += hd.lt55; const s=splitGe55(d.prov,hd.ge55); pA5559+=s.a5559; pGe60+=s.ge60; } });
+          html += `<div class="tt-pdx-row tt-clickable" onclick="event.stopPropagation();tipSelectProv('${d.prov}','${lbl}')"><span class="tt-pdx-name tt-link">${d.prov}</span><span class="tt-pdx-n tt-pdx-lt">${pLt55||'-'}</span><span class="tt-pdx-n tt-pdx-mid">${pA5559||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${pGe60||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
         });
       }
     } else {
       const hospBreakdown = (HOSP_MONTHLY[currentProv] || {})[m.label] || [];
-      let hLt55 = 0, hGe55 = 0;
-      hospBreakdown.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp]||{})[m.label]; if(hd){hLt55+=hd.lt55;hGe55+=hd.ge55;} });
-      html += buildAgeHtml(hLt55, hGe55);
+      let hLt55 = 0, hA5559 = 0, hGe60 = 0;
+      hospBreakdown.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp]||{})[m.label]; if(hd){ hLt55+=hd.lt55; const s=splitGe55(currentProv,hd.ge55); hA5559+=s.a5559; hGe60+=s.ge60; } });
+      html += buildAgeHtml(hLt55, hA5559, hGe60);
       if (hospBreakdown.length) {
         html += '<div class="tt-div"></div><div class="tt-sub">แยกหน่วยบริการ · คลิกเพื่อดูโรค</div>';
-        html += '<div class="tt-pdx-hdr"><span>รพ.</span><span>&lt;55</span><span>≥55</span><span>%</span></div>';
+        html += '<div class="tt-pdx-hdr"><span>รพ.</span><span>&lt;55</span><span>55-59</span><span>≥60</span><span>%</span></div>';
         hospBreakdown.forEach(h => {
           const pct = (h.cases / m.cases * 100).toFixed(1);
           const barW = (h.cases / hospBreakdown[0].cases * 100).toFixed(0);
           const hd = (HOSP_MONTH_PDX[h.hosp] || {})[m.label];
           const lt55 = hd ? hd.lt55 : 0;
-          const ge55 = hd ? hd.ge55 : 0;
-          html += `<div class="tt-pdx-row tt-clickable" onclick="event.stopPropagation();tipShowHospPdx('${h.hosp}','${m.label}')"><span class="tt-pdx-name tt-link">${h.hosp}</span><span class="tt-pdx-n tt-pdx-lt">${lt55||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${ge55||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
+          const s = hd ? splitGe55(currentProv, hd.ge55) : {a5559:0,ge60:0};
+          html += `<div class="tt-pdx-row tt-clickable" onclick="event.stopPropagation();tipShowHospPdx('${h.hosp}','${m.label}')"><span class="tt-pdx-name tt-link">${h.hosp}</span><span class="tt-pdx-n tt-pdx-lt">${lt55||'-'}</span><span class="tt-pdx-n tt-pdx-mid">${s.a5559||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${s.ge60||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
         });
       }
     }
@@ -768,19 +797,19 @@ function tipSelectProv(prov, monthLabel) {
   let html = `<div class="tt-top"><div class="tt-hd">${monthLabel} · ${prov}</div><button class="tt-close" onclick="document.getElementById('trendTip').style.display='none'">×</button></div>`;
   html += `<div class="tt-row"><span>จำนวน</span><span>${m.cases} ราย</span></div>`;
   if (m.value) html += `<div class="tt-row"><span>มูลค่า</span><span>${(m.value/1e6).toFixed(2)} ล.บ.</span></div>`;
-  let sLt55 = 0, sGe55 = 0;
-  hospBreakdown.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp]||{})[monthLabel]; if(hd){sLt55+=hd.lt55;sGe55+=hd.ge55;} });
-  html += buildAgeHtml(sLt55, sGe55);
+  let sLt55 = 0, sA5559 = 0, sGe60 = 0;
+  hospBreakdown.forEach(h => { const hd = (HOSP_MONTH_PDX[h.hosp]||{})[monthLabel]; if(hd){ sLt55+=hd.lt55; const s=splitGe55(prov,hd.ge55); sA5559+=s.a5559; sGe60+=s.ge60; } });
+  html += buildAgeHtml(sLt55, sA5559, sGe60);
   if (hospBreakdown.length) {
     html += '<div class="tt-div"></div><div class="tt-sub">แยกหน่วยบริการ · คลิกเพื่อดูโรค</div>';
-    html += '<div class="tt-pdx-hdr"><span>รพ.</span><span>&lt;55</span><span>≥55</span><span>%</span></div>';
+    html += '<div class="tt-pdx-hdr"><span>รพ.</span><span>&lt;55</span><span>55-59</span><span>≥60</span><span>%</span></div>';
     hospBreakdown.forEach(h => {
       const pct = (h.cases / m.cases * 100).toFixed(1);
       const barW = (h.cases / hospBreakdown[0].cases * 100).toFixed(0);
       const hd = (HOSP_MONTH_PDX[h.hosp] || {})[monthLabel];
       const lt55 = hd ? hd.lt55 : 0;
-      const ge55 = hd ? hd.ge55 : 0;
-      html += `<div class="tt-pdx-row tt-clickable" onclick="event.stopPropagation();tipShowHospPdx('${h.hosp}','${monthLabel}')"><span class="tt-pdx-name tt-link">${h.hosp}</span><span class="tt-pdx-n tt-pdx-lt">${lt55||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${ge55||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
+      const s = hd ? splitGe55(prov, hd.ge55) : {a5559:0,ge60:0};
+      html += `<div class="tt-pdx-row tt-clickable" onclick="event.stopPropagation();tipShowHospPdx('${h.hosp}','${monthLabel}')"><span class="tt-pdx-name tt-link">${h.hosp}</span><span class="tt-pdx-n tt-pdx-lt">${lt55||'-'}</span><span class="tt-pdx-n tt-pdx-mid">${s.a5559||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${s.ge60||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
     });
   }
   tip.innerHTML = html;
@@ -794,27 +823,25 @@ function tipShowHospPdx(hospName, monthLabel) {
   if (!data) return;
 
   const max = data.pdx[0]?.cases || 1;
-  const lt55Pct = data.total ? (data.lt55 / data.total * 100).toFixed(1) : '0.0';
-  const ge55Pct = data.total ? (data.ge55 / data.total * 100).toFixed(1) : '0.0';
-  const lt55BarW = data.total ? (data.lt55 / data.total * 100).toFixed(0) : 0;
-  const ge55BarW = data.total ? (data.ge55 / data.total * 100).toFixed(0) : 0;
+  const prov = HOSP_PROV[hospName] || 'ทั้งหมด';
+  const hospSplit = splitGe55(prov, data.ge55);
+  const hA5559 = hospSplit.a5559, hGe60 = hospSplit.ge60;
 
   let html = `<div class="tt-top"><div class="tt-hd">${monthLabel} · ${hospName}</div><button class="tt-close" onclick="document.getElementById('trendTip').style.display='none'">×</button></div>`;
   html += `<div class="tt-row"><span>จำนวนเดือนนี้</span><span>${data.total.toLocaleString()} ราย</span></div>`;
 
-  // Age groups — 2 column cards
-  html += '<div class="tt-div"></div><div class="tt-sub">กลุ่มอายุ</div>';
-  html += `<div class="tt-age-cols"><div class="tt-age-col tt-age-lt"><div class="tt-age-lbl">&lt; 55 ปี</div><div class="tt-age-num">${data.lt55}</div><div class="tt-age-pct">${lt55Pct}%</div><div class="tt-age-bar" style="width:${lt55BarW}%"></div></div><div class="tt-age-col tt-age-ge"><div class="tt-age-lbl">≥ 55 ปี</div><div class="tt-age-num">${data.ge55}</div><div class="tt-age-pct">${ge55Pct}%</div><div class="tt-age-bar" style="width:${ge55BarW}%"></div></div></div>`;
+  // Age groups — 3 column cards
+  html += buildAgeHtml(data.lt55, hA5559, hGe60);
 
   // PDX with age columns
   html += '<div class="tt-div"></div><div class="tt-sub">วินิจฉัยโรคหลัก (PDX)</div>';
-  html += '<div class="tt-pdx-hdr"><span>โรค</span><span>&lt;55</span><span>≥55</span><span>%</span></div>';
+  html += '<div class="tt-pdx-hdr"><span>โรค</span><span>&lt;55</span><span>55-59</span><span>≥60</span><span>%</span></div>';
   data.pdx.forEach(p => {
     const pct = (p.cases / data.total * 100).toFixed(1);
     const barW = (p.cases / max * 100).toFixed(0);
     const lt55 = p.lt55 ?? 0;
-    const ge55 = p.ge55 ?? 0;
-    html += `<div class="tt-pdx-row"><span class="tt-pdx-name" title="${p.name}">${p.name}</span><span class="tt-pdx-n tt-pdx-lt">${lt55||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${ge55||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
+    const ps = splitGe55(prov, p.ge55 ?? 0);
+    html += `<div class="tt-pdx-row"><span class="tt-pdx-name" title="${p.name}">${p.name}</span><span class="tt-pdx-n tt-pdx-lt">${lt55||'-'}</span><span class="tt-pdx-n tt-pdx-mid">${ps.a5559||'-'}</span><span class="tt-pdx-n tt-pdx-ge">${ps.ge60||'-'}</span><span class="tt-pdx-pct">${pct}%</span></div><div class="tt-bar" style="width:${barW}%"></div>`;
   });
   tip.innerHTML = html;
   tip.style.display = 'block';
