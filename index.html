@@ -934,5 +934,7 @@ C('tAbs').onclick=()=>setTrend('abs');C('tIdx').onclick=()=>setTrend('index');
 C('reset').onclick=()=>{selYears=new Set(M.years);selIssues=new Set(M.issues);buildChips();renderOverview()};
 if(!SHOW_OVERVIEW){const _nov=C('nav-overview');if(_nov)_nov.style.display='none';}
 buildChips();renderHome();
+const _ph=window.location.hash.replace('#','');
+if(PAGES.includes(_ph)&&_ph!=='home'&&_ph!=='tka'){go(_ph);}
 </script>
 </body></html>
