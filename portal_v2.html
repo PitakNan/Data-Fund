@@ -156,6 +156,17 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
 .prov-filter{display:flex;gap:6px;padding:10px 24px;overflow-x:auto;background:rgba(0,0,0,.3);flex-wrap:wrap;border-bottom:1px solid var(--line)}
 .pf-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--line);background:none;color:var(--mut);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
 .pf-btn:hover{background:var(--card2);color:var(--ink)}.pf-btn.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tka-age-pie{display:flex;gap:16px;align-items:center;padding:12px 24px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.2)}
+.age-btn-col{display:flex;flex-direction:column;gap:5px;min-width:86px;flex-shrink:0}
+.tka-age-btn{cursor:pointer;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:500;color:var(--mut);background:var(--card2);border:1px solid var(--line);transition:.15s;text-align:center}
+.tka-age-btn:hover{color:var(--ink);border-color:rgba(34,211,238,.5)}.tka-age-btn.active{background:var(--accent);color:var(--accent-ink);font-weight:700;border-color:var(--accent)}
+.tka-pie-wrap{position:relative;flex-shrink:0}
+.tka-pie-legend{flex:1;display:flex;flex-direction:column;gap:3px;font-size:11.5px;min-width:0}
+.pie-leg-item{display:flex;align-items:center;gap:6px;padding:3px 7px;border-radius:6px;cursor:pointer;transition:.12s}
+.pie-leg-item:hover,.pie-leg-item.active{background:var(--card2)}
+.pie-leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.pie-leg-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.pie-leg-val{color:var(--mut);white-space:nowrap;font-family:monospace;font-size:11px}
 .tka-main{padding:16px 24px;display:flex;flex-direction:column;gap:12px}
 .tka-card{background:var(--card);border-radius:14px;border:1px solid var(--line)}
 .card-hd{padding:11px 16px 9px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
@@ -329,6 +340,7 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
     <div class="hero-right" id="tkaHeroRight"></div>
   </div>
   <div class="prov-filter" id="tkaProvFilter"></div>
+  <div id="tkaAgePie"></div>
 </div>
 <div class="tka-main">
   <div class="row2">
@@ -542,6 +554,8 @@ function renderTKAme(){
 }
 /* ── NB M&E Page ──────────────────────────────────────────────── */
 function renderNBme(){
+  const rws69nb=(FD.byIssue['nb']?.core||[]).filter(r=>String(r.yr)==='69').reduce((s,r)=>s+r.rws,0);
+  const progNb=C('nb_progress');if(progNb)progNb.innerHTML=issueHbarHTML(rws69nb,4687.42,2929.64);
   const hosps=ME.nb_hosp, lv=ME.nb_level, pyr=ME.nb_prov_yr;
   const total=hosps.reduce((s,r)=>s+r.cases,0);
   const lowCases=hosps.filter(r=>r.lvl_grp&&r.lvl_grp.includes('F2')||r.lvl_grp&&r.lvl_grp.includes('F3')).reduce((s,r)=>s+r.cases,0);
@@ -576,6 +590,8 @@ function renderNBme(){
 }
 /* ── PSYCH M&E Page ───────────────────────────────────────────── */
 function renderPsychMe(){
+  const rws69ps=(FD.byIssue['psych']?.core||[]).filter(r=>String(r.yr)==='69').reduce((s,r)=>s+r.rws,0);
+  const progPs=C('psych_progress');if(progPs)progPs.innerHTML=issueHbarHTML(rws69ps,0,0);
   const re=ME.psych_re, pyr=ME.psych_prov_yr;
   const avgRe=ME.psych_re_avg;
   const PROVS=['เชียงใหม่','เชียงราย','ลำปาง','แพร่','น่าน','ลำพูน','พะเยา','แม่ฮ่องสอน'];
@@ -608,6 +624,8 @@ function renderPsychMe(){
 }
 /* ── adjRW<0.5 M&E Page ───────────────────────────────────────── */
 function renderAdjMe(){
+  const rws69adj=(FD.byIssue['adjlow']?.core||[]).filter(r=>String(r.yr)==='69').reduce((s,r)=>s+r.rws,0);
+  const progAdj=C('adjlow_progress');if(progAdj)progAdj.innerHTML=issueHbarHTML(rws69adj,8009.42,5005.89);
   const hosps=ME.adj_hosp, los=ME.adj_los, pyr=ME.adj_prov_yr, pdx=ME.adj_pdx;
   const shortCases=ME.adj_short;
   const PROVS=['เชียงใหม่','เชียงราย','ลำปาง','แพร่','น่าน','ลำพูน','พะเยา','แม่ฮ่องสอน'];
@@ -869,6 +887,17 @@ function renderOverview(){
 
 /* ===== ISSUE PAGES (filterable + trend) ===== */
 let cur={k:null,years:null,levels:null,hosp:''};
+function issueHbarHTML(actual,targetYear,targetApr){
+  const n=v=>v.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+  if(!targetYear){
+    return `<div class="card" style="margin-bottom:12px"><div style="display:flex;flex-direction:column;gap:6px"><div class="hero-share-label">ความก้าวหน้าเทียบเป้าเขต 1 (ปี 2569)</div><div class="hbar-legend"><span style="opacity:.6">ยังไม่มีเป้าหมายกำหนด</span></div><div class="hbar-row"><span class="hbar-lbl">Adj.RW (ปีงบ 69)</span><div class="hbar-wrap"><div class="hbar-track"><div class="hbar-fill" style="width:100%;background:#22d3ee"></div><span class="hbar-tag" style="left:auto;right:0;transform:none;color:#e2e8f0">${n(actual)}</span></div></div></div></div></div>`;
+  }
+  const fillPct=+(actual/targetYear*100).toFixed(1);
+  const markPct=Math.min(+(targetApr/targetYear*100).toFixed(1),100);
+  const color=actual>=targetApr?'#22d3ee':'#fbbf24';
+  const fw=Math.min(fillPct,100).toFixed(1),tLeft=Math.min(fillPct,95).toFixed(1);
+  return `<div class="card" style="margin-bottom:12px"><div style="display:flex;flex-direction:column;gap:6px"><div class="hero-share-label">ความก้าวหน้าเทียบเป้าเขต 1 (ปี 2569)</div><div class="hbar-legend"><span><span class="hbar-legend-dot" style="background:${color}"></span>ผลงานจริง</span><span><span class="hbar-legend-tick"></span>เป้า ณ เม.ย.69</span><span style="opacity:.5">ปลายแถบ = เป้าทั้งปี</span></div><div class="hbar-row"><span class="hbar-lbl">Adj.RW (ปีงบ 69)</span><div class="hbar-wrap"><div class="hbar-track"><div class="hbar-fill" style="width:${fw}%;background:${color}"></div><span class="hbar-tag" style="left:${tLeft}%;color:${color}">${n(actual)}</span><div class="hbar-marker" style="left:${markPct}%"></div><span class="hbar-tag target" style="left:${markPct}%">${n(targetApr)}</span></div></div><span class="hbar-annual">${n(targetYear)}</span></div></div></div>`;
+}
 function head(k){return '<h1>'+ICON[k]+' '+TITLE[k]+'</h1><div class="sub">เจาะลึกรายมิติ พร้อมตัวกรอง <span class="navbtn home" style="margin-left:8px" onclick="go(\'home\')">&#8962; กลับสารบัญ</span></div>';}
 function grp(rows,kf,vf){const o={};rows.forEach(r=>{const k=kf(r);o[k]=(o[k]||0)+vf(r)});return Object.keys(o).map(k=>({k:k,v:o[k]})).sort((a,b)=>b.v-a.v);}
 function sumArr(rows,field,labels){const out=labels.map(()=>0);rows.forEach(r=>{if(r[field])r[field].forEach((v,i)=>{out[i]+=v})});return labels.map((l,i)=>({k:l,v:out[i]}));}
@@ -887,6 +916,7 @@ function renderIssue(k){
     h+='<div id="refer_matrixwrap"></div>';
     h+='<h2 class="sec">&#127973; Top โรค (PDX) ที่ส่งออก</h2><div class="card"><div class="hint" style="margin-bottom:6px">* คอลัมน์เป็นปี พ.ศ. · เชื่อมกับตัวกรองของตาราง Matrix (โรงพยาบาลต้นทาง + หน่วยวัด จำนวนครั้ง/adjRW)</div><div id="'+k+'_pdx"></div></div>';
   }else{
+    if(k==='nb'||k==='psych'||k==='adjlow')h+='<div id="'+k+'_progress"></div>';
     h+='<div class="grid">';
     h+=card('แนวโน้มรายปีงบ (ย้อนหลัง)','แท่ง=เคส · เส้น=เงิน · แสดงทุกปีงบที่มี (ปรับตาม รพ./ระดับหน่วย)',cv(k+'_trend','tall'),'c12');
     h+='<div id="'+k+'_spec" class="c12"></div>';
@@ -926,6 +956,7 @@ function renderReferPage(){
      '<span class="sep"></span><span class="chip" id="rmReset">&#8634; ล้าง</span>'+
      '</div>';
   h+='<div class="kpis" id="ik"></div>';
+  h+='<div id="refer_progress"></div>';
   h+='<div class="grid">'+card('แนวโน้มรายจังหวัด เทียบรายปีงบ (ย้อนหลัง)','แกน = จังหวัดต้นทาง · แท่งกลุ่ม = ปีงบ 66→69 · เส้นขาวซ้อน = ทิศทางเทรนด์ในจังหวัดนั้น · ค่าตามหน่วยวัดที่เลือก · กรองตามตัวกรองด้านบน',cv('refer_trend','tall'),'c12')+'</div>';
   h+='<div id="refer_matrixwrap"></div>';
   h+='<h2 class="sec">&#127973; Top โรค (PDX) ที่ส่งออก</h2><div class="card"><div class="hint" style="margin-bottom:6px">* คอลัมน์เป็นปี พ.ศ. ที่เลือก · ตามตัวกรองด้านบน (รพ.ต้นทาง + จังหวัด + หน่วยวัด)</div><div id="refer_pdx"></div></div>';
@@ -960,7 +991,10 @@ function referKpiTrend(){
   const ys=rmYsel(),yset=new Set(ys);
   const mode=rmMeasure,mi=RMU[mode].mi,money=(mode!=='c');
   // KPI totals + per-province×year (respect from + year + prov filters)
-  let cnt=0,rw=0,baht=0;const dset=new Set();
+  let cnt=0,rw=0,baht=0;
+  const yi69=RM.years.findIndex(y=>y.slice(2)==='69');
+  let rw69refer=0;if(yi69>=0)RM.cells.forEach(c=>{if(c[2]===yi69)rw69refer+=c[5];});
+  const progRef=C('refer_progress');if(progRef)progRef.innerHTML=issueHbarHTML(rw69refer,70910,44318.75);const dset=new Set();
   const provList=RM.provs.filter(p=>rmProv.has(p));
   const byPY={};provList.forEach(p=>{byPY[p]={};ys.forEach(yi=>byPY[p][yi]=0);});
   RM.cells.forEach(c=>{const fi=c[0],di=c[1],yi=c[2];
@@ -1124,21 +1158,35 @@ const TKA_TOTAL=2114,TKA_TARGET_YEAR=3200,TKA_TARGET_APR=1768,TKA_NAT_QTY=26500,
 let tkaCurrProv='ทั้งหมด';
 let _tkaChartGeo=null;
 let _tkaReady=false;
+let tkaAgeGroup='all';
 
 function tkaPageInit(){if(!_tkaReady){tkaBuildFilter();tkaInitTooltip();_tkaReady=true;}tkaRender();}
 function tkaBuildFilter(){const el=document.getElementById('tkaProvFilter');const all=['ทั้งหมด',...TKA_PROVS];el.innerHTML=all.map(p=>`<button class="pf-btn${p==='ทั้งหมด'?' active':''}" onclick="tkaSelectProv('${p}',this)">${p}</button>`).join('');}
 function tkaSelectProv(prov,btn){tkaCurrProv=prov;document.querySelectorAll('#tkaProvFilter .pf-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');tkaRender();}
+const TKA_AGE_DEFS=[{id:'all',label:'ทั้งหมด',key:d=>d.total||0},{id:'lt55',label:'< 55 ปี',key:d=>d.lt55||0},{id:'a5559',label:'55–59 ปี',key:d=>d.a5559||0},{id:'ge60',label:'≥ 60 ปี',key:d=>d.ge60||0}];
+const TKA_PIE_CLR=['#22d3ee','#f472b6','#fbbf24','#34d399','#a78bfa','#f87171','#38bdf8','#fb923c'];
+function tkaAgeVal(d){const ag=TKA_AGE_DEFS.find(a=>a.id===tkaAgeGroup);return ag?ag.key(d||{}):0;}
+function tkaSelectAge(id,btn){tkaAgeGroup=id;document.querySelectorAll('.tka-age-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');tkaRender();}
+function tkaPieClick(prov){if(tkaCurrProv===prov){const b=document.querySelector('#tkaProvFilter .pf-btn');if(b)tkaSelectProv('ทั้งหมด',b);}else{const b=Array.from(document.querySelectorAll('#tkaProvFilter .pf-btn')).find(b=>b.textContent===prov);if(b)tkaSelectProv(prov,b);else{tkaCurrProv=prov;tkaRender();}}}
+function tkaRenderAgePie(){const host=document.getElementById('tkaAgePie');if(!host)return;const ageBtns=TKA_AGE_DEFS.map(ag=>`<button class="tka-age-btn${ag.id===tkaAgeGroup?' active':''}" onclick="tkaSelectAge('${ag.id}',this)">${ag.label}</button>`).join('');const provs=TKA_PROVS;const vals=provs.map(p=>tkaAgeVal(PROV_DATA[p]));const total=vals.reduce((a,b)=>a+b,0)||1;const legHtml=provs.map((p,i)=>{const pct=(vals[i]/total*100).toFixed(1);const active=tkaCurrProv===p?' active':'';return `<div class="pie-leg-item${active}" onclick="tkaPieClick('${p}')"><span class="pie-leg-dot" style="background:${TKA_PIE_CLR[i%8]}"></span><span class="pie-leg-name">${p}</span><span class="pie-leg-val">${vals[i].toLocaleString()} (${pct}%)</span></div>`;}).join('');host.innerHTML=`<div class="tka-age-pie"><div class="age-btn-col">${ageBtns}</div><div class="tka-pie-wrap"><canvas id="tkaPieChart" width="180" height="180"></canvas></div><div class="tka-pie-legend">${legHtml}</div></div>`;mk('tkaPieChart',{type:'doughnut',data:{labels:provs,datasets:[{data:vals,backgroundColor:TKA_PIE_CLR.slice(0,provs.length),borderWidth:2,borderColor:'#0f172a',hoverOffset:6}]},options:{responsive:false,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw.toLocaleString()} (${(c.raw/total*100).toFixed(1)}%)`}}},onClick:(e,els)=>{if(els.length)tkaPieClick(provs[els[0].index]);}}});}
 function tkaNormMonthly(monthly,prov){const map={};monthly.forEach(m=>map[m.label]=m.cases);const vals=TKA_VAL_MONTHLY[prov]||Array(8).fill(0);return TKA_MONTHS.map((lbl,i)=>({label:lbl,cases:map[lbl]||0,value:vals[i]}));}
-function tkaRender(){const d=PROV_DATA[tkaCurrProv];const isAll=tkaCurrProv==='ทั้งหมด';tkaRenderHero(d,isAll);tkaRenderIndicators(d,isAll);tkaRenderDemo(d);tkaRenderTrend(tkaNormMonthly(d.monthly,tkaCurrProv));tkaRenderPdx(d);tkaRenderHosp(d,isAll);}
+function tkaRender(){const d=PROV_DATA[tkaCurrProv];const isAll=tkaCurrProv==='ทั้งหมด';tkaRenderHero(d,isAll);tkaRenderIndicators(d,isAll);tkaRenderDemo(d);tkaRenderTrend(tkaNormMonthly(d.monthly,tkaCurrProv));tkaRenderPdx(d);tkaRenderHosp(d,isAll);tkaRenderAgePie();}
 
 function tkaRenderHero(d,isAll){
   const kpi=document.getElementById('tkaHeroKpi'),sep=document.getElementById('tkaHeroSep'),right=document.getElementById('tkaHeroRight');
   if(isAll){kpi.style.display='none';sep.style.display='none';
     const qtyFill=(d.total/TKA_TARGET_YEAR*100).toFixed(1),markPct=(TKA_TARGET_APR/TKA_TARGET_YEAR*100).toFixed(1),APR_VAL=TKA_R1_VAL_TGT*(TKA_TARGET_APR/TKA_TARGET_YEAR),valFill=(TKA_R1_VAL_ACT/TKA_R1_VAL_TGT*100).toFixed(1);
     right.innerHTML=`<div class="hero-share-label">ความก้าวหน้าเทียบเป้าเขต 1 (ปี 2569)</div><div class="hbar-legend"><span><span class="hbar-legend-dot" style="background:#C17A2A"></span>ผลงานจริง</span><span><span class="hbar-legend-tick"></span>เป้า ณ เม.ย.69</span><span style="opacity:.5">ปลายแถบ = เป้าทั้งปี</span></div><div class="hbar-row"><span class="hbar-lbl">มูลค่า (บาท)</span><div class="hbar-wrap"><div class="hbar-track"><div class="hbar-fill" style="width:${valFill}%;background:#C17A2A"></div><span class="hbar-tag" style="left:${valFill}%;color:#E8C07A">${(TKA_R1_VAL_ACT/1e6).toFixed(1)} ล.บ.</span><div class="hbar-marker" style="left:${markPct}%"></div><span class="hbar-tag target" style="left:${markPct}%">${(APR_VAL/1e6).toFixed(1)} ล.บ.</span></div></div><span class="hbar-annual">${(TKA_R1_VAL_TGT/1e6).toFixed(1)} ล.บ.</span></div><div class="hbar-row"><span class="hbar-lbl">จำนวน (เข่า:ครั้ง)</span><div class="hbar-wrap"><div class="hbar-track"><div class="hbar-fill" style="width:${qtyFill}%;background:#22d3ee"></div><span class="hbar-tag" style="left:${qtyFill}%;color:#22d3ee">${d.total.toLocaleString()} ครั้ง</span><div class="hbar-marker" style="left:${markPct}%"></div><span class="hbar-tag target" style="left:${markPct}%">${TKA_TARGET_APR.toLocaleString()} ครั้ง</span></div></div><span class="hbar-annual">${TKA_TARGET_YEAR.toLocaleString()} ครั้ง</span></div>`;
-  }else{kpi.style.display='flex';sep.style.display='block';document.getElementById('tkaHeroNum').textContent=d.total.toLocaleString();document.getElementById('tkaHeroLbl').textContent=`DISTINCT PID · ราย · จ.${tkaCurrProv}`;
-    const sharePct=(d.total/TKA_TOTAL*100).toFixed(1),fillPct=Math.min(d.total/PROV_DATA['เชียงราย'].total*100,100).toFixed(1);
-    right.innerHTML=`<div class="hero-row"><span>สัดส่วนของเขตฯ 1 ทั้งหมด</span><span class="hero-pct">${sharePct}%</span></div><div class="hero-track"><div class="hero-fill" style="width:${fillPct}%"></div></div><div class="hero-sub"><div class="hero-sub-item"><div class="hero-sub-num">${d.hospitals.length}</div><div class="hero-sub-lbl">หน่วยบริการ</div></div><div class="hero-sub-item"><div class="hero-sub-num">${(d.female/d.total*100).toFixed(0)}%</div><div class="hero-sub-lbl">หญิง</div></div><div class="hero-sub-item"><div class="hero-sub-num">${(d.ge60/d.total*100).toFixed(0)}%</div><div class="hero-sub-lbl">≥60 ปี</div></div></div>`;
+  }else{kpi.style.display='flex';sep.style.display='block';
+    const ageCnt=tkaAgeVal(d),ageZone=tkaAgeVal(PROV_DATA['ทั้งหมด']);
+    const ageDef=TKA_AGE_DEFS.find(a=>a.id===tkaAgeGroup);
+    document.getElementById('tkaHeroNum').textContent=ageCnt.toLocaleString();
+    document.getElementById('tkaHeroLbl').textContent=`${tkaAgeGroup==='all'?'DISTINCT PID · ราย':ageDef.label+' · ราย'} · จ.${tkaCurrProv}`;
+    const sharePct=(ageCnt/(ageZone||1)*100).toFixed(1);
+    const maxAge=Math.max(...TKA_PROVS.map(p=>tkaAgeVal(PROV_DATA[p]||{})));
+    const fillPct=Math.min(ageCnt/(maxAge||1)*100,100).toFixed(1);
+    const shareLabel=tkaAgeGroup==='all'?'สัดส่วนของเขตฯ 1 ทั้งหมด':`สัดส่วนของเขตฯ 1 (${ageDef.label})`;
+    right.innerHTML=`<div class="hero-row"><span>${shareLabel}</span><span class="hero-pct">${sharePct}%</span></div><div class="hero-track"><div class="hero-fill" style="width:${fillPct}%"></div></div><div class="hero-sub"><div class="hero-sub-item"><div class="hero-sub-num">${d.hospitals.length}</div><div class="hero-sub-lbl">หน่วยบริการ</div></div><div class="hero-sub-item"><div class="hero-sub-num">${(d.female/d.total*100).toFixed(0)}%</div><div class="hero-sub-lbl">หญิง</div></div><div class="hero-sub-item"><div class="hero-sub-num">${(d.ge60/d.total*100).toFixed(0)}%</div><div class="hero-sub-lbl">≥60 ปี</div></div></div>`;
   }
 }
 
