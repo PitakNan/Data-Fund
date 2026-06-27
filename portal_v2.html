@@ -270,6 +270,17 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
 .tt-pdx-n{font-family:monospace;font-size:11px;text-align:right;opacity:.7}
 .tt-pdx-lt{color:rgba(255,180,100,.85)}.tt-pdx-mid{color:rgba(167,139,250,.85)}.tt-pdx-ge{color:rgba(34,211,238,.85)}
 .tt-pdx-pct{font-family:monospace;font-size:10px;text-align:right;opacity:.4}
+#tkaQuotaModal{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.65);align-items:center;justify-content:center}
+#tkaQuotaModal.show{display:flex}
+#tkaQuotaModalBox{background:#0b1220;border:1px solid var(--line);border-radius:16px;width:min(580px,94vw);max-height:80vh;overflow-y:auto;padding:20px 22px;box-shadow:0 16px 48px rgba(0,0,0,.7)}
+.qm-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.qm-title{font-size:15px;font-weight:700;color:var(--accent)}
+.qm-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:22px;line-height:1;cursor:pointer;padding:0 0 0 12px}
+.qm-close:hover{color:#fff}
+.qm-sub{font-size:11px;color:var(--mut);margin-bottom:12px}
+.qm-sum{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:8px;font-size:12px;color:var(--mut)}
+.qm-prov-name{cursor:pointer;color:var(--accent);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+.qm-prov-name:hover{color:#fff}
 </style></head>
 <body>
 
@@ -369,6 +380,23 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
     </div>
     <div id="tka-tab-pdx" class="tka-tab-pane active"><table><thead><tr><th>รหัส</th><th>คำวินิจฉัย</th><th style="text-align:right;color:var(--warn)">&lt;55</th><th style="text-align:right;color:#a78bfa">55-59</th><th style="text-align:right;color:var(--accent)">&#x2265;60</th><th style="width:180px">สัดส่วน</th></tr></thead><tbody id="tkaPdxTbody"></tbody></table><div class="fn">M17x = ข้อเข่าเสื่อม &middot; T84x = ภาวะแทรกซ้อนจากข้อเทียม &middot; นับ distinct PID</div></div>
     <div id="tka-tab-hosp" class="tka-tab-pane"><table><thead><tr><th id="tkaHospProvCol">จังหวัด</th><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right;color:var(--warn)">&lt;55</th><th style="text-align:right;color:#a78bfa">55-59</th><th style="text-align:right;color:var(--accent)">&#x2265;60</th><th style="width:150px">สัดส่วน</th></tr></thead><tbody id="tkaHospTbody"></tbody></table><div class="fn">นับ distinct PID per หน่วยบริการ</div></div>
+  </div>
+</div>
+<div id="tkaQuotaWrap" style="padding:0 16px 16px">
+  <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;margin-top:12px">
+    <div class="card-hd"><span class="card-title">&#128202; การจัดสรรโควต้าคงเหลือตามสัดส่วน</span><span style="font-size:10px;color:var(--mut)">พ.ค.−ก.ย. 2569 · คลิกชื่อจังหวัดเพื่อดูรายหน่วยบริการ</span></div>
+    <div id="tkaQuotaContent" style="padding:8px 12px 12px;overflow-x:auto"></div>
+  </div>
+</div>
+<div id="tkaQuotaModal" onclick="if(event.target===this)tkaCloseQuotaModal()">
+  <div id="tkaQuotaModalBox">
+    <div class="qm-hdr">
+      <div class="qm-title" id="tkaQMTitle"></div>
+      <button class="qm-close" onclick="tkaCloseQuotaModal()">&#215;</button>
+    </div>
+    <div class="qm-sub" id="tkaQMSub"></div>
+    <div class="qm-sum" id="tkaQMSum"></div>
+    <div id="tkaQMContent" style="overflow-x:auto"></div>
   </div>
 </div>
 </section>
@@ -1169,8 +1197,19 @@ function tkaAgeVal(d){const ag=TKA_AGE_DEFS.find(a=>a.id===tkaAgeGroup);return a
 function tkaSelectAge(id,btn){tkaAgeGroup=id;document.querySelectorAll('.tka-age-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');tkaRender();}
 function tkaPieClick(prov){if(tkaCurrProv===prov){const b=document.querySelector('#tkaProvFilter .pf-btn');if(b)tkaSelectProv('ทั้งหมด',b);}else{const b=Array.from(document.querySelectorAll('#tkaProvFilter .pf-btn')).find(b=>b.textContent===prov);if(b)tkaSelectProv(prov,b);else{tkaCurrProv=prov;tkaRender();}}}
 function tkaRenderAgePie(){const host=document.getElementById('tkaAgePie');if(!host)return;const ageBtns=TKA_AGE_DEFS.map(ag=>`<button class="tka-age-btn${ag.id===tkaAgeGroup?' active':''}" onclick="tkaSelectAge('${ag.id}',this)">${ag.label}</button>`).join('');const rawProvs=TKA_PROVS;const rawVals=rawProvs.map(p=>tkaAgeVal(PROV_DATA[p]));const total=rawVals.reduce((a,b)=>a+b,0)||1;const ord=rawVals.map((_,i)=>i).sort((a,b)=>rawVals[b]-rawVals[a]);const provs=ord.map(i=>rawProvs[i]),vals=ord.map(i=>rawVals[i]);const legHtml=provs.map((p,i)=>{const pct=(vals[i]/total*100).toFixed(1);const active=tkaCurrProv===p?' active':'';return `<div class="pie-leg-item${active}" onclick="tkaPieClick('${p}')"><span class="pie-leg-dot" style="background:${TKA_PIE_CLR[i%8]}"></span><span class="pie-leg-name">${p}</span><span class="pie-leg-val">${vals[i].toLocaleString()} (${pct}%)</span></div>`;}).join('');host.innerHTML=`<div class="tka-age-pie"><div class="age-btn-col">${ageBtns}</div><div class="tka-pie-wrap"><canvas id="tkaPieChart" width="180" height="180"></canvas></div><div class="tka-pie-legend">${legHtml}</div></div>`;mk('tkaPieChart',{type:'doughnut',data:{labels:provs,datasets:[{data:vals,backgroundColor:TKA_PIE_CLR.slice(0,provs.length),borderWidth:2,borderColor:'#0f172a',hoverOffset:6}]},options:{responsive:false,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw.toLocaleString()} (${(c.raw/total*100).toFixed(1)}%)`}}},onClick:(e,els)=>{if(els.length)tkaPieClick(provs[els[0].index]);}}});}
-function tkaNormMonthly(monthly,prov){if(tkaAgeGroup!=='all'){const am={};TKA_MONTHS.forEach(l=>{am[l]=0;});Object.entries(HOSP_MONTH_PDX).forEach(([hosp,months])=>{const hp=HOSP_PROV[hosp];if(prov!=='ทั้งหมด'&&hp!==prov)return;Object.entries(months).forEach(([lbl,md])=>{if(!(lbl in am))return;if(tkaAgeGroup==='lt55')am[lbl]+=md.lt55||0;else{const s=tkaSplitGe55(hp||prov,md.ge55||0);am[lbl]+=tkaAgeGroup==='a5559'?s.a5559:s.ge60;}});});return TKA_MONTHS.map(lbl=>({label:lbl,cases:am[lbl]||0,value:0}));}const map={};monthly.forEach(m=>map[m.label]=m.cases);const vals=TKA_VAL_MONTHLY[prov]||Array(8).fill(0);return TKA_MONTHS.map((lbl,i)=>({label:lbl,cases:map[lbl]||0,value:vals[i]}));}
-function tkaRender(){const d=PROV_DATA[tkaCurrProv];const isAll=tkaCurrProv==='ทั้งหมด';tkaRenderHero(d,isAll);tkaRenderIndicators(d,isAll);tkaRenderDemo(d);tkaRenderTrend(tkaNormMonthly(d.monthly,tkaCurrProv));tkaRenderPdx(d);tkaRenderHosp(d,isAll);tkaRenderAgePie();}
+function tkaNormMonthly(monthly,prov){
+  const map={};monthly.forEach(m=>map[m.label]=m.cases);
+  const vals=TKA_VAL_MONTHLY[prov]||Array(8).fill(0);
+  if(tkaAgeGroup!=='all'){
+    const d=PROV_DATA[prov]||PROV_DATA['ทั้งหมด'];
+    const total=d.total||1;
+    const ageN=tkaAgeGroup==='lt55'?(d.lt55||0):tkaAgeGroup==='a5559'?(d.a5559||0):(d.ge60||0);
+    const ratio=ageN/total;
+    return TKA_MONTHS.map((lbl,i)=>({label:lbl,cases:Math.round((map[lbl]||0)*ratio),value:Math.round(vals[i]*ratio)}));
+  }
+  return TKA_MONTHS.map((lbl,i)=>({label:lbl,cases:map[lbl]||0,value:vals[i]}));
+}
+function tkaRender(){const d=PROV_DATA[tkaCurrProv];const isAll=tkaCurrProv==='ทั้งหมด';tkaRenderHero(d,isAll);tkaRenderIndicators(d,isAll);tkaRenderDemo(d);tkaRenderTrend(tkaNormMonthly(d.monthly,tkaCurrProv));tkaRenderPdx(d);tkaRenderHosp(d,isAll);tkaRenderAgePie();tkaRenderQuota(isAll);}
 
 function tkaRenderHero(d,isAll){
   const kpi=document.getElementById('tkaHeroKpi'),sep=document.getElementById('tkaHeroSep'),right=document.getElementById('tkaHeroRight');
@@ -1215,7 +1254,7 @@ function tkaRenderTrend(monthly){
   monthly.forEach((m,i)=>{ctx.fillStyle='rgba(255,255,255,.28)';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText(m.label,xC(i),pad.t+cH+16);});
   const nzC=cases.filter(v=>v>0),nzV=vals.filter(v=>v>0);const avgC=nzC.length?Math.round(nzC.reduce((a,b)=>a+b,0)/nzC.length):0;const avgV=nzV.length?nzV.reduce((a,b)=>a+b,0)/nzV.length:0;
   const ageLabel=tkaAgeGroup==='all'?'':`[${TKA_AGE_DEFS.find(a=>a.id===tkaAgeGroup).label}] `;
-  document.getElementById('tkaTrendAvg').textContent=tkaAgeGroup==='all'?`เฉลี่ย ${avgC} ราย · ${(avgV/1e6).toFixed(1)} ล.บ./เดือน`:`เฉลี่ย ${avgC} ราย ${ageLabel}· ~จากรพ.ที่มีข้อมูล PDX`;
+  document.getElementById('tkaTrendAvg').textContent=tkaAgeGroup==='all'?`เฉลี่ย ${avgC} ราย · ${(avgV/1e6).toFixed(1)} ล.บ./เดือน`:`เฉลี่ย ${avgC} ราย ${ageLabel}· ${(avgV/1e6).toFixed(1)} ล.บ./เดือน · ประมาณการตามสัดส่วน`;
   _tkaChartGeo={monthly,n,pad,cW,cH,xC};
 }
 
@@ -1240,6 +1279,47 @@ function tkaRenderHosp(d,isAll){
 }
 
 function tkaSwitchTab(btn,id){document.querySelectorAll('.tka-tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tka-tab-pane').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById(id).classList.add('active');}
+
+function tkaRenderQuota(isAll){
+  const wrap=document.getElementById('tkaQuotaWrap');
+  if(!wrap)return;
+  wrap.style.display=isAll?'':'none';
+  if(!isAll)return;
+  const el=document.getElementById('tkaQuotaContent');
+  const actual=TKA_TOTAL;
+  const target=TKA_TARGET_YEAR;
+  const remaining=target-actual;
+  const rows=TKA_PROVS.map(p=>{
+    const d=PROV_DATA[p];if(!d)return '';
+    const prop=d.total/actual;
+    const alloc=Math.round(remaining*prop);
+    const annualTgt=d.total+alloc;
+    const pct=(prop*100).toFixed(1);
+    const barW=(prop*100).toFixed(0);
+    return `<tr><td style="font-weight:500"><span class="qm-prov-name" onclick="tkaShowQuotaProv('${p}',${alloc})">${p}</span></td><td class="td-r">${d.total.toLocaleString()}</td><td><div class="ibar-wrap"><div class="ibar-track"><div class="ibar-fill" style="width:${barW}%"></div></div><span style="font-family:monospace;font-size:10px;color:var(--mut);width:38px;text-align:right">${pct}%</span></div></td><td class="td-r" style="color:var(--warn);font-weight:700">${alloc.toLocaleString()}</td><td class="td-r" style="color:var(--accent)">${annualTgt.toLocaleString()}</td></tr>`;
+  }).join('');
+  el.innerHTML=`<div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:var(--mut)"><span>เป้าปีงบ 69 &nbsp;<strong style="color:var(--ink);font-size:14px">${target.toLocaleString()}</strong> ราย</span><span>ผลงานจริง (ก.ย.68−เม.ย.69) &nbsp;<strong style="color:var(--accent);font-size:14px">${actual.toLocaleString()}</strong> ราย</span><span>โควต้าคงเหลือ (พ.ค.−ก.ย.69) &nbsp;<strong style="color:var(--warn);font-size:14px">${remaining.toLocaleString()}</strong> ราย</span></div><table><thead><tr><th>จังหวัด</th><th style="text-align:right">ผลงาน (ราย)</th><th style="min-width:140px">สัดส่วน</th><th style="text-align:right;color:var(--warn)">โควต้าที่จัดสรร</th><th style="text-align:right;color:var(--accent)">เป้ารวมทั้งปี</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="border-top:2px solid var(--line);font-weight:700"><td>รวมเขต 1</td><td class="td-r">${actual.toLocaleString()}</td><td><span style="font-size:11px;color:var(--mut)">100%</span></td><td class="td-r" style="color:var(--warn)">${remaining.toLocaleString()}</td><td class="td-r" style="color:var(--accent)">${target.toLocaleString()}</td></tr></tfoot></table><div class="fn" style="margin-top:6px">คำนวณโดยแบ่งโควต้าคงเหลือตามสัดส่วนผลงานจริง (ก.ย.68−เม.ย.69) ทุกช่วงอายุ · นับ distinct PID · อาจมีผลต่างจากการปัดเศษ</div>`;
+}
+
+function tkaShowQuotaProv(prov,alloc){
+  const d=PROV_DATA[prov];if(!d)return;
+  const provTotal=d.total;
+  document.getElementById('tkaQMTitle').textContent='📊 '+prov+' — รายหน่วยบริการ';
+  document.getElementById('tkaQMSub').textContent='การจัดสรรโควต้าคงเหลือ (พ.ค.−ก.ย. 2569)';
+  document.getElementById('tkaQMSum').innerHTML=`<span>ผลงานจังหวัด &nbsp;<strong style="color:var(--accent);font-size:14px">${provTotal.toLocaleString()}</strong> ราย</span><span>โควต้าที่จัดสรร &nbsp;<strong style="color:var(--warn);font-size:14px">${alloc.toLocaleString()}</strong> ราย</span><span>เป้ารวมทั้งปี &nbsp;<strong style="color:var(--ink);font-size:14px">${(provTotal+alloc).toLocaleString()}</strong> ราย</span>`;
+  const bmap={'รพศ.':'b-s','รพท.':'b-m','รพช./รพร.':'b-c','รพ.อื่น':'b-o'};
+  const maxC=d.hospitals[0]?.cases||1;
+  const rows=d.hospitals.map(h=>{
+    const prop=h.cases/provTotal;
+    const hospAlloc=Math.round(alloc*prop);
+    const pct=(prop*100).toFixed(1);
+    const barW=(h.cases/maxC*100).toFixed(0);
+    return `<tr><td>${h.hosp}</td><td><span class="badge ${bmap[h.htype]||'b-o'}">${h.htype}</span></td><td class="td-r">${h.cases.toLocaleString()}</td><td><div class="ibar-wrap"><div class="ibar-track"><div class="ibar-fill" style="width:${barW}%"></div></div><span style="font-family:monospace;font-size:10px;color:var(--mut);width:38px;text-align:right">${pct}%</span></div></td><td class="td-r" style="color:var(--warn);font-weight:700">${hospAlloc.toLocaleString()}</td><td class="td-r" style="color:var(--accent)">${(h.cases+hospAlloc).toLocaleString()}</td></tr>`;
+  }).join('');
+  document.getElementById('tkaQMContent').innerHTML=`<table><thead><tr><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right">ผลงาน</th><th style="min-width:120px">สัดส่วน</th><th style="text-align:right;color:var(--warn)">โควต้าจัดสรร</th><th style="text-align:right;color:var(--accent)">เป้ารวมทั้งปี</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="border-top:2px solid var(--line);font-weight:700"><td colspan="2">รวม</td><td class="td-r">${provTotal.toLocaleString()}</td><td></td><td class="td-r" style="color:var(--warn)">${alloc.toLocaleString()}</td><td class="td-r" style="color:var(--accent)">${(provTotal+alloc).toLocaleString()}</td></tr></tfoot></table><div class="fn" style="margin-top:6px">แบ่งโควต้าตามสัดส่วนผลงานจริงในจังหวัด · อาจมีผลต่างจากการปัดเศษ</div>`;
+  document.getElementById('tkaQuotaModal').classList.add('show');
+}
+function tkaCloseQuotaModal(){document.getElementById('tkaQuotaModal').classList.remove('show');}
 
 function tkaInitTooltip(){
   const canvas=document.getElementById('tkaTrendChart');const tip=document.getElementById('tkaTrendTip');
