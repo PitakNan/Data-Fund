@@ -854,7 +854,7 @@ function renderHome(){
     const yrs=[...d.yearly].sort((a,b)=>a.yr>b.yr?1:-1);
     const yrMin='ปีงบ '+yrs[0].yr,yrMax='ปีงบ '+yrs[yrs.length-1].yr;
     const spk=mkSparkSVG(yrs.map(r=>r.cases),ICOL[k]);
-    h+='<div class="pcard" style="--cc:'+ICOL[k]+'" onclick="'+(k==='tka'?"location.href=\'_TKA/tka_dashboard.html\'":"go(\'"+k+"\')")+'">'+
+    h+='<div class="pcard" style="--cc:'+ICOL[k]+'" onclick="go(\''+k+'\')">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
         '<div><div class="ic">'+ICON[k]+'</div><h3>'+TITLE[k]+'</h3></div>'+
         '<div style="font-size:11px;color:var(--mut);text-align:right">'+yrMin+'–'+yrMax+'</div>'+
