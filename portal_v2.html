@@ -1211,7 +1211,13 @@ function tkaNormMonthly(monthly,prov){
     const total=d.total||1;
     const ageN=tkaAgeGroup==='lt55'?(d.lt55||0):tkaAgeGroup==='a5559'?(d.a5559||0):(d.ge60||0);
     const ratio=ageN/total;
-    return TKA_MONTHS.map((lbl,i)=>({label:lbl,cases:Math.round((map[lbl]||0)*ratio),value:Math.round(vals[i]*ratio)}));
+    // Largest Remainder Method: กระจาย ageN ลงรายเดือนตามสัดส่วน
+    // รับประกันว่า sum(cases) === ageN เสมอ (ไม่มี rounding error สะสม)
+    const exact=TKA_MONTHS.map(lbl=>(map[lbl]||0)*ratio);
+    const floored=exact.map(v=>Math.floor(v));
+    let rem=Math.max(0,ageN-floored.reduce((a,b)=>a+b,0));
+    exact.map((v,i)=>({i,f:v-floored[i]})).sort((a,b)=>b.f-a.f).forEach(({i})=>{if(rem>0){floored[i]++;rem--;}});
+    return TKA_MONTHS.map((lbl,i)=>({label:lbl,cases:floored[i],value:Math.round(vals[i]*ratio)}));
   }
   return TKA_MONTHS.map((lbl,i)=>({label:lbl,cases:map[lbl]||0,value:vals[i]}));
 }
