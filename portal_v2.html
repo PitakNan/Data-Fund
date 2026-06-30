@@ -285,6 +285,49 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
 .quota-tog-btn{padding:4px 11px;border-radius:5px;border:none;cursor:pointer;font-size:11px;font-weight:700;color:var(--mut);background:transparent;font-family:inherit;letter-spacing:.03em;transition:all .15s;white-space:nowrap}
 .quota-tog-btn.on{background:var(--card2);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .quota-tog-btn:hover:not(.on){color:var(--ink)}
+/* ── adjRW <0.5 dashboard ── */
+.adjrw-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--card);padding:10px 14px;border-radius:0 0 14px 14px;margin-bottom:14px;position:sticky;top:48px;z-index:100;border:1px solid var(--line);border-top:none}
+.adjrw-bar .lab{color:var(--mut);font-size:12px;margin-right:2px}
+.adjrw-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.sl-row{width:100%;padding:0 4px;min-width:220px}
+.sl-labels{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--mut);margin-bottom:3px}
+.sl-labels .sl-mid{color:var(--accent);font-weight:600;font-size:11px}
+.range-wrap{position:relative;height:24px}
+.range-wrap input[type=range]{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;-webkit-appearance:none;appearance:none;background:transparent;margin:0}
+.range-wrap input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--line);border-radius:2px}
+.range-wrap input[type=range]::-webkit-slider-thumb{pointer-events:all;-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--card);margin-top:-5.5px}
+.range-wrap input[type=range]::-moz-range-thumb{pointer-events:all;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--card)}
+.range-wrap input[type=range]::-moz-range-track{height:4px;background:var(--line);border-radius:2px}
+.sl-bar{position:absolute;top:10px;height:4px;background:rgba(34,211,238,.45);pointer-events:none;border-radius:2px}
+.pgsz-btn{background:var(--card2);color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;font-family:inherit;transition:.12s}
+.pgsz-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pgsz-btn.on{background:rgba(34,211,238,.12);color:var(--accent);border-color:var(--accent);font-weight:600}
+.rw-bar{display:inline-block;height:8px;border-radius:2px;background:var(--accent);opacity:.7;min-width:2px;vertical-align:middle;margin-right:4px}
+.lnk{color:#7dd3fc;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.lnk:hover{color:var(--accent)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
+.modal-overlay.on{display:flex}
+.modal{background:#131f34;border:1px solid var(--line);border-radius:16px;width:100%;max-width:780px;box-shadow:0 16px 48px rgba(0,0,0,.7)}
+.modal-hdr{background:var(--card);padding:14px 18px;border-radius:16px 16px 0 0;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.modal-hdr h3{font-size:14px;font-weight:700;flex:1;color:var(--accent)}
+.modal-close{background:none;border:none;color:var(--mut);font-size:22px;cursor:pointer;padding:0 4px;line-height:1}
+.modal-close:hover{color:var(--ink)}
+.modal-body{padding:14px 16px;max-height:65vh;overflow-y:auto}
+.breadcrumb{font-size:11px;color:var(--mut);padding:7px 18px;border-bottom:1px solid var(--line);display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.breadcrumb span{cursor:pointer;color:#7dd3fc}.breadcrumb span:hover{color:var(--accent)}
+.breadcrumb .sep2{color:var(--mut)}
+.search-input{background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12px;font-family:inherit;width:180px}
+.search-input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.pager{margin-top:8px;font-size:11px;color:var(--mut);display:flex;align-items:center;gap:8px}
+.pager button{background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:inherit}
+.pager button:hover{border-color:var(--accent);color:var(--accent)}
+.adjrw-tt{position:fixed;pointer-events:none;background:#0b1220;border:1px solid var(--line);color:var(--ink);font-size:12px;padding:10px 14px;border-radius:10px;z-index:500;line-height:1.6;white-space:nowrap;display:none;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.adjrw-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:12px}
+.adjrw-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.adjrw-card h3{font-size:14px;font-weight:600;margin-bottom:10px;color:var(--ink)}
+.adjrw-tblwrap{max-height:380px;overflow:auto}
+.ac4{grid-column:span 4}.ac5{grid-column:span 5}.ac6{grid-column:span 6}.ac7{grid-column:span 7}.ac8{grid-column:span 8}.ac12{grid-column:span 12}
+@media(max-width:900px){.adjrw-kpis{grid-template-columns:repeat(2,1fr)}.ac4,.ac5,.ac6,.ac7,.ac8,.ac12{grid-column:span 12}}
 </style></head>
 <body>
 
@@ -408,7 +451,83 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
 <section id="pg-nb" class="page"><div id="nb_body"></div></section>
 <section id="pg-refer" class="page"><div id="refer_body"></div></section>
 <section id="pg-psych" class="page"><div id="psych_body"></div></section>
-<section id="pg-adjlow" class="page"><div id="adjlow_body"></div></section>
+<section id="pg-adjlow" class="page">
+  <div id="adjlow_body">
+    <div style="padding:40px;text-align:center;color:var(--mut)">กำลังโหลดข้อมูล adjRW...</div>
+  </div>
+
+  <!-- adjRW Province modal -->
+  <div class="modal-overlay" id="prov-modal" onclick="overlayClick(event,'prov-modal')">
+    <div class="modal">
+      <div class="modal-hdr"><h3 id="prov-title">รายจังหวัด</h3><button class="modal-close" onclick="closeAll()">✕</button></div>
+      <div class="breadcrumb"><span onclick="closeAll()">หน้า adjRW</span></div>
+      <div class="modal-body adjrw-tblwrap" id="prov-body"></div>
+    </div>
+  </div>
+
+  <!-- adjRW Hospital modal -->
+  <div class="modal-overlay" id="hosp-modal" onclick="overlayClick(event,'hosp-modal')">
+    <div class="modal">
+      <div class="modal-hdr"><h3 id="hosp-title">หน่วยบริการ</h3><button class="modal-close" onclick="closeAll()">✕</button></div>
+      <div class="breadcrumb">
+        <span onclick="closeAll()">หน้า adjRW</span>
+        <span class="sep2">›</span>
+        <span onclick="closeModal('hosp-modal')">จังหวัด</span>
+      </div>
+      <div class="modal-body adjrw-tblwrap" id="hosp-body"></div>
+    </div>
+  </div>
+
+  <!-- adjRW Disease per hospital modal -->
+  <div class="modal-overlay" id="dis-modal" onclick="overlayClick(event,'dis-modal')">
+    <div class="modal">
+      <div class="modal-hdr"><h3 id="dis-title">โรครายหน่วยบริการ</h3><button class="modal-close" onclick="closeAll()">✕</button></div>
+      <div class="breadcrumb">
+        <span onclick="closeAll()">adjRW</span>
+        <span class="sep2">›</span>
+        <span onclick="closeModal('dis-modal')">จังหวัด → หน่วยบริการ</span>
+      </div>
+      <div class="modal-body adjrw-tblwrap" id="dis-body"></div>
+    </div>
+  </div>
+
+  <!-- adjRW Province × Year modal -->
+  <div class="modal-overlay" id="pvyr-modal" onclick="overlayClick(event,'pvyr-modal')">
+    <div class="modal" style="max-width:680px">
+      <div class="modal-hdr"><h3 id="pvyr-title">จังหวัด × ปีงบประมาณ</h3><button class="modal-close" onclick="closeAll()">✕</button></div>
+      <div class="breadcrumb"><span onclick="closeModal('pvyr-modal')">← กลับตารางโรค</span></div>
+      <div class="modal-body adjrw-tblwrap" id="pvyr-body"></div>
+    </div>
+  </div>
+
+  <!-- adjRW Disease drill: โรค → จังหวัด -->
+  <div class="modal-overlay" id="dprov-modal" onclick="overlayClick(event,'dprov-modal')">
+    <div class="modal">
+      <div class="modal-hdr"><h3 id="dprov-title">รายจังหวัด</h3><button class="modal-close" onclick="closeAll()">✕</button></div>
+      <div class="breadcrumb">
+        <span onclick="closeAll()">ตารางโรค</span>
+        <span class="sep2">›</span>
+        <span style="color:var(--ink)">จังหวัด</span>
+      </div>
+      <div class="modal-body adjrw-tblwrap" id="dprov-body"></div>
+    </div>
+  </div>
+
+  <!-- adjRW Disease drill: จังหวัด → รพ. -->
+  <div class="modal-overlay" id="dhosp-modal" onclick="overlayClick(event,'dhosp-modal')">
+    <div class="modal">
+      <div class="modal-hdr"><h3 id="dhosp-title">หน่วยบริการ</h3><button class="modal-close" onclick="closeAll()">✕</button></div>
+      <div class="breadcrumb">
+        <span onclick="closeAll()">ตารางโรค</span>
+        <span class="sep2">›</span>
+        <span id="dhosp-bc-dis" class="lnk" onclick="openDisProvModal(_curPdx)">จังหวัด</span>
+        <span class="sep2">›</span>
+        <span id="dhosp-title-bc" style="color:var(--ink)">รพ.</span>
+      </div>
+      <div class="modal-body adjrw-tblwrap" id="dhosp-body"></div>
+    </div>
+  </div>
+</section>
 
 <script>/**
  * Skipped minification because the original files appears to be already minified.
@@ -464,7 +583,7 @@ function go(id){
   PAGES.forEach(p=>{const el=C('pg-'+p);if(el)el.classList.toggle('show',p===id);});
   document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on',b.dataset.pg===id));
   window.scrollTo(0,0);
-  if(id==='home')renderHome();else if(id==='overview')renderOverview();else if(id==='tka'){tkaPageInit();return;}else renderIssue(id);
+  if(id==='home')renderHome();else if(id==='overview')renderOverview();else if(id==='tka'){tkaPageInit();return;}else if(id==='adjlow'){initAdjRWDashboard();return;}else renderIssue(id);
 }
 
 function mkSparkSVG(vals,col){
@@ -1430,5 +1549,671 @@ function tkaTipShowHospPdx(hospName,monthLabel){const tip=document.getElementByI
 }
 window.addEventListener('resize',()=>{if(tkaCurrProv&&_tkaReady)tkaRenderTrend(tkaNormMonthly(PROV_DATA[tkaCurrProv].monthly,tkaCurrProv));});
 /* ═══════════ END TKA ═══════════ */
+
+/* ═══════════ adjRW <0.5 INTERACTIVE DASHBOARD ═══════════ */
+let ADJRW_DATA = null;
+let _adjrwInitialized = false;
+
+/* ── adjRW state ── */
+let arFState={adjrw:'all',los:'all',prov:'all',level:'all',aff:'all',from:'',to:'',fy:'all'};
+let arFiltMonthly=[];
+let arMONTHS_IDX=[];
+let arDisPage=0;
+let arDisPageSize=10;
+let arChartMeta=[];
+let ar_disHcode='',ar_disHname='',ar_disProvName='',ar_disSelFy=null;
+let ar_curPdx='',ar_curProvName='';
+let arDprovPageSize=10,arDhospPageSize=10;
+let ar_chartYm='';
+
+/* ── Fiscal year ranges ── */
+const AR_FY={'all':{from:'',to:''},'65':{from:'2021-10',to:'2022-09'},'66':{from:'2022-10',to:'2023-09'},'67':{from:'2023-10',to:'2024-09'},'68':{from:'2024-10',to:'2025-09'},'69':{from:'2025-10',to:'2026-09'}};
+const AR_TH_MONTHS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function arFmtYM(s){if(!s)return s;const[y,m]=s.split('-');return AR_TH_MONTHS[parseInt(m)-1]+' '+(parseInt(y)+543-2500);}
+function arFmt(n){return n==null?'–':Math.round(n).toLocaleString('th-TH');}
+function arFmtB(n){if(n==null)return'–';if(n>=1e9)return(n/1e9).toFixed(2)+' พันล้าน';if(n>=1e6)return(n/1e6).toFixed(2)+' ล้าน';if(n>=1000)return Math.round(n).toLocaleString('th-TH')+' ฿';return Math.round(n)+' ฿';}
+function arYmToFY(ym){const[y,m]=ym.split('-').map(Number);const by=y+543;return 'ปีงบฯ '+(m>=10?by+1-2500:by-2500);}
+
+/* ── Tooltip ── */
+const arTtEl=()=>document.getElementById('adjrw-tt');
+function arShowTT(x,y,html){const el=arTtEl();if(!el)return;el.innerHTML=html;el.style.display='block';el.style.left=(x+14)+'px';el.style.top=(y-10)+'px';}
+function arHideTT(){const el=arTtEl();if(el)el.style.display='none';}
+
+/* ── Slider helpers ── */
+function arSlUpdateBar(){
+  const wrap=document.getElementById('ar-sl-wrap'),bar=document.getElementById('ar-sl-bar');
+  if(!wrap||!bar)return;
+  const fi=parseInt(document.getElementById('ar-sl-from').value),ti=parseInt(document.getElementById('ar-sl-to').value);
+  const maxI=parseInt(document.getElementById('ar-sl-from').max)||1;
+  const pct1=(fi/maxI)*100,pct2=(ti/maxI)*100;
+  bar.style.left=pct1+'%';bar.style.width=(pct2-pct1)+'%';
+  const fl=arMONTHS_IDX[fi]?arFmtYM(arMONTHS_IDX[fi]):'';
+  const tl=arMONTHS_IDX[ti]?arFmtYM(arMONTHS_IDX[ti]):'';
+  document.getElementById('ar-sl-mid').textContent=(fi===0&&ti===arMONTHS_IDX.length-1)?'ทั้งหมด':(fl+' – '+tl);
+}
+function arSliderMove(){
+  let fi=parseInt(document.getElementById('ar-sl-from').value),ti=parseInt(document.getElementById('ar-sl-to').value);
+  if(fi>ti){document.getElementById('ar-sl-from').value=ti;fi=ti;}
+  if(ti<fi){document.getElementById('ar-sl-to').value=fi;ti=fi;}
+  arFState.from=arMONTHS_IDX[fi]||'';arFState.to=arMONTHS_IDX[ti]||'';arFState.fy='custom';
+  document.querySelectorAll('.ar-fy-chip').forEach(el=>el.classList.remove('on'));
+  arSlUpdateBar();arApplyFilters();
+}
+function arSetSliderToFY(fy){
+  if(!arMONTHS_IDX.length)return;
+  const r=AR_FY[fy]||{from:'',to:''};
+  let fi=0,ti=arMONTHS_IDX.length-1;
+  if(r.from){const i=arMONTHS_IDX.findIndex(m=>m>=r.from);if(i>=0)fi=i;}
+  if(r.to){let i=-1;for(let j=arMONTHS_IDX.length-1;j>=0;j--){if(arMONTHS_IDX[j]<=r.to){i=j;break;}}if(i>=0)ti=i;}
+  document.getElementById('ar-sl-from').value=fi;document.getElementById('ar-sl-to').value=ti;arSlUpdateBar();
+}
+function arSetFY(fy){
+  arFState.fy=fy;
+  document.querySelectorAll('.ar-fy-chip').forEach(el=>{el.classList.toggle('on',el.dataset.fy===fy);});
+  if(AR_FY[fy]){arFState.from=AR_FY[fy].from;arFState.to=AR_FY[fy].to;}
+  arSetSliderToFY(fy);arApplyFilters();
+}
+
+/* ── matched hcodes ── */
+function arGetMatchedHcodes(){
+  const {prov,level,aff}=arFState;
+  if(prov==='all'&&level==='all'&&aff==='all')return null;
+  if(!ADJRW_DATA.hcode_meta)return null;
+  return new Set(Object.entries(ADJRW_DATA.hcode_meta)
+    .filter(([,m])=>{
+      if(prov!=='all'&&m.province!==prov)return false;
+      if(level!=='all'&&m.level!==level)return false;
+      if(aff!=='all'&&m.affiliation!==aff)return false;
+      return true;
+    }).map(([hc])=>hc));
+}
+
+function arApplyFilters(){
+  const adj=document.getElementById('ar-f-adjrw').value,los=document.getElementById('ar-f-los').value,prov=document.getElementById('ar-f-prov').value;
+  const level=document.getElementById('ar-f-level').value,aff=document.getElementById('ar-f-aff').value;
+  const from=arFState.from,to=arFState.to;
+  arFState={...arFState,adjrw:adj,los,prov,level,aff,from,to};
+  const DATA=ADJRW_DATA;
+  const matched=arGetMatchedHcodes();
+  if(matched){
+    const mph=DATA.monthly_prov_hosp||{};
+    const byYm={};
+    Object.entries(mph).forEach(([ym,pvMap])=>{
+      if(from&&ym<from)return;if(to&&ym>to)return;
+      let cases=0,baht=0;
+      Object.values(pvMap).forEach(hMap=>Object.entries(hMap).forEach(([hc,v])=>{if(matched.has(hc)){cases+=v.cases;baht+=v.baht;}}));
+      if(cases>0)byYm[ym]={ym,cases,baht,groups:{}};
+    });
+    arFiltMonthly=Object.keys(byYm).sort().map(ym=>byYm[ym]);
+  }else{
+    arFiltMonthly=DATA.monthly.filter(r=>{if(from&&r.ym<from)return false;if(to&&r.ym>to)return false;return true;});
+  }
+  arSyncDisChips(adj);
+  arUpdateKPIs();arDrawChart();arRenderSummaryTables();arRenderDiseaseTable();
+}
+
+/* ── KPIs ── */
+function arUpdateKPIs(){
+  const DATA=ADJRW_DATA;const adj=arFState.adjrw;
+  const hcFiltered=arFState.prov!=='all'||arFState.level!=='all'||arFState.aff!=='all';
+  let cases=0,baht=0;
+  arFiltMonthly.forEach(r=>{
+    const grpC=r.groups&&r.groups[adj];
+    cases+=(adj==='all'||hcFiltered||!grpC)?r.cases:grpC;
+    baht+=r.baht;
+  });
+  let provCount=DATA.provinces.length;
+  if(arFState.prov!=='all')provCount=1;
+  else if(hcFiltered&&DATA.hcode_meta){
+    const provSet=new Set(Object.entries(DATA.hcode_meta).filter(([,m])=>{
+      if(arFState.level!=='all'&&m.level!==arFState.level)return false;
+      if(arFState.aff!=='all'&&m.affiliation!==arFState.aff)return false;
+      return true;
+    }).map(([,m])=>m.province).filter(Boolean));
+    provCount=provSet.size||DATA.provinces.length;
+  }
+  const el=id=>document.getElementById(id);
+  el('ar-kv-cases').textContent=arFmt(cases);
+  el('ar-kv-baht').textContent=arFmtB(baht);
+  el('ar-kv-prov').textContent=provCount;
+  el('ar-kv-range').textContent=(arFiltMonthly.length?arFmtYM(arFiltMonthly[0].ym)+' – '+arFmtYM(arFiltMonthly[arFiltMonthly.length-1].ym):'—');
+}
+
+/* ── Summary Tables ── */
+const AR_LOS_ORDER=['0–6 ชม.','6-12 ชม.','12-24 ชม.','24-48 ชม.','48-72 ชม.','มากกว่า 72 ชม.'];
+function arRenderSummaryTables(){
+  const DATA=ADJRW_DATA;const matched=arGetMatchedHcodes();const {prov}=arFState;
+  const fmtRate=v=>v.cases?Math.round(v.baht/v.cases).toLocaleString('th-TH')+' ฿':'—';
+  // AdjRW Group
+  const adjTot={};
+  if(matched&&DATA.monthly_hc_groups){
+    arFiltMonthly.forEach(r=>{const hcGrp=DATA.monthly_hc_groups[r.ym]||{};Object.entries(hcGrp).forEach(([hc,v])=>{if(!matched.has(hc))return;Object.entries(v.adj||{}).forEach(([g,c])=>{if(!adjTot[g])adjTot[g]={cases:0,baht:0};adjTot[g].cases+=c;});});});
+    const totC=Object.values(adjTot).reduce((s,v)=>s+v.cases,0)||1;const totB=arFiltMonthly.reduce((s,r)=>s+r.baht,0);
+    Object.keys(adjTot).forEach(g=>{adjTot[g].baht=(adjTot[g].cases/totC)*totB;});
+  }else if(prov!=='all'&&DATA.monthly_prov_adj){
+    arFiltMonthly.forEach(r=>{const pa=(DATA.monthly_prov_adj[r.ym]||{})[prov]||{};Object.entries(pa).forEach(([g,c])=>{if(!adjTot[g])adjTot[g]={cases:0,baht:0};adjTot[g].cases+=c;});});
+    const totC=Object.values(adjTot).reduce((s,v)=>s+v.cases,0)||1;const totB=arFiltMonthly.reduce((s,r)=>s+r.baht,0);
+    Object.keys(adjTot).forEach(g=>{adjTot[g].baht=(adjTot[g].cases/totC)*totB;});
+  }else{
+    arFiltMonthly.forEach(r=>{Object.entries(r.groups||{}).forEach(([g,c])=>{if(!adjTot[g])adjTot[g]={cases:0,baht:0};adjTot[g].cases+=c;});const tot=r.cases||1;Object.entries(r.groups||{}).forEach(([g,c])=>{adjTot[g].baht+=(c/tot)*r.baht;});});
+  }
+  const adjGrps=Object.keys(adjTot).sort();const adjGrand={cases:Object.values(adjTot).reduce((s,v)=>s+v.cases,0),baht:Object.values(adjTot).reduce((s,v)=>s+v.baht,0)};
+  let aHtml=`<table class="ranking-tbl"><tr><th>AdjRW Group</th><th class="n">ความถี่ (เคส)</th><th class="n">%</th><th class="n">มูลค่า (ล้าน ฿)</th><th class="n">%</th><th class="n">อัตราจ่าย/เคส</th></tr>`;
+  if(adjGrps.length===0){aHtml+=`<tr><td colspan="6" style="text-align:center;color:var(--mut);padding:12px">ไม่พบข้อมูล</td></tr>`;}
+  else{
+    adjGrps.forEach(g=>{const v=adjTot[g];const pct=adjGrand.cases?((v.cases/adjGrand.cases)*100).toFixed(1):'0';const bpct=adjGrand.baht?((v.baht/adjGrand.baht)*100).toFixed(1):'0';const col=g==='<=0.5'?'color:var(--accent)':'color:var(--warn)';aHtml+=`<tr><td><b style="${col}">${g}</b></td><td class="n">${arFmt(v.cases)}</td><td class="n">${pct}%</td><td class="n">${(v.baht/1e6).toFixed(1)}</td><td class="n">${bpct}%</td><td class="n" style="color:var(--warn)">${fmtRate(v)}</td></tr>`;});
+    aHtml+=`<tr style="background:var(--card2)"><td><b>รวม</b></td><td class="n"><b>${arFmt(adjGrand.cases)}</b></td><td class="n">100%</td><td class="n"><b>${(adjGrand.baht/1e6).toFixed(1)}</b></td><td class="n">100%</td><td class="n" style="color:var(--warn)"><b>${fmtRate(adjGrand)}</b></td></tr>`;
+  }
+  aHtml+=`</table>`;document.getElementById('ar-sum-adj').innerHTML=aHtml;
+  // LOS Group
+  let losTot={};
+  if(matched&&DATA.monthly_hc_groups){arFiltMonthly.forEach(r=>{const hcGrp=DATA.monthly_hc_groups[r.ym]||{};Object.entries(hcGrp).forEach(([hc,v])=>{if(!matched.has(hc))return;Object.entries(v.los||{}).forEach(([g,d])=>{if(!losTot[g])losTot[g]={cases:0,baht:0};losTot[g].cases+=d.cases;losTot[g].baht+=d.baht;});});});}
+  else if(prov!=='all'&&DATA.monthly_prov_los){arFiltMonthly.forEach(r=>{const pl=(DATA.monthly_prov_los[r.ym]||{})[prov]||{};Object.entries(pl).forEach(([g,v])=>{if(!losTot[g])losTot[g]={cases:0,baht:0};losTot[g].cases+=v.cases;losTot[g].baht+=v.baht;});});}
+  else if(DATA.monthly_los){arFiltMonthly.forEach(r=>{const ml=DATA.monthly_los[r.ym]||{};Object.entries(ml).forEach(([g,v])=>{if(!losTot[g])losTot[g]={cases:0,baht:0};losTot[g].cases+=v.cases;losTot[g].baht+=v.baht;});});}
+  const losGrand={cases:Object.values(losTot).reduce((s,v)=>s+v.cases,0),baht:Object.values(losTot).reduce((s,v)=>s+v.baht,0)};
+  let lHtml=`<table class="ranking-tbl"><tr><th>LOS Group</th><th class="n">ความถี่ (เคส)</th><th class="n">%</th><th class="n">มูลค่า (ล้าน ฿)</th><th class="n">%</th><th class="n">อัตราจ่าย/เคส</th></tr>`;
+  AR_LOS_ORDER.forEach(g=>{const v=losTot[g]||{cases:0,baht:0};const pct=losGrand.cases?((v.cases/losGrand.cases)*100).toFixed(1):'0';const bpct=losGrand.baht?((v.baht/losGrand.baht)*100).toFixed(1):'0';lHtml+=`<tr><td>${g}</td><td class="n">${arFmt(v.cases)}</td><td class="n">${pct}%</td><td class="n">${(v.baht/1e6).toFixed(1)}</td><td class="n">${bpct}%</td><td class="n" style="color:var(--warn)">${fmtRate(v)}</td></tr>`;});
+  lHtml+=`<tr style="background:var(--card2)"><td><b>รวม</b></td><td class="n"><b>${arFmt(losGrand.cases)}</b></td><td class="n">100%</td><td class="n"><b>${(losGrand.baht/1e6).toFixed(1)}</b></td><td class="n">100%</td><td class="n" style="color:var(--warn)"><b>${fmtRate(losGrand)}</b></td></tr></table>`;
+  document.getElementById('ar-sum-los').innerHTML=lHtml;
+}
+
+/* ── Chart ── */
+const AR_CH=240;
+function arDrawChart(){
+  const cv=document.getElementById('ar-chart-cv');if(!cv)return;
+  const W=cv.offsetWidth||900,dpr=window.devicePixelRatio||1;
+  cv.width=W*dpr;cv.height=AR_CH*dpr;cv.style.height=AR_CH+'px';
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const adj=arFState.adjrw;
+  const months=arFiltMonthly.filter(r=>r.cases>0);
+  if(!months.length){ctx.fillStyle='#94a3b8';ctx.font='13px Segoe UI';ctx.fillText('ไม่มีข้อมูล',W/2-40,AR_CH/2);return;}
+  const PAD={t:28,b:52,l:62,r:80};const cw=W-PAD.l-PAD.r,ch=AR_CH-PAD.t-PAD.b;
+  const hasGrp=months.length>0&&Object.keys(months[0].groups||{}).length>0;
+  const getCases=r=>(!hasGrp||adj==='all')?r.cases:(r.groups[adj]||0);
+  const getLE=r=>hasGrp?(r.groups&&r.groups['<=0.5']||0):r.cases;
+  const getGT=r=>hasGrp?(r.groups&&r.groups['>0.5']||0):0;
+  const maxC=Math.max(...months.map(getCases),1);const maxB=Math.max(...months.map(r=>r.baht),1);
+  const step=cw/(months.length-1||1);
+  arChartMeta=[];
+  for(let i=0;i<=4;i++){
+    const gy=PAD.t+ch-i*ch/4;
+    ctx.strokeStyle='rgba(51,65,85,.55)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+    ctx.beginPath();ctx.moveTo(PAD.l,gy);ctx.lineTo(W-PAD.r,gy);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#94a3b8';ctx.font='10px Segoe UI';ctx.textAlign='right';
+    ctx.fillText(arFmt(maxC*i/4/1000)+'k',PAD.l-5,gy+3.5);
+    ctx.fillStyle='rgba(251,191,36,.8)';ctx.textAlign='left';
+    ctx.fillText((maxB*i/4/1e6).toFixed(0)+'M',W-PAD.r+5,gy+3.5);
+  }
+  const px=(i)=>PAD.l+i*step;const pyCases=(v)=>PAD.t+ch-(v/maxC)*ch;const pyBaht=(v)=>PAD.t+ch-(v/maxB)*ch;
+  if(adj==='all'||adj==='<=0.5'){
+    ctx.beginPath();months.forEach((r,i)=>{const x=px(i),y=pyCases(getLE(r));i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.lineTo(px(months.length-1),PAD.t+ch);ctx.lineTo(px(0),PAD.t+ch);ctx.closePath();ctx.fillStyle='rgba(34,211,238,.08)';ctx.fill();
+  }
+  ctx.beginPath();months.forEach((r,i)=>{const x=px(i),y=pyBaht(r.baht);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.strokeStyle='rgba(251,191,36,.65)';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.stroke();ctx.setLineDash([]);
+  if(adj==='all'||adj==='<=0.5'){ctx.beginPath();months.forEach((r,i)=>{const x=px(i),y=pyCases(getLE(r));i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.strokeStyle='#22d3ee';ctx.lineWidth=2.5;ctx.stroke();}
+  if(adj==='all'||adj==='>0.5'){ctx.beginPath();months.forEach((r,i)=>{const x=px(i),y=pyCases(getGT(r));i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.strokeStyle='rgba(34,211,238,.38)';ctx.lineWidth=2;ctx.stroke();}
+  months.forEach((r,i)=>{
+    const x=px(i),cases=getCases(r);const yC=pyCases(cases),yB=pyBaht(r.baht);
+    ctx.beginPath();ctx.arc(x,yC,3,0,Math.PI*2);ctx.fillStyle='#22d3ee';ctx.fill();
+    ctx.beginPath();ctx.arc(x,yB,2.5,0,Math.PI*2);ctx.fillStyle='rgba(251,191,36,.7)';ctx.fill();
+    const skip=Math.ceil(months.length/18);
+    if(i%skip===0||i===months.length-1){ctx.save();ctx.translate(x,AR_CH-8);ctx.rotate(-0.6);ctx.font='10px Segoe UI';ctx.fillStyle='#94a3b8';ctx.textAlign='right';ctx.fillText(arFmtYM(r.ym),0,0);ctx.restore();}
+    arChartMeta.push({ym:r.ym,x,w:step,cases,baht:r.baht,groups:r.groups||{}});
+  });
+  ctx.strokeStyle='#334155';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(PAD.l,PAD.t);ctx.lineTo(PAD.l,PAD.t+ch);ctx.lineTo(W-PAD.r,PAD.t+ch);ctx.stroke();
+  const lx=PAD.l+4;
+  ctx.strokeStyle='#22d3ee';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(lx,PAD.t-13);ctx.lineTo(lx+18,PAD.t-13);ctx.stroke();ctx.beginPath();ctx.arc(lx+9,PAD.t-13,3,0,Math.PI*2);ctx.fillStyle='#22d3ee';ctx.fill();
+  ctx.fillStyle='#94a3b8';ctx.font='10px Segoe UI';ctx.textAlign='left';ctx.fillText('<=0.5 (เคส)',lx+22,PAD.t-10);
+  ctx.strokeStyle='rgba(34,211,238,.38)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(lx+108,PAD.t-13);ctx.lineTo(lx+126,PAD.t-13);ctx.stroke();ctx.fillText('>0.5 (เคส)',lx+130,PAD.t-10);
+  ctx.strokeStyle='rgba(251,191,36,.65)';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(lx+214,PAD.t-13);ctx.lineTo(lx+232,PAD.t-13);ctx.stroke();ctx.setLineDash([]);ctx.fillText('มูลค่า (แกนขวา)',lx+236,PAD.t-10);
+}
+
+/* ── Chart events ── */
+function arChartMM(e){
+  const cv=document.getElementById('ar-chart-cv');if(!cv)return;
+  const rc=cv.getBoundingClientRect(),mx=e.clientX-rc.left;
+  const hit=arChartMeta.find(m=>Math.abs(mx-m.x)<=m.w/2);
+  if(hit){cv.style.cursor='pointer';arShowTT(e.clientX,e.clientY,`<b>${arFmtYM(hit.ym)}</b><br>เคส <=0.5: <b style="color:#22d3ee">${arFmt(hit.groups['<=0.5']||0)}</b><br>เคส >0.5: ${arFmt(hit.groups['>0.5']||0)}<br>มูลค่า: <b style="color:#fbbf24">${arFmtB(hit.baht)}</b>`);}
+  else{cv.style.cursor='crosshair';arHideTT();}
+}
+function arChartClick(e){
+  const cv=document.getElementById('ar-chart-cv');if(!cv)return;
+  const rc=cv.getBoundingClientRect(),mx=e.clientX-rc.left;
+  const hit=arChartMeta.find(m=>Math.abs(mx-m.x)<=m.w/2);
+  if(hit)openProvModal(hit.ym);
+}
+
+/* ── Province Modal ── */
+function openProvModal(ym){
+  const DATA=ADJRW_DATA;ar_chartYm=ym||'';
+  const label=ym?arFmtYM(ym):'สรุปทั้งหมด';
+  document.getElementById('prov-title').textContent='รายจังหวัด — '+label;
+  const groups=DATA.filters.adjrwGroups;const matched=arGetMatchedHcodes();
+  let provRows;
+  if(matched&&DATA.monthly_prov_hosp){
+    const src=ym&&DATA.monthly_prov_hosp[ym]?{[ym]:DATA.monthly_prov_hosp[ym]}:DATA.monthly_prov_hosp;
+    const provMap={};
+    Object.values(src).forEach(pvMap=>{Object.entries(pvMap).forEach(([provName,hospMap])=>{Object.entries(hospMap).forEach(([hc,v])=>{if(matched.has(hc)){if(!provMap[provName])provMap[provName]={cases:0,baht:0,groups:{}};provMap[provName].cases+=v.cases;provMap[provName].baht+=v.baht;}});});});
+    provRows=Object.entries(provMap).map(([name,v])=>({name,...v})).sort((a,b)=>b.cases-a.cases);
+  }else if(ym&&DATA.monthly_prov&&DATA.monthly_prov[ym]){
+    const mp=DATA.monthly_prov[ym];provRows=Object.entries(mp).map(([name,v])=>({name,...v})).sort((a,b)=>b.cases-a.cases);
+  }else{
+    provRows=DATA.provinces.map(p=>({name:p.name,cases:p.cases,baht:p.baht,groups:p.groups}));
+  }
+  let html=`<table class="ranking-tbl"><thead><tr><th>จังหวัด</th>`;
+  groups.forEach(g=>{html+=`<th class="n">${g}</th>`;});
+  html+=`<th class="n">รวม</th><th class="n">มูลค่า</th></tr></thead><tbody>`;
+  provRows.forEach(p=>{
+    html+=`<tr><td><span class="lnk" onclick="openHospModal('${p.name}')">${p.name}</span></td>`;
+    groups.forEach(g=>{html+=`<td class="n">${arFmt((p.groups||{})[g]||0)}</td>`;});
+    html+=`<td class="n"><b>${arFmt(p.cases)}</b></td><td class="n">${arFmtB(p.baht)}</td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('prov-body').innerHTML=html;openModal('prov-modal');
+}
+
+/* ── Hospital Modal ── */
+function openHospModal(provName){
+  const DATA=ADJRW_DATA;const prov=DATA.provinces.find(p=>p.name===provName);if(!prov)return;
+  const ym=ar_chartYm;const matched=arGetMatchedHcodes();
+  const mph=ym&&DATA.monthly_prov_hosp&&DATA.monthly_prov_hosp[ym]&&DATA.monthly_prov_hosp[ym][provName];
+  const label=ym?(' — '+arFmtYM(ym)):'';
+  document.getElementById('hosp-title').textContent='หน่วยบริการ — '+provName+label;
+  let hospRows;
+  if(mph){
+    hospRows=Object.entries(mph).filter(([hcode])=>!matched||matched.has(hcode)).map(([hcode,v])=>{
+      const h=prov.hospitals.find(h=>h.hcode===hcode);const meta=(DATA.hcode_meta||{})[hcode]||{};
+      const name=h?h.name:(meta.name||('รพ.'+hcode));const level=h?h.level:(meta.level||'?');
+      const hcGrp=ym&&DATA.monthly_hc_groups?.[ym]?.[hcode];const groups=hcGrp?hcGrp.adj:(h?h.groups:{});
+      return {hcode,name,level,cases:v.cases,baht:v.baht,groups};
+    }).sort((a,b)=>b.cases-a.cases);
+  }else{
+    hospRows=prov.hospitals.filter(h=>!matched||matched.has(h.hcode)).slice();
+  }
+  const groups=DATA.filters.adjrwGroups;
+  let html=`<table class="ranking-tbl"><thead><tr><th>#</th><th>หน่วยบริการ</th><th>ระดับ</th>`;
+  groups.forEach(g=>{html+=`<th class="n">${g}</th>`;});
+  html+=`<th class="n">รวม</th><th class="n">มูลค่า</th></tr></thead><tbody>`;
+  hospRows.forEach((h,i)=>{
+    const safeN=h.name.replace(/'/g,"\\'");
+    html+=`<tr><td style="color:var(--mut)">${i+1}</td>`;
+    html+=`<td><span class="lnk" onclick="openDisModal('${h.hcode}','${safeN}','${provName}')">${h.name}</span></td>`;
+    html+=`<td><span class="badge ${h.level}">${h.level}</span></td>`;
+    groups.forEach(g=>{html+=`<td class="n">${arFmt((h.groups||{})[g]||0)}</td>`;});
+    html+=`<td class="n"><b>${arFmt(h.cases)}</b></td><td class="n">${arFmtB(h.baht)}</td></tr>`;
+  });
+  html+=`</tbody></table>`;document.getElementById('hosp-body').innerHTML=html;openModal('hosp-modal');
+}
+
+/* ── Disease per hospital Modal ── */
+function openDisModal(hcode,hname,provName){
+  const DATA=ADJRW_DATA;ar_disHcode=hcode;ar_disHname=hname;ar_disProvName=provName;
+  document.getElementById('dis-title').textContent='โรค — '+hname;
+  const prov=DATA.provinces.find(p=>p.name===provName);const hosp=prov&&prov.hospitals.find(h=>h.hcode===hcode);
+  if(!hosp){
+    const ym=ar_chartYm;const mphHosp=ym&&DATA.monthly_prov_hosp?.[ym]?.[provName]?.[hcode];
+    let html='';
+    if(ym){const mthCases=mphHosp?mphHosp.cases:null;const mthBaht=mphHosp?mphHosp.baht:null;html+=`<div style="font-size:11px;color:var(--mut);margin-bottom:8px;padding:6px 8px;background:rgba(34,211,238,.07);border-radius:6px;border-left:3px solid var(--accent)">เดือน <b style="color:var(--ink)">${arFmtYM(ym)}</b> &nbsp;|&nbsp; ${mthCases!=null?`<b style="color:var(--accent)">${arFmt(mthCases)}</b> เคส / ${arFmtB(mthBaht)}`:'(ไม่มีข้อมูลเดือนนี้)'}</div>`;}
+    html+=`<div style="color:var(--mut);padding:12px;text-align:center;font-size:12px">ℹ️ ไม่พบข้อมูลโรครายหน่วยบริการ<br><span style="font-size:11px">(${hname} ไม่อยู่ในกลุ่มข้อมูลโรคสะสม)</span></div>`;
+    document.getElementById('dis-body').innerHTML=html;openModal('dis-modal');return;
+  }
+  const ym=ar_chartYm;const suggestFy=ym?arYmToFY(ym):null;const FYS=DATA.filters.gbYears||[];
+  const hasFyData=suggestFy&&(hosp.diseases||[]).some(d=>(d.yrCases?.[suggestFy]||0)>0);
+  ar_disSelFy=hasFyData?suggestFy:null;
+  arRenderDisTable();openModal('dis-modal');
+}
+
+function arRenderDisTable(){
+  const DATA=ADJRW_DATA;const prov=DATA.provinces.find(p=>p.name===ar_disProvName);const hosp=prov&&prov.hospitals.find(h=>h.hcode===ar_disHcode);
+  if(!hosp)return;
+  const ym=ar_chartYm;const mphHosp=ym&&DATA.monthly_prov_hosp?.[ym]?.[ar_disProvName]?.[ar_disHcode];
+  const mthCases=mphHosp?mphHosp.cases:null;const mthBaht=mphHosp?mphHosp.baht:null;const FYS=DATA.filters.gbYears||[];const selFy=ar_disSelFy;
+  let html='';
+  if(ym){html+=`<div style="font-size:11px;color:var(--mut);margin-bottom:8px;padding:6px 8px;background:rgba(34,211,238,.07);border-radius:6px;border-left:3px solid var(--accent)">เดือน <b style="color:var(--ink)">${arFmtYM(ym)}</b> &nbsp;|&nbsp; ${mthCases!=null?`<b style="color:var(--accent)">${arFmt(mthCases)}</b> เคส / <b style="color:var(--warn)">${arFmtB(mthBaht)}</b>`:'(ไม่มีข้อมูลเดือนนี้)'}<span style="opacity:.55;margin-left:8px;font-size:10px">(โรคไม่รองรับระดับเดือน — เลือกปีงบด้านล่าง)</span></div>`;}
+  const chips=[...FYS,null];const suggestFy=ym?arYmToFY(ym):null;
+  html+=`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;align-items:center"><span style="font-size:11px;color:var(--mut)">ปีงบฯ:</span>`;
+  chips.forEach(fy=>{
+    const label=fy?fy.replace('ปีงบฯ ','ปี '):'ทั้งหมด';const isActive=selFy===fy;const isSuggest=fy===suggestFy&&!isActive;
+    const style=isActive?'background:var(--accent);color:var(--accent-ink);':isSuggest?'background:rgba(34,211,238,.15);color:var(--accent);border:1px dashed var(--accent);':'background:var(--card2);color:var(--mut);';
+    html+=`<button onclick="ar_disSelFy=${fy===null?'null':"'"+fy+"'"};arRenderDisTable()" style="${style}border:none;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;font-family:inherit">${label}</button>`;
+  });
+  html+='</div>';
+  const autoSwitched=suggestFy&&selFy===null&&(hosp.diseases||[]).every(d=>(d.yrCases?.[suggestFy]||0)===0);
+  if(autoSwitched){html+=`<div style="font-size:10px;color:var(--warn);margin-bottom:6px">⚠️ ข้อมูลรายโรคของ ${suggestFy} ไม่ครอบคลุม Top-10 — แสดงยอดรวมทั้งหมดแทน</div>`;}
+  let diseases=(hosp.diseases||[]).map(d=>{const fyCases=selFy?(d.yrCases?.[selFy]||0):d.cases;const fyBaht=selFy&&d.cases>0?d.baht*(fyCases/d.cases):d.baht;return {...d,fyCases,fyBaht};});
+  if(selFy){diseases=diseases.filter(d=>d.fyCases>0).sort((a,b)=>b.fyCases-a.fyCases);}
+  const casesLabel=selFy?`เคส (${selFy.replace('ปีงบฯ ','ปีงบ ')})`:'เคส (ทั้งหมด)';const maxRw=Math.max(...diseases.map(d=>d.avgRw||0),0.01);
+  if(diseases.length===0){html+=`<div style="text-align:center;color:var(--mut);padding:16px;font-size:12px">ไม่พบโรคใน ${selFy||'ช่วงนี้'}</div>`;}
+  else{
+    html+=`<table class="ranking-tbl"><thead><tr><th>#</th><th>รหัส</th><th>ชื่อโรค</th><th class="n">avgRW</th><th class="n">${casesLabel}</th><th class="n">มูลค่า</th></tr></thead><tbody>`;
+    diseases.forEach((d,i)=>{const w=Math.round((d.avgRw/maxRw)*50);html+=`<tr><td style="color:var(--mut)">${i+1}</td><td style="color:var(--mut);font-size:11px">${d.pdx}</td><td style="font-size:12px">${d.name}</td><td class="n"><span class="rw-bar" style="width:${w}px"></span>${d.avgRw}</td><td class="n"><b style="color:var(--accent)">${arFmt(d.fyCases)}</b></td><td class="n">${arFmtB(d.fyBaht)}</td></tr>`;});
+    html+=`</tbody></table>`;
+  }
+  document.getElementById('dis-body').innerHTML=html;
+}
+
+/* ── Disease Table ── */
+function arSetPageSize(n){
+  arDisPageSize=n;arDisPage=0;
+  document.querySelectorAll('.ar-pgsz-btn').forEach(el=>el.classList.toggle('on',parseInt(el.dataset.n)===n));
+  arRenderDiseaseTable();
+}
+function arSyncDisChips(grp){
+  document.getElementById('ar-dis-adjrw-grp').value=grp;
+  document.querySelectorAll('.ar-dis-grp-chip').forEach(el=>el.classList.toggle('on',el.dataset.grp===grp));
+}
+function arSetDisGrp(grp){
+  document.getElementById('ar-f-adjrw').value=grp;arSyncDisChips(grp);arFState.adjrw=grp;arDisPage=0;arRenderDiseaseTable();
+}
+function arRenderDiseaseTable(){
+  const DATA=ADJRW_DATA;const q=(document.getElementById('ar-dis-search').value||'').toLowerCase();
+  const grpF=document.getElementById('ar-dis-adjrw-grp').value;
+  let list=DATA.diseases.filter(d=>{if(q&&!(d.pdx+d.name).toLowerCase().includes(q))return false;if(grpF==='<=0.5'&&d.avgRw>0.5)return false;if(grpF==='>0.5'&&d.avgRw<=0.5)return false;return true;});
+  list=list.slice().sort((a,b)=>b.avgRw-a.avgRw||b.cases-a.cases);const total=list.length;
+  const titleEl=document.getElementById('ar-dis-tbl-title');if(titleEl)titleEl.textContent='🔬 ตารางโรค (PDX) — '+arFmt(total)+' โรค';
+  const PAGE=25;let slice;
+  if(arDisPageSize===0){slice=list.slice(arDisPage*PAGE,(arDisPage+1)*PAGE);}
+  else{slice=list.slice(0,arDisPageSize);arDisPage=0;}
+  const maxRw=Math.max(...slice.map(d=>d.avgRw||0),0.01);
+  const {prov:pF,level:lF,aff:aF}=arFState;const hasFilter=pF!=='all'||lF!=='all'||aF!=='all';
+  const scopeNote=hasFilter?`<div style="font-size:10px;color:var(--warn);margin-bottom:6px">⚙️ ตารางนี้แสดงข้อมูลรวมทุกปีทั้งเขต — คลิกชื่อโรคเพื่อดูข้อมูลตามตัวกรองที่เลือก</div>`:'';
+  let html=scopeNote+`<table class="ranking-tbl"><thead><tr>
+    <th style="position:sticky;top:0;z-index:2;background:var(--card)">#</th>
+    <th style="position:sticky;top:0;z-index:2;background:var(--card)">รหัส</th>
+    <th style="position:sticky;top:0;z-index:2;background:var(--card)">ชื่อโรค</th>
+    <th class="n" style="position:sticky;top:0;z-index:2;background:var(--card)">avgRW กลุ่ม</th>
+    <th class="n" style="position:sticky;top:0;z-index:2;background:var(--card)">ความถี่ (เคส) ทุกปี</th>
+    <th class="n" style="position:sticky;top:0;z-index:2;background:var(--card)">มูลค่า (฿)</th>
+  </tr></thead><tbody>`;
+  slice.forEach((d,i)=>{
+    const rank=(arDisPageSize===0?arDisPage*PAGE:0)+i+1;const w=Math.round((d.avgRw/maxRw)*50);
+    html+=`<tr><td style="color:var(--mut)">${rank}</td><td style="color:var(--mut);font-size:11px">${d.pdx}</td>`;
+    html+=`<td><span class="lnk" onclick="openDisProvModal('${d.pdx}')" title="คลิกดูรายจังหวัด → รพ.">${d.name}</span></td>`;
+    html+=`<td class="n"><span class="rw-bar" style="width:${w}px"></span>${d.avgRw}</td>`;
+    html+=`<td class="n">${arFmt(d.cases)}</td><td class="n">${arFmtB(d.baht)}</td></tr>`;
+  });
+  html+=`</tbody></table>`;document.getElementById('ar-dis-tbl').innerHTML=html;
+  const showPager=arDisPageSize===0;
+  document.getElementById('ar-dis-pager').style.display=showPager?'':'none';
+  document.getElementById('ar-dis-prev').style.display=showPager?'':'none';
+  document.getElementById('ar-dis-next').style.display=showPager?'':'none';
+  if(showPager){
+    document.getElementById('ar-dis-pager').innerHTML=`แสดง ${arDisPage*PAGE+1}–${Math.min((arDisPage+1)*PAGE,total)} จาก ${arFmt(total)} โรค`;
+    document.getElementById('ar-dis-prev').disabled=arDisPage===0;
+    document.getElementById('ar-dis-next').disabled=(arDisPage+1)*PAGE>=total;
+  }
+}
+
+/* ── Disease Drill: โรค → จังหวัด ── */
+function arPgszBar(sizVar,setFn){
+  const sizes=[10,20,50,0];const labels=['10','20','50','Max'];
+  return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px"><span style="font-size:11px;color:var(--mut)">แสดง:</span>${sizes.map((n,i)=>`<button class="pgsz-btn${sizVar===n?' on':''}" onclick="${setFn}(${n})">${labels[i]}</button>`).join('')}</div>`;
+}
+function openDisProvModal(pdx,pgSz){
+  const DATA=ADJRW_DATA;const dis=DATA.diseases.find(d=>d.pdx===pdx);if(!dis)return;
+  ar_curPdx=pdx;ar_chartYm='';if(pgSz!==undefined)arDprovPageSize=pgSz;
+  document.getElementById('dprov-title').textContent=dis.pdx+' — '+dis.name;
+  const FYS=DATA.filters.gbYears||[];const provYrMap=dis.provYr||{};const {prov:provF}=arFState;const matched=arGetMatchedHcodes();
+  let allRows=Object.entries(provYrMap).map(([name,yrData])=>{
+    const yrCases=FYS.map(y=>yrData[y]||0);const cases=yrCases.reduce((s,v)=>s+v,0);let baht=0;
+    const pObj=DATA.provinces.find(p=>p.name===name);
+    if(pObj){pObj.hospitals.forEach(h=>{if(matched&&!matched.has(h.hcode))return;const hd=(h.diseases||[]).find(d=>d.pdx===pdx);if(hd)baht+=hd.baht||0;});}
+    return {name,yrCases,cases,baht};
+  });
+  if(provF!=='all')allRows=allRows.filter(r=>r.name===provF);
+  let displayRows=allRows;
+  if(matched){displayRows=allRows.map(r=>{const pObj=DATA.provinces.find(p=>p.name===r.name);if(!pObj)return r;let cases2=0;const yrC2=FYS.map(()=>0);pObj.hospitals.forEach(h=>{if(!matched.has(h.hcode))return;const hcTop=(h.diseases||[]).find(d=>d.pdx===pdx);if(!hcTop)return;cases2+=hcTop.cases||0;FYS.forEach((y,i)=>{yrC2[i]+=(hcTop.yrCases&&hcTop.yrCases[y])||0;});});return {...r,cases:cases2,yrCases:yrC2};}).filter(r=>r.cases>0);}
+  displayRows.sort((a,b)=>b.cases-a.cases);const grandC=displayRows.reduce((s,r)=>s+r.cases,0);const grandYr=FYS.map((_,i)=>displayRows.reduce((s,r)=>s+r.yrCases[i],0));const rows=arDprovPageSize===0?displayRows:displayRows.slice(0,arDprovPageSize);
+  const filterNote=(provF!=='all'||matched)?`<div style="font-size:10px;color:var(--warn);margin-bottom:8px">⚙️ แสดงตามตัวกรองที่เลือก${provF!=='all'?' (จ.'+provF+')':''}${matched?' (ระดับ/สังกัดที่กรอง)':''}</div>`:'';
+  let html=arPgszBar(arDprovPageSize,`(n)=>openDisProvModal('${pdx.replace(/'/g,"\\'")}',n)`);
+  html+=filterNote+`<table class="ranking-tbl"><thead><tr><th>#</th><th>จังหวัด</th>`;
+  FYS.forEach(y=>{html+=`<th class="n" style="font-size:10px">${y.replace('ปีงบฯ ','ปี ')}</th>`;});
+  html+=`<th class="n">รวม</th><th class="n">%</th><th class="n">มูลค่า *</th></tr></thead><tbody>`;
+  rows.forEach((p,i)=>{
+    const pct=grandC?((p.cases/grandC)*100).toFixed(1):'0';const safeP=p.name.replace(/'/g,"\\'");
+    html+=`<tr><td style="color:var(--mut)">${i+1}</td><td><span class="lnk" onclick="openDisHospModal('${pdx}','${safeP}')">${p.name}</span></td>`;
+    p.yrCases.forEach(c=>{html+=c?`<td class="n">${arFmt(c)}</td>`:`<td class="n" style="color:var(--mut)">—</td>`;});
+    html+=`<td class="n"><b>${arFmt(p.cases)}</b></td><td class="n">${pct}%</td><td class="n">${arFmtB(p.baht)}</td></tr>`;
+  });
+  html+=`<tr style="background:var(--card2)"><td></td><td><b>รวม</b></td>`;
+  grandYr.forEach(c=>{html+=`<td class="n"><b>${arFmt(c)}</b></td>`;});
+  html+=`<td class="n"><b>${arFmt(grandC)}</b></td><td class="n">100%</td><td class="n">—</td></tr></tbody></table>`;
+  html+=`<div style="font-size:10px;color:var(--mut);margin-top:6px">* มูลค่าประมาณจาก Top-10 โรคต่อ รพ.</div>`;
+  document.getElementById('dprov-body').innerHTML=html;openModal('dprov-modal');
+}
+
+/* ── Disease Drill: จังหวัด → รพ. ── */
+function openDisHospModal(pdx,provName,pgSz){
+  const DATA=ADJRW_DATA;const dis=DATA.diseases.find(d=>d.pdx===pdx);const prov=DATA.provinces.find(p=>p.name===provName);if(!dis||!prov)return;
+  ar_curProvName=provName;if(pgSz!==undefined)arDhospPageSize=pgSz;
+  document.getElementById('dhosp-title').textContent='หน่วยบริการ — '+provName;
+  document.getElementById('dhosp-bc-dis').textContent=dis.pdx+' '+dis.name;
+  const FYS=DATA.filters.gbYears||[];const hdYr=DATA.hosp_dis_yr||{};const matched=arGetMatchedHcodes();
+  const provYrData=(dis.provYr||{})[provName]||{};const provTotal=FYS.reduce((s,y)=>s+(provYrData[y]||0),0);
+  const allRows=prov.hospitals.filter(h=>!matched||matched.has(h.hcode)).map(h=>{
+    const hcFull=hdYr[h.hcode]&&hdYr[h.hcode][pdx];const hcTop=(h.diseases||[]).find(d=>d.pdx===pdx);
+    const disCases=hcFull?hcFull.cases:(hcTop?hcTop.cases:null);const disBaht=hcFull?hcFull.baht:(hcTop?hcTop.baht:null);
+    const yrCases=FYS.map(y=>hcFull?(hcFull.yr&&hcFull.yr[y]||0):(hcTop&&hcTop.yrCases&&hcTop.yrCases[y]||0));
+    return {hcode:h.hcode,name:h.name,level:h.level,disCases,disBaht,yrCases};
+  });
+  const hasData=allRows.some(h=>h.disCases>0);const filtRows=hasData?allRows.filter(h=>h.disCases>0):allRows;
+  filtRows.sort((a,b)=>(b.disCases||0)-(a.disCases||0));
+  const grandDis=filtRows.reduce((s,r)=>s+(r.disCases||0),0);const grandBaht=filtRows.reduce((s,r)=>s+(r.disBaht||0),0);const grandYr=FYS.map((_,i)=>filtRows.reduce((s,r)=>s+(r.yrCases[i]||0),0));const rows=arDhospPageSize===0?filtRows:filtRows.slice(0,arDhospPageSize);
+  const coverPct=provTotal>0?Math.round(grandDis/provTotal*100):null;
+  const dataNote=!hasData?`<span style="color:var(--warn)">⚠️ ไม่พบข้อมูลโรคต่อ รพ.</span>`:coverPct!==null?`ยอดรพ. <b style="color:var(--accent)">${arFmt(grandDis)}</b> เคส <span style="color:var(--mut)">/ จังหวัด ${arFmt(provTotal)} เคส (${coverPct}%)</span>`:`เคสของโรค <b style="color:var(--accent)">${dis.pdx}</b>`;
+  let html=arPgszBar(arDhospPageSize,`(n)=>openDisHospModal('${pdx}','${provName.replace(/'/g,"\\'")}',n)`);
+  html+=`<div style="font-size:11px;color:var(--mut);margin-bottom:8px;padding:5px 8px;background:rgba(34,211,238,.06);border-radius:6px">${dataNote}${matched?` <span style="color:var(--warn);margin-left:6px">⚙️ กรองตามระดับ/สังกัด</span>`:''}</div>`;
+  html+=`<table class="ranking-tbl"><thead><tr><th>#</th><th>หน่วยบริการ</th><th>ระดับ</th>`;
+  FYS.forEach(y=>{html+=`<th class="n" style="font-size:10px">${y.replace('ปีงบฯ ','ปี ')}</th>`;});
+  html+=`<th class="n">รวม (เคส)</th><th class="n">มูลค่า</th></tr></thead><tbody>`;
+  rows.forEach((h,i)=>{
+    const safeN=h.name.replace(/'/g,"\\'");
+    html+=`<tr><td style="color:var(--mut)">${i+1}</td>`;
+    html+=`<td><span class="lnk" onclick="openDisModal('${h.hcode}','${safeN}','${provName}')">${h.name}</span></td>`;
+    html+=`<td><span class="badge ${h.level}">${h.level}</span></td>`;
+    h.yrCases.forEach(c=>{html+=c?`<td class="n">${arFmt(c)}</td>`:`<td class="n" style="color:var(--mut)">—</td>`;});
+    html+=`<td class="n"><b style="color:var(--accent)">${h.disCases!=null?arFmt(h.disCases):'—'}</b></td><td class="n">${h.disBaht!=null?arFmtB(h.disBaht):'—'}</td></tr>`;
+  });
+  html+=`<tr style="background:var(--card2);border-top:2px solid var(--accent)"><td></td><td><b>รวม ${filtRows.length} แห่ง</b></td><td></td>`;
+  grandYr.forEach(c=>{html+=`<td class="n"><b>${arFmt(c)}</b></td>`;});
+  html+=`<td class="n"><b style="color:var(--accent)">${arFmt(grandDis)}</b></td><td class="n"><b>${arFmtB(grandBaht)}</b></td></tr></tbody></table>`;
+  document.getElementById('dhosp-body').innerHTML=html;openModal('dhosp-modal');
+}
+
+/* ── Province × Year Modal ── */
+function openProvYrModal(pdx){
+  const DATA=ADJRW_DATA;const dis=DATA.diseases.find(d=>d.pdx===pdx);if(!dis)return;
+  document.getElementById('pvyr-title').textContent=dis.pdx+' — '+dis.name;
+  const yrs=DATA.filters.gbYears;const provs=Object.keys(dis.provYr||{}).sort();
+  let html=`<table class="ranking-tbl"><tr><th>จังหวัด</th>`;
+  yrs.forEach(y=>{html+=`<th class="n">${y.replace('ปีงบฯ ','ปี ')}</th>`;});
+  html+=`<th class="n">รวม</th></tr>`;
+  let colTots=yrs.map(()=>0),grand=0;
+  provs.forEach(prov=>{const pd=dis.provYr[prov]||{};const rt=yrs.reduce((s,y)=>s+(pd[y]||0),0);grand+=rt;html+=`<tr><td>${prov}</td>`;yrs.forEach((y,yi)=>{const v=pd[y]||0;colTots[yi]+=v;html+=`<td class="n">${arFmt(v)}</td>`;});html+=`<td class="n"><b>${arFmt(rt)}</b></td></tr>`;});
+  html+=`<tr style="background:var(--card2)"><td><b>รวม</b></td>`;yrs.forEach((_,yi)=>{html+=`<td class="n"><b>${arFmt(colTots[yi])}</b></td>`;});html+=`<td class="n"><b>${arFmt(grand)}</b></td></tr></table>`;
+  document.getElementById('pvyr-body').innerHTML=html;openModal('pvyr-modal');
+}
+
+/* ── Modal helpers ── */
+function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('on');}
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('on');}
+function closeAll(){document.querySelectorAll('.modal-overlay.on').forEach(e=>e.classList.remove('on'));}
+function overlayClick(e,id){if(e.target===e.currentTarget)closeAll();}
+
+/* ── Reset filters ── */
+function arResetFilters(){
+  document.getElementById('ar-f-adjrw').value='all';document.getElementById('ar-f-los').value='all';
+  document.getElementById('ar-f-prov').value='all';document.getElementById('ar-f-level').value='all';document.getElementById('ar-f-aff').value='all';
+  arSyncDisChips('all');arSetFY('all');
+}
+
+/* ── Main init function ── */
+async function initAdjRWDashboard(){
+  // Show section
+  const body=document.getElementById('adjlow_body');
+  if(!body)return;
+  if(_adjrwInitialized){return;}
+
+  // Show loading
+  body.innerHTML=`<div style="padding:60px;text-align:center;color:var(--mut)"><div style="font-size:32px;margin-bottom:12px">⏳</div><div>กำลังโหลดข้อมูล adjRW...</div></div>`;
+
+  try{
+    const resp=await fetch('_adjrw_los2.json');
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    ADJRW_DATA=await resp.json();
+  }catch(err){
+    body.innerHTML=`<div style="padding:40px;text-align:center;color:var(--warn)"><b>โหลดข้อมูลไม่สำเร็จ</b><br><span style="font-size:12px;color:var(--mut)">${err.message}</span><br><br><button onclick="initAdjRWDashboard()" style="background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 18px;cursor:pointer;font-family:inherit">ลองใหม่</button></div>`;
+    return;
+  }
+
+  const DATA=ADJRW_DATA;
+
+  // Build the full dashboard HTML into adjlow_body
+  body.innerHTML=`
+    <h1>📉 adjRW &lt; 0.5 (ความซับซ้อนต่ำ)</h1>
+    <div class="sub">เจาะลึกรายมิติ พร้อมตัวกรอง <span class="navbtn home" style="margin-left:8px;font-size:12px;padding:4px 10px" onclick="go('home')">⌂ กลับสารบัญ</span></div>
+
+    <div class="card" style="margin-bottom:14px" id="adjlow_progress"></div>
+
+    <!-- Filter Bar -->
+    <div class="adjrw-bar">
+      <span class="lab">AdjRW:</span>
+      <select id="ar-f-adjrw" onchange="arApplyFilters()"><option value="all">— ทั้งหมด —</option></select>
+      <div class="sep"></div>
+      <span class="lab">LOS:</span>
+      <select id="ar-f-los" onchange="arApplyFilters()"><option value="all">— ทั้งหมด —</option></select>
+      <div class="sep"></div>
+      <span class="lab">สังกัดจังหวัด:</span>
+      <select id="ar-f-prov" onchange="arApplyFilters()"><option value="all">— ทั้งหมด —</option></select>
+      <div class="sep"></div>
+      <span class="lab">ระดับหน่วย:</span>
+      <select id="ar-f-level" onchange="arApplyFilters()"><option value="all">— ทั้งหมด —</option></select>
+      <div class="sep"></div>
+      <span class="lab">ชื่อสังกัด:</span>
+      <select id="ar-f-aff" onchange="arApplyFilters()" style="max-width:160px"><option value="all">— ทั้งหมด —</option></select>
+      <div class="sep"></div>
+      <span class="lab">ช่วงเวลา:</span>
+      <span class="chip ar-fy-chip on" data-fy="all" onclick="arSetFY('all')">ทั้งหมด</span>
+      <span class="chip ar-fy-chip" data-fy="66" onclick="arSetFY('66')">ปีงบ 66</span>
+      <span class="chip ar-fy-chip" data-fy="67" onclick="arSetFY('67')">ปีงบ 67</span>
+      <span class="chip ar-fy-chip" data-fy="68" onclick="arSetFY('68')">ปีงบ 68</span>
+      <span class="chip ar-fy-chip" data-fy="69" onclick="arSetFY('69')">ปีงบ 69</span>
+      <div class="sl-row">
+        <div class="sl-labels">
+          <span id="ar-sl-from-label">—</span>
+          <span id="ar-sl-mid" class="sl-mid">ทั้งหมด</span>
+          <span id="ar-sl-to-label">—</span>
+        </div>
+        <div class="range-wrap" id="ar-sl-wrap">
+          <div class="sl-bar" id="ar-sl-bar"></div>
+          <input type="range" id="ar-sl-from" min="0" max="48" value="0" step="1" oninput="arSliderMove()">
+          <input type="range" id="ar-sl-to" min="0" max="48" value="48" step="1" oninput="arSliderMove()">
+        </div>
+      </div>
+      <div class="sep"></div>
+      <span class="chip" onclick="arResetFilters()">↺ รีเซ็ต</span>
+    </div>
+
+    <!-- KPIs -->
+    <div class="adjrw-kpis">
+      <div class="kpi"><div class="t">เคส (ตามตัวกรอง)</div><div class="v acc" id="ar-kv-cases">—</div><div class="u">เคสทั้งหมด</div></div>
+      <div class="kpi"><div class="t">มูลค่ารวม</div><div class="v warn" id="ar-kv-baht">—</div><div class="u">รวมทุกกลุ่ม</div></div>
+      <div class="kpi"><div class="t">จำนวนจังหวัด</div><div class="v acc" id="ar-kv-prov">8</div><div class="u">จังหวัด</div></div>
+      <div class="kpi"><div class="t">ช่วงข้อมูล</div><div class="v" style="font-size:14px" id="ar-kv-range">—</div><div class="u">ช่วงเวลาที่เลือก</div></div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card" style="margin-bottom:14px">
+      <h3>📈 แนวโน้มรายเดือน — เคส + มูลค่า
+        <span class="hint" style="font-size:11px;float:right">คลิกจุด → ดูรายละเอียดจังหวัดของเดือนนั้น</span>
+      </h3>
+      <canvas id="ar-chart-cv" height="220" style="display:block;width:100%;cursor:crosshair"></canvas>
+    </div>
+
+    <!-- Summary Tables -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="card"><h3>📊 สรุปตาม AdjRW Group</h3><div class="adjrw-tblwrap" id="ar-sum-adj"></div></div>
+      <div class="card"><h3>🕐 สรุปตาม LOS Group (วันนอน)</h3><div class="adjrw-tblwrap" id="ar-sum-los"></div></div>
+    </div>
+
+    <!-- Disease Table -->
+    <div class="card">
+      <h3 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span id="ar-dis-tbl-title">🔬 ตารางโรค (PDX)</span>
+        <span style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--mut)">AdjRW:</span>
+          <span class="chip ar-dis-grp-chip on" data-grp="all" onclick="arSetDisGrp('all')">ทั้งหมด</span>
+          <span class="chip ar-dis-grp-chip" data-grp="<=0.5" onclick="arSetDisGrp('<=0.5')">≤ 0.5</span>
+          <span class="chip ar-dis-grp-chip" data-grp=">0.5" onclick="arSetDisGrp('>0.5')">&gt; 0.5</span>
+          <input class="search-input" id="ar-dis-search" placeholder="ค้นหา รหัส/ชื่อโรค…">
+        </span>
+      </h3>
+      <input type="hidden" id="ar-dis-adjrw-grp" value="all">
+      <div style="font-size:11px;color:var(--mut);margin-bottom:8px">เรียงตาม avgRW มากสุด → น้อยสุด · คลิกชื่อโรค → ดูจำนวนเคสรายจังหวัด × ปีงบประมาณ</div>
+      <div class="adjrw-tblwrap" id="ar-dis-tbl"></div>
+      <div class="pager" style="flex-wrap:wrap;gap:8px;margin-top:8px">
+        <span style="color:var(--mut);font-size:11px">แสดง:</span>
+        <button class="ar-pgsz-btn on" data-n="10" onclick="arSetPageSize(10)">Top 10</button>
+        <button class="ar-pgsz-btn" data-n="20" onclick="arSetPageSize(20)">Top 20</button>
+        <button class="ar-pgsz-btn" data-n="50" onclick="arSetPageSize(50)">Top 50</button>
+        <button class="ar-pgsz-btn" data-n="0" onclick="arSetPageSize(0)">ทั้งหมด</button>
+        <div class="sep" style="height:20px"></div>
+        <button id="ar-dis-prev" style="display:none">◀ ก่อน</button>
+        <span id="ar-dis-pager" style="display:none"></span>
+        <button id="ar-dis-next" style="display:none">ถัด ▶</button>
+      </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="adjrw-tt" id="adjrw-tt"></div>
+  `;
+
+  // Also render the adjlow_progress bar (existing renderAdjMe progress section)
+  const progAdj=document.getElementById('adjlow_progress');
+  if(progAdj){
+    const rws69adj=(FD.byIssue['adjlow']?.core||[]).filter(r=>String(r.yr)==='69').reduce((s,r)=>s+r.rws,0);
+    progAdj.innerHTML=issueHbarHTML(rws69adj,8009.42,5005.89);
+  }
+
+  // Populate selects
+  DATA.filters.adjrwGroups.forEach(g=>{document.getElementById('ar-f-adjrw').insertAdjacentHTML('beforeend',`<option value="${g}">${g}</option>`);});
+  const losOrder=['0–6 ชม.','6-12 ชม.','12-24 ชม.','24-48 ชม.','48-72 ชม.','มากกว่า 72 ชม.'];
+  losOrder.forEach(g=>{document.getElementById('ar-f-los').insertAdjacentHTML('beforeend',`<option value="${g}">${g}</option>`);});
+  DATA.filters.provinces.forEach(g=>{document.getElementById('ar-f-prov').insertAdjacentHTML('beforeend',`<option value="${g}">${g}</option>`);});
+  const hmeta=DATA.hcode_meta||{};
+  const allLevels=[...new Set(Object.values(hmeta).map(m=>m.level))].sort().filter(Boolean);
+  const allAffs=[...new Set(Object.values(hmeta).map(m=>m.affiliation))].sort().filter(Boolean);
+  (DATA.filters.levels||allLevels).forEach(l=>{document.getElementById('ar-f-level').insertAdjacentHTML('beforeend',`<option value="${l}">${l}</option>`);});
+  (DATA.filters.affiliations||allAffs).forEach(a=>{document.getElementById('ar-f-aff').insertAdjacentHTML('beforeend',`<option value="${a}">${a}</option>`);});
+
+  // Init slider
+  arMONTHS_IDX=DATA.monthly.map(r=>r.ym);const maxIdx=arMONTHS_IDX.length-1;
+  document.getElementById('ar-sl-from').max=maxIdx;document.getElementById('ar-sl-to').max=maxIdx;
+  document.getElementById('ar-sl-from').value=0;document.getElementById('ar-sl-to').value=maxIdx;
+  document.getElementById('ar-sl-from-label').textContent=arFmtYM(arMONTHS_IDX[0])||'';
+  document.getElementById('ar-sl-to-label').textContent=arFmtYM(arMONTHS_IDX[maxIdx])||'';
+  arSlUpdateBar();
+
+  arFState={adjrw:'all',los:'all',prov:'all',level:'all',aff:'all',from:'',to:'',fy:'all'};
+  arSetFY('all');
+  arSetPageSize(10);
+
+  // Wire chart events
+  const cv=document.getElementById('ar-chart-cv');
+  cv.addEventListener('mousemove',arChartMM);
+  cv.addEventListener('mouseleave',arHideTT);
+  cv.addEventListener('click',arChartClick);
+  window.addEventListener('resize',arDrawChart);
+
+  // Wire disease table search + pager
+  document.getElementById('ar-dis-search').addEventListener('input',()=>{arDisPage=0;arRenderDiseaseTable();});
+  document.getElementById('ar-dis-prev').addEventListener('click',()=>{arDisPage--;arRenderDiseaseTable();});
+  document.getElementById('ar-dis-next').addEventListener('click',()=>{arDisPage++;arRenderDiseaseTable();});
+
+  _adjrwInitialized=true;
+}
+/* ═══════════ END adjRW DASHBOARD ═══════════ */
 </script>
 </body></html>
