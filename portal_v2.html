@@ -590,7 +590,7 @@ function go(id){
   PAGES.forEach(p=>{const el=C('pg-'+p);if(el)el.classList.toggle('show',p===id);});
   document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on',b.dataset.pg===id));
   window.scrollTo(0,0);
-  if(id==='home')renderHome();else if(id==='overview')renderOverview();else if(id==='tka'){tkaPageInit();return;}else if(id==='adjlow'){initAdjRWDashboard();return;}else renderIssue(id);
+  if(id==='home')renderHome();else if(id==='overview')renderOverview();else if(id==='tka'){tkaPageInit();return;}else if(id==='adjlow'){initAdjRWDashboard();return;}else if(id==='nb'){initNBDashboard();return;}else renderIssue(id);
 }
 
 function mkSparkSVG(vals,col){
@@ -711,42 +711,287 @@ function renderTKAme(){
   host.innerHTML=specHtml;
   mkProvYrChart('tka_prov_trend',pyr,PROVS,yrs);
 }
-/* ── NB M&E Page ──────────────────────────────────────────────── */
-function renderNBme(){
-  const rws69nb=(FD.byIssue['nb']?.core||[]).filter(r=>String(r.yr)==='69').reduce((s,r)=>s+r.rws,0);
-  const progNb=C('nb_progress');if(progNb)progNb.innerHTML=issueHbarHTML(rws69nb,4687.42,2929.64);
-  const hosps=ME.nb_hosp, lv=ME.nb_level, pyr=ME.nb_prov_yr;
-  const total=hosps.reduce((s,r)=>s+r.cases,0);
-  const lowCases=hosps.filter(r=>r.lvl_grp&&r.lvl_grp.includes('F2')||r.lvl_grp&&r.lvl_grp.includes('F3')).reduce((s,r)=>s+r.cases,0);
-  const lowPct=total?+(lowCases/total*100).toFixed(1):0;
-  const PROVS=['เชียงใหม่','เชียงราย','ลำปาง','แพร่','น่าน','ลำพูน','พะเยา','แม่ฮ่องสอน'];
-  const yrs=['67','68','69'];
-  const host=C('nb_spec');if(!host)return;
-  let lvRows='';lv.forEach(r=>{
-    const cls=r.lvl.includes('A')||r.lvl.includes('S')?'rag-g':r.lvl.includes('F2')||r.lvl.includes('F3')?'rag-r':r.lvl.includes('M')?'rag-a':'rag-n';
-    lvRows+='<tr><td><span class="'+cls+'">'+r.lvl+'</span></td><td class="n">'+fmt(r.cases)+'</td><td class="n">'+fmtB(r.baht)+'</td></tr>';});
-  let hRows='';hosps.filter(r=>r.lvl_grp&&(r.lvl_grp.includes('F2')||r.lvl_grp.includes('F3'))).slice(0,20).forEach(r=>{
-    hRows+='<tr><td>'+r.hosp.slice(0,26)+'</td><td>'+r.prov+'</td><td class="n">'+ragSpan('r',r.lvl)+'</td><td class="n">'+fmt(r.cases)+'</td><td class="n">'+(r.los!=null?r.los+' วัน':'–')+'</td></tr>';});
-  host.innerHTML='<div class="exec-panel"><h3>&#128205; สรุปสำหรับผู้บริหาร — NB น้ำหนักน้อย &lt;1,500g</h3>'+
-    '<div class="exec-grid">'+
-    execItem('ทารกในหน่วย F2/F3',fmt(ME.nb_low_total),'เคส','หน่วยที่อาจไม่มีศักยภาพ NICU เพียงพอ',rag(lowPct,10,20,true))+
-    execItem('สัดส่วนใน F2/F3',lowPct+'%','ของทั้งหมด','ควรน้อยกว่า 10% ถือว่าดี',rag(lowPct,10,20,true))+
-    execItem('⚠️ ปีงบ 69 ลดฮวบ','–','ข้อมูลยังไม่ครบปี','การลดลงไม่ใช่ดีขึ้นจริง ห้ามแปลผิด','a')+
+/* ════ NB <1,500g Dashboard ════ */
+let NB_DATA=null,_nbInit=false;
+let nbFY='all',nbFProvs=null,nbFLevel='all';
+let nbPDXSort={col:'cases',dir:'desc'},nbPDXPage=0;
+let nbHospSort={col:'cases',dir:'desc'},nbHospPage=0;
+const NB_PGSZ=20;
+const NB_PROV_COLORS=['#22d3ee','#f59e0b','#a78bfa','#34d399','#f472b6','#60a5fa','#fb923c','#4ade80'];
+const NB_TH_MONTHS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+let _nbProvChart=null,nbDateMinIdx=0,nbDateMaxIdx=0;
+
+async function initNBDashboard(){
+  if(_nbInit){nbApplyFilters();return;}
+  const body=document.getElementById('nb_body');if(!body)return;
+  body.innerHTML='<div style="text-align:center;padding:60px;color:#94a3b8">⏳ กำลังโหลดข้อมูล NB &lt;1,500g…</div>';
+  try{const r=await fetch('_nb_data.json');NB_DATA=await r.json();}
+  catch(e){body.innerHTML='<div style="text-align:center;padding:60px;color:#f87171">โหลดข้อมูลไม่สำเร็จ</div>';return;}
+  _nbInit=true;
+  nbFProvs=new Set(NB_DATA.filters.provinces);
+  nbDateMinIdx=0; nbDateMaxIdx=(NB_DATA.filters.months||[]).length-1;
+  if(!document.getElementById('nb-slider-css')){
+    const s=document.createElement('style');s.id='nb-slider-css';
+    s.textContent='#nb-smin,#nb-smax{position:absolute;width:100%;pointer-events:none;-webkit-appearance:none;appearance:none;background:transparent;height:24px;margin:0}#nb-smin::-webkit-slider-thumb,#nb-smax::-webkit-slider-thumb{pointer-events:all;-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#22d3ee;cursor:pointer;border:2px solid #0f2744;box-shadow:0 0 4px #22d3ee88}#nb-smin::-moz-range-thumb,#nb-smax::-moz-range-thumb{pointer-events:all;width:14px;height:14px;border-radius:50%;background:#22d3ee;cursor:pointer;border:2px solid #0f2744}';
+    document.head.appendChild(s);
+  }
+  const rws69nb=(FD?.byIssue?.nb?.core||[]).filter(r=>String(r.yr)==='69').reduce((s,r)=>s+r.rws,0);
+  const progHTML=typeof issueHbarHTML==='function'?issueHbarHTML(rws69nb,4687.42,2929.64):'';
+  body.innerHTML=
+    '<div id="nb-progress">'+progHTML+'</div>'+
+    '<div class="card" style="margin-bottom:12px">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:10px">'+
+        '<div><span style="font-size:11px;color:var(--mut);margin-right:6px">ปีงบ:</span>'+
+          '<span class="pgsz-btn on" id="nb-fy-all" onclick="nbSetFY(\'all\')">ทั้งหมด</span>'+
+          NB_DATA.filters.years.map(y=>'<span class="pgsz-btn" id="nb-fy-'+y+'" onclick="nbSetFY(\''+y+'\')">ปีงบ '+y+'</span>').join('')+
+        '</div>'+
+        '<div><span style="font-size:11px;color:var(--mut);margin-right:6px">ระดับ:</span>'+
+          '<span class="pgsz-btn on" id="nb-lv-all" onclick="nbSetLevel(\'all\')">ทั้งหมด</span>'+
+          ['A','S','M1','M2','F1','F2','F3'].map(l=>'<span class="pgsz-btn" id="nb-lv-'+l+'" onclick="nbSetLevel(\''+l+'\')">'+l+'</span>').join('')+
+        '</div>'+
+      '</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'+
+        '<span style="font-size:11px;color:var(--mut)">จังหวัด (กราฟ+ตาราง):</span>'+
+        '<span class="pgsz-btn on" id="nb-pv-all" onclick="nbToggleProv(\'all\')">ทั้งหมด</span>'+
+        NB_DATA.filters.provinces.map((p,i)=>'<span class="pgsz-btn on" id="nb-pv-'+i+'" onclick="nbToggleProv('+i+')" style="border-left:3px solid '+NB_PROV_COLORS[i]+'">'+p+'</span>').join('')+
+      '</div>'+
     '</div>'+
-    '<ul class="action-list">'+
-    '<li>&#128680; <b>ส่งต่อทารกจาก F2/F3 → A/S</b> — มีทารกเสี่ยงสูง '+fmt(ME.nb_low_total)+' เคสในหน่วยที่ไม่มี NICU</li>'+
-    '<li>&#128203; <b>พัฒนาเครือข่าย NICU</b> — จังหวัดที่ F2/F3 สูงสุดคือ เชียงใหม่, แม่ฮ่องสอน, น่าน</li>'+
-    '<li>&#128161; <b>อย่าแปลผล ปีงบ 69</b> — ตัวเลขลดเพราะข้อมูลไม่ครบ ไม่ใช่คุณภาพดีขึ้นจริง</li>'+
-    '</ul></div>'+
-    '<div class="grid">'+
-    card('แนวโน้มรายจังหวัด',null,cv('nb_prov_trend','tall'),'c6')+
-    '<div class="card c6"><h3>&#128204; การกระจายตามระดับหน่วยบริการ (ศักยภาพ NICU)</h3>'+
-    '<div class="tblwrap"><table class="ranking-tbl"><tr><th>ระดับหน่วย</th><th class="n">เคส</th><th class="n">เงิน</th></tr>'+lvRows+'</table></div></div>'+
+    '<div id="nb-kpi" class="grid" style="margin-bottom:12px"></div>'+
+    '<div class="card" style="margin-bottom:12px">'+
+      '<h3>&#128200; แนวโน้มรายเดือน รายจังหวัด (เคส) <span id="nb-chart-range-lbl" style="font-size:11px;color:#94a3b8;font-weight:normal;margin-left:8px"></span></h3>'+
+      '<div id="nb-slider-wrap" style="position:relative;margin:10px 6px 4px;height:24px">'+
+        '<div style="position:absolute;top:10px;left:0;right:0;height:4px;background:#1e3a5f;border-radius:2px">'+
+          '<div id="nb-slider-track" style="position:absolute;height:100%;background:#22d3ee44;border-radius:2px"></div>'+
+        '</div>'+
+        '<input type="range" id="nb-smin" min="0" step="1" value="0" oninput="nbSliderChange(\'min\')">'+
+        '<input type="range" id="nb-smax" min="0" step="1" value="0" oninput="nbSliderChange(\'max\')">'+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:8px">'+
+        '<span id="nb-smin-lbl"></span><span id="nb-smax-lbl"></span>'+
+      '</div>'+
+      '<div style="height:340px;overflow-x:auto"><canvas id="nb-prov-cv"></canvas></div>'+
+      '<div class="hint" style="margin-top:6px">⚠️ ปีงบ 69 ข้อมูลยังไม่ครบปี — เส้นลงในช่วงท้ายไม่ใช่แนวโน้มที่แท้จริง</div>'+
     '</div>'+
-    '<div class="card" style="margin-top:12px"><h3>&#128680; รพ. F2/F3 ที่ดูแลทารก &lt;1,500g — ต้องทบทวนระบบส่งต่อ NICU</h3>'+
-    '<div class="tblwrap"><table class="ranking-tbl"><tr><th>โรงพยาบาล</th><th>จังหวัด</th><th>ระดับ</th><th class="n">เคส</th><th class="n">LOS เฉลี่ย</th></tr>'+hRows+'</table></div></div>';
-  mkProvYrChart('nb_prov_trend',pyr,PROVS,yrs);
+    '<div class="grid" style="margin-bottom:12px">'+
+      '<div class="card c6"><h3>&#127973; ระดับหน่วยบริการ (ศักยภาพ NICU)</h3><div class="tblwrap" id="nb-level-tbl"></div></div>'+
+    '</div>'+
+    '<div class="card" style="margin-bottom:12px"><h3>&#128300; ตารางโรค (PDX) ใน NB &lt;1,500g</h3>'+
+      '<div class="tblwrap" id="nb-pdx-tbl"></div>'+
+      '<div id="nb-pdx-pg" style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"></div>'+
+    '</div>'+
+    '<div class="card"><h3>&#127968; ตารางโรงพยาบาล</h3>'+
+      '<div class="tblwrap" id="nb-hosp-tbl"></div>'+
+      '<div id="nb-hosp-pg" style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"></div>'+
+    '</div>'+
+    '<div id="nb-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;overflow-y:auto" onclick="if(event.target.id===\'nb-modal\')nbCloseModal()">'+
+      '<div style="background:#0f2744;border:1px solid #1e3a5f;border-radius:8px;max-width:640px;margin:60px auto;padding:24px">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'+
+          '<h3 id="nb-modal-title" style="margin:0;color:#e2e8f0"></h3>'+
+          '<button onclick="nbCloseModal()" style="background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer">✕</button>'+
+        '</div><div id="nb-modal-body"></div>'+
+      '</div>'+
+    '</div>';
+  nbInitSlider();
+  nbApplyFilters();
 }
+
+function nbSetFY(y){
+  nbFY=y;nbPDXPage=0;nbHospPage=0;
+  document.querySelectorAll('[id^="nb-fy-"]').forEach(b=>b.classList.toggle('on',b.id==='nb-fy-'+(y==='all'?'all':y)));
+  nbApplyFilters();
+}
+function nbToggleProv(idx){
+  const PROVS=NB_DATA.filters.provinces;
+  if(idx==='all'){nbFProvs=new Set(PROVS);}
+  else{
+    const p=PROVS[idx];
+    if(nbFProvs.has(p)&&nbFProvs.size>1)nbFProvs.delete(p);
+    else nbFProvs.add(p);
+  }
+  nbHospPage=0;
+  // update chip styles
+  const allSel=nbFProvs.size===PROVS.length;
+  document.getElementById('nb-pv-all')?.classList.toggle('on',allSel);
+  PROVS.forEach((p,i)=>document.getElementById('nb-pv-'+i)?.classList.toggle('on',nbFProvs.has(p)));
+  nbApplyFilters();
+}
+function nbSetLevel(l){
+  nbFLevel=l;nbHospPage=0;
+  document.querySelectorAll('[id^="nb-lv-"]').forEach(b=>b.classList.toggle('on',b.id==='nb-lv-'+(l==='all'?'all':l)));
+  nbApplyFilters();
+}
+function nbApplyFilters(){if(!NB_DATA)return;nbUpdateKPIs();nbRenderProvChart();nbRenderLevelTable();nbRenderPDXTable();nbRenderHospTable();}
+
+function nbFilteredHosps(){
+  return NB_DATA.hospitals.filter(h=>{
+    if(nbFProvs&&!nbFProvs.has(h.prov))return false;
+    if(nbFLevel!=='all'&&h.level!==nbFLevel)return false;
+    return true;
+  });
+}
+function nbGetHospCases(h){return nbFY==='all'?h.cases:(h.yr&&h.yr[nbFY])||0;}
+
+function nbUpdateKPIs(){
+  const hs=nbFilteredHosps();
+  const cases=hs.reduce((s,h)=>s+nbGetHospCases(h),0);
+  const baht=nbFY==='all'?hs.reduce((s,h)=>s+h.baht,0):0;
+  const f23=hs.filter(h=>h.f23).reduce((s,h)=>s+nbGetHospCases(h),0);
+  const f23pct=cases?+(f23/cases*100).toFixed(1):0;
+  const adjSum=hs.reduce((s,h)=>s+(h.avg_adjrw*nbGetHospCases(h)),0);
+  const avgAdj=cases?+(adjSum/cases).toFixed(4):0;
+  const el=document.getElementById('nb-kpi');if(!el)return;
+  el.innerHTML=kpi('เคสทั้งหมด',fmt(cases),'เคส')+kpi('ใน F2/F3',fmt(f23),'เคส')+
+    kpi('% F2/F3',f23pct+'%',f23pct>10?'⚠️ >10%':'✅ ≤10%')+kpi('AdjRW เฉลี่ย',avgAdj,'')+
+    (nbFY==='all'?kpi('มูลค่า',fmtB(baht),'บาท'):'');
+}
+
+function nbYmThai(ym){const[y,m]=ym.split('-');return NB_TH_MONTHS[+m-1]+' '+(+y+543).toString().slice(-2);}
+
+function nbSliderChange(which){
+  const allMs=NB_DATA.filters.months||[];if(!allMs.length)return;
+  const smin=document.getElementById('nb-smin'),smax=document.getElementById('nb-smax');if(!smin||!smax)return;
+  let lo=+smin.value,hi=+smax.value;
+  if(which==='min'&&lo>hi){lo=hi;smin.value=lo;}
+  if(which==='max'&&hi<lo){hi=lo;smax.value=hi;}
+  nbDateMinIdx=lo;nbDateMaxIdx=hi;
+  const pct=allMs.length>1;
+  const lPct=pct?lo/(allMs.length-1)*100:0,rPct=pct?hi/(allMs.length-1)*100:100;
+  const track=document.getElementById('nb-slider-track');
+  if(track)track.style.cssText='position:absolute;height:100%;border-radius:2px;background:#22d3ee44;left:'+lPct+'%;width:'+(rPct-lPct)+'%';
+  const minL=document.getElementById('nb-smin-lbl'),maxL=document.getElementById('nb-smax-lbl');
+  if(minL)minL.textContent=nbYmThai(allMs[lo]);
+  if(maxL)maxL.textContent=nbYmThai(allMs[hi]);
+  const rangeL=document.getElementById('nb-chart-range-lbl');
+  if(rangeL)rangeL.textContent='('+nbYmThai(allMs[lo])+' – '+nbYmThai(allMs[hi])+')';
+  nbRenderProvChart();
+}
+
+function nbInitSlider(){
+  const allMs=NB_DATA.filters.months||[];if(!allMs.length)return;
+  const mx=allMs.length-1;
+  const smin=document.getElementById('nb-smin'),smax=document.getElementById('nb-smax');if(!smin||!smax)return;
+  smin.max=mx;smin.value=0;smax.max=mx;smax.value=mx;
+  nbDateMinIdx=0;nbDateMaxIdx=mx;
+  const minL=document.getElementById('nb-smin-lbl'),maxL=document.getElementById('nb-smax-lbl');
+  if(minL)minL.textContent=nbYmThai(allMs[0]);
+  if(maxL)maxL.textContent=nbYmThai(allMs[mx]);
+  const rangeL=document.getElementById('nb-chart-range-lbl');
+  if(rangeL)rangeL.textContent='('+nbYmThai(allMs[0])+' – '+nbYmThai(allMs[mx])+')';
+  const track=document.getElementById('nb-slider-track');
+  if(track)track.style.cssText='position:absolute;height:100%;border-radius:2px;background:#22d3ee44;left:0%;width:100%';
+}
+
+function nbRenderProvChart(){
+  const allMs=NB_DATA.filters.months||[];
+  const visMs=allMs.slice(nbDateMinIdx,nbDateMaxIdx+1);
+  if(!visMs.length)return;
+  const ALL_PROVS=NB_DATA.filters.provinces;
+  const selProvs=ALL_PROVS.filter(p=>nbFProvs&&nbFProvs.has(p));
+  const pmLookup={};
+  (NB_DATA.prov_month||[]).forEach(e=>{pmLookup[e.prov+'|'+e.ym]=e.cases;});
+  const datasets=selProvs.map(p=>{
+    const ci=ALL_PROVS.indexOf(p),col=NB_PROV_COLORS[ci%NB_PROV_COLORS.length];
+    return{label:p,data:visMs.map(ym=>pmLookup[p+'|'+ym]||0),
+      borderColor:col,backgroundColor:col+'22',tension:0.3,pointRadius:visMs.length>24?0:3,pointHoverRadius:5,fill:false,borderWidth:2};
+  });
+  const cv=document.getElementById('nb-prov-cv');if(!cv)return;
+  if(_nbProvChart){_nbProvChart.destroy();_nbProvChart=null;}
+  // dynamic canvas width for many months
+  const minPxPerMonth=28,totalW=Math.max(cv.parentElement.clientWidth||600,visMs.length*minPxPerMonth);
+  cv.style.width=totalW+'px';cv.style.height='340px';
+  _nbProvChart=new Chart(cv,{type:'line',
+    data:{labels:visMs.map(nbYmThai),datasets},
+    options:{responsive:false,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'bottom',labels:{color:'#cbd5e1',font:{size:10},boxWidth:10,padding:10}},
+        tooltip:{callbacks:{title:ctx=>ctx[0]?.label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.raw)+' เคส'}}},
+      scales:{
+        x:{ticks:{color:'#94a3b8',maxRotation:45,autoSkip:true,maxTicksLimit:18},grid:{color:'#1e3a5f'}},
+        y:{ticks:{color:'#94a3b8'},grid:{color:'#1e3a5f'}}}}});
+}
+
+function nbRenderLevelTable(){
+  const el=document.getElementById('nb-level-tbl');if(!el)return;
+  const lvls=NB_DATA.level_yr.map(r=>({lvl:r.lvl,cases:nbFY==='all'?r.cases:(r.yr&&r.yr[nbFY])||0})).filter(r=>r.cases>0).sort((a,b)=>b.cases-a.cases);
+  const total=lvls.reduce((s,r)=>s+r.cases,0);
+  let t='<table class="ranking-tbl"><tr><th>ระดับ</th><th class="n">เคส</th><th class="n">%</th></tr>';
+  lvls.forEach(r=>{
+    const cls=r.lvl==='A'||r.lvl==='S'?'rag-g':r.lvl==='F2'||r.lvl==='F3'?'rag-r':r.lvl.startsWith('M')?'rag-a':'rag-n';
+    const pct=total?+(r.cases/total*100).toFixed(1):0;
+    t+='<tr><td><span class="'+cls+'">'+r.lvl+'</span></td><td class="n">'+fmt(r.cases)+'</td><td class="n">'+pct+'%</td></tr>';
+  });
+  el.innerHTML=t+'</table>';
+}
+
+function nbSetPDXSort(col){
+  if(nbPDXSort.col===col)nbPDXSort.dir=nbPDXSort.dir==='desc'?'asc':'desc';
+  else{nbPDXSort.col=col;nbPDXSort.dir='desc';}
+  nbPDXPage=0;nbRenderPDXTable();
+}
+
+function nbRenderPDXTable(){
+  const el=document.getElementById('nb-pdx-tbl');const pg=document.getElementById('nb-pdx-pg');if(!el)return;
+  let list=NB_DATA.pdx.map(d=>({...d,_c:nbFY==='all'?d.cases:(d.yr&&d.yr[nbFY])||0})).filter(d=>d._c>0);
+  const sk={cases:d=>d._c,sum_adjrw:d=>d.sum_adjrw||0,baht:d=>d.baht}[nbPDXSort.col]||(d=>d._c);
+  list=list.sort((a,b)=>nbPDXSort.dir==='desc'?sk(b)-sk(a):sk(a)-sk(b));
+  const total=list.length,start=nbPDXPage*NB_PGSZ,slice=list.slice(start,start+NB_PGSZ);
+  const arr=c=>c===nbPDXSort.col?(nbPDXSort.dir==='desc'?'▼':'▲'):'⇅';
+  const sth='position:sticky;top:0;background:#0f2744;z-index:2';
+  let t='<div style="max-height:400px;overflow-y:auto"><table class="ranking-tbl"><thead><tr>'+
+    '<th style="'+sth+'">รหัส</th><th style="'+sth+'">โรค (PDX)</th>'+
+    '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetPDXSort(\'cases\')">'+arr('cases')+' เคส</th>'+
+    '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetPDXSort(\'sum_adjrw\')">'+arr('sum_adjrw')+' SumAdjRW</th>'+
+    '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetPDXSort(\'baht\')">'+arr('baht')+' มูลค่า</th></tr></thead><tbody>';
+  slice.forEach(r=>{t+='<tr><td>'+r.pdx+'</td><td>'+(''+r.name).slice(0,38)+'</td><td class="n">'+fmt(r._c)+'</td><td class="n">'+((r.sum_adjrw||0).toFixed(2))+'</td><td class="n">'+fmtB(r.baht)+'</td></tr>';});
+  el.innerHTML=t+'</tbody></table></div>';
+  if(pg){const pages=Math.ceil(total/NB_PGSZ);pg.innerHTML='<span style="font-size:11px;color:var(--mut)">'+total+' รหัส</span>'+(pages>1?Array.from({length:pages},(_,i)=>'<button class="pgsz-btn'+(i===nbPDXPage?' on':'')+'" onclick="nbPDXPage='+i+';nbRenderPDXTable()">'+( i+1)+'</button>').join(''):'');}
+}
+
+function nbSetHospSort(col){
+  if(nbHospSort.col===col)nbHospSort.dir=nbHospSort.dir==='desc'?'asc':'desc';
+  else{nbHospSort.col=col;nbHospSort.dir='desc';}
+  nbHospPage=0;nbRenderHospTable();
+}
+
+function nbRenderHospTable(){
+  const el=document.getElementById('nb-hosp-tbl');const pg=document.getElementById('nb-hosp-pg');if(!el)return;
+  const sk={cases:h=>h._c,sum_adjrw:h=>h.sum_adjrw||0,baht:h=>h.baht}[nbHospSort.col]||(h=>h._c);
+  const list=nbFilteredHosps().map(h=>({...h,_c:nbGetHospCases(h)})).filter(h=>h._c>0).sort((a,b)=>nbHospSort.dir==='desc'?sk(b)-sk(a):sk(a)-sk(b));
+  const total=list.length,start=nbHospPage*NB_PGSZ,slice=list.slice(start,start+NB_PGSZ);
+  const arr=c=>c===nbHospSort.col?(nbHospSort.dir==='desc'?'▼':'▲'):'⇅';
+  const sth='position:sticky;top:0;background:#0f2744;z-index:2';
+  let t='<div style="max-height:400px;overflow-y:auto"><table class="ranking-tbl"><thead><tr>'+
+    '<th style="'+sth+'">#</th><th style="'+sth+'">โรงพยาบาล</th><th style="'+sth+'">จังหวัด</th><th style="'+sth+'">ระดับ</th>'+
+    '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetHospSort(\'cases\')">'+arr('cases')+' เคส</th>'+
+    '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetHospSort(\'sum_adjrw\')">'+arr('sum_adjrw')+' SumAdjRW</th>'+
+    '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetHospSort(\'baht\')">'+arr('baht')+' มูลค่า</th></tr></thead><tbody>';
+  slice.forEach((h,i)=>{
+    const cls=h.level==='A'||h.level==='S'?'rag-g':h.level==='F2'||h.level==='F3'?'rag-r':h.level.startsWith('M')?'rag-a':'rag-n';
+    t+='<tr><td>'+(start+i+1)+'</td><td style="cursor:pointer;color:#38bdf8" onclick="nbOpenHospModal(\''+h.hcode+'\')">'+h.name.slice(0,28)+'</td><td>'+h.prov+'</td><td><span class="'+cls+'">'+h.level+'</span></td><td class="n">'+fmt(h._c)+'</td><td class="n">'+((h.sum_adjrw||0).toFixed(2))+'</td><td class="n">'+fmtB(h.baht)+'</td></tr>';
+  });
+  el.innerHTML=t+'</tbody></table></div>';
+  if(pg){const pages=Math.ceil(total/NB_PGSZ);pg.innerHTML='<span style="font-size:11px;color:var(--mut)">'+total+' โรงพยาบาล</span>'+(pages>1?Array.from({length:pages},(_,i)=>'<button class="pgsz-btn'+(i===nbHospPage?' on':'')+'" onclick="nbHospPage='+i+';nbRenderHospTable()">'+( i+1)+'</button>').join(''):'');}
+}
+
+function nbOpenHospModal(hcode){
+  const h=NB_DATA.hospitals.find(x=>x.hcode===hcode);if(!h)return;
+  const pdxList=NB_DATA.hosp_pdx[hcode]||[];
+  const modal=document.getElementById('nb-modal');
+  const title=document.getElementById('nb-modal-title');
+  const body=document.getElementById('nb-modal-body');
+  if(!modal||!title||!body)return;
+  const cls=h.level==='A'||h.level==='S'?'rag-g':h.level==='F2'||h.level==='F3'?'rag-r':h.level.startsWith('M')?'rag-a':'rag-n';
+  title.innerHTML=h.name+' <span class="'+cls+'" style="font-size:12px">'+h.level+'</span> · '+h.prov;
+  let t='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">'+
+    kpi('เคสทั้งหมด',fmt(h.cases),'เคส')+kpi('AdjRW เฉลี่ย',h.avg_adjrw.toFixed(4),'')+kpi('มูลค่า',fmtB(h.baht),'บาท')+'</div>'+
+    '<div class="tblwrap"><table class="ranking-tbl"><tr><th>รหัส</th><th>โรค (PDX)</th><th class="n">เคส</th><th class="n">มูลค่า</th></tr>';
+  pdxList.forEach(p=>{t+='<tr><td>'+p.pdx+'</td><td>'+(''+p.name).slice(0,36)+'</td><td class="n">'+fmt(p.cases)+'</td><td class="n">'+fmtB(p.baht)+'</td></tr>';});
+  t+='</table></div>';
+  body.innerHTML=t;
+  modal.style.display='block';document.body.style.overflow='hidden';
+}
+function nbCloseModal(){const m=document.getElementById('nb-modal');if(m)m.style.display='none';document.body.style.overflow='';}
+/* ════ End NB Dashboard ════ */
 /* ── PSYCH M&E Page ───────────────────────────────────────────── */
 function renderPsychMe(){
   const rws69ps=(FD.byIssue['psych']?.core||[]).filter(r=>String(r.yr)==='69').reduce((s,r)=>s+r.rws,0);
