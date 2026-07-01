@@ -755,21 +755,23 @@ async function initNBDashboard(){
         '<span class="pgsz-btn on" id="nb-pv-all" onclick="nbToggleProv(\'all\')">ทั้งหมด</span>'+
         NB_DATA.filters.provinces.map((p,i)=>'<span class="pgsz-btn on" id="nb-pv-'+i+'" onclick="nbToggleProv('+i+')" style="border-left:3px solid '+NB_PROV_COLORS[i]+'">'+p+'</span>').join('')+
       '</div>'+
+      '<div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #1e3a5f">'+
+        '<span style="font-size:11px;color:var(--mut);white-space:nowrap">&#128197; ช่วงเวลา (กราฟ):</span>'+
+        '<span id="nb-smin-lbl" style="font-size:11px;color:#22d3ee;min-width:56px"></span>'+
+        '<div id="nb-slider-wrap" style="position:relative;flex:1;min-width:180px;height:24px">'+
+          '<div style="position:absolute;top:10px;left:0;right:0;height:4px;background:#1e3a5f;border-radius:2px">'+
+            '<div id="nb-slider-track" style="position:absolute;height:100%;background:#22d3ee44;border-radius:2px"></div>'+
+          '</div>'+
+          '<input type="range" id="nb-smin" min="0" step="1" value="0" oninput="nbSliderChange(\'min\')">'+
+          '<input type="range" id="nb-smax" min="0" step="1" value="0" oninput="nbSliderChange(\'max\')">'+
+        '</div>'+
+        '<span id="nb-smax-lbl" style="font-size:11px;color:#22d3ee;min-width:56px;text-align:right"></span>'+
+      '</div>'+
     '</div>'+
     '<div id="nb-kpi" class="grid" style="margin-bottom:12px"></div>'+
     '<div class="card" style="margin-bottom:12px">'+
-      '<h3>&#128200; แนวโน้มรายเดือน รายจังหวัด (เคส) <span id="nb-chart-range-lbl" style="font-size:11px;color:#94a3b8;font-weight:normal;margin-left:8px"></span></h3>'+
-      '<div id="nb-slider-wrap" style="position:relative;margin:10px 6px 4px;height:24px">'+
-        '<div style="position:absolute;top:10px;left:0;right:0;height:4px;background:#1e3a5f;border-radius:2px">'+
-          '<div id="nb-slider-track" style="position:absolute;height:100%;background:#22d3ee44;border-radius:2px"></div>'+
-        '</div>'+
-        '<input type="range" id="nb-smin" min="0" step="1" value="0" oninput="nbSliderChange(\'min\')">'+
-        '<input type="range" id="nb-smax" min="0" step="1" value="0" oninput="nbSliderChange(\'max\')">'+
-      '</div>'+
-      '<div style="display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:8px">'+
-        '<span id="nb-smin-lbl"></span><span id="nb-smax-lbl"></span>'+
-      '</div>'+
-      '<div style="height:340px;overflow-x:auto"><canvas id="nb-prov-cv"></canvas></div>'+
+      '<h3>&#128200; แนวโน้มรายเดือน รายจังหวัด (เคส)</h3>'+
+      '<div style="height:380px;overflow-x:auto"><canvas id="nb-prov-cv"></canvas></div>'+
       '<div class="hint" style="margin-top:6px">⚠️ ปีงบ 69 ข้อมูลยังไม่ครบปี — เส้นลงในช่วงท้ายไม่ใช่แนวโน้มที่แท้จริง</div>'+
     '</div>'+
     '<div class="grid" style="margin-bottom:12px">'+
@@ -892,22 +894,23 @@ function nbRenderProvChart(){
   const datasets=selProvs.map(p=>{
     const ci=ALL_PROVS.indexOf(p),col=NB_PROV_COLORS[ci%NB_PROV_COLORS.length];
     return{label:p,data:visMs.map(ym=>pmLookup[p+'|'+ym]||0),
-      borderColor:col,backgroundColor:col+'22',tension:0.3,pointRadius:visMs.length>24?0:3,pointHoverRadius:5,fill:false,borderWidth:2};
+      borderColor:col,backgroundColor:col+'18',tension:0.2,pointRadius:visMs.length>18?0:3,pointHoverRadius:6,fill:false,borderWidth:2.5,pointBorderWidth:0,pointBackgroundColor:col};
   });
   const cv=document.getElementById('nb-prov-cv');if(!cv)return;
   if(_nbProvChart){_nbProvChart.destroy();_nbProvChart=null;}
   // dynamic canvas width for many months
   const minPxPerMonth=28,totalW=Math.max(cv.parentElement.clientWidth||600,visMs.length*minPxPerMonth);
-  cv.style.width=totalW+'px';cv.style.height='340px';
+  cv.style.width=totalW+'px';cv.style.height='380px';
   _nbProvChart=new Chart(cv,{type:'line',
     data:{labels:visMs.map(nbYmThai),datasets},
-    options:{responsive:false,maintainAspectRatio:false,
+    options:{responsive:false,maintainAspectRatio:false,devicePixelRatio:window.devicePixelRatio||2,
       interaction:{mode:'index',intersect:false},
-      plugins:{legend:{position:'bottom',labels:{color:'#cbd5e1',font:{size:10},boxWidth:10,padding:10}},
-        tooltip:{callbacks:{title:ctx=>ctx[0]?.label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.raw)+' เคส'}}},
+      plugins:{legend:{position:'bottom',labels:{color:'#cbd5e1',font:{size:11},boxWidth:12,padding:14}},
+        tooltip:{backgroundColor:'#0d1f38',borderColor:'#1e3a5f',borderWidth:1,padding:10,
+          callbacks:{title:ctx=>ctx[0]?.label,label:ctx=>' '+ctx.dataset.label+': '+fmt(ctx.raw)+' เคส'}}},
       scales:{
-        x:{ticks:{color:'#94a3b8',maxRotation:45,autoSkip:true,maxTicksLimit:18},grid:{color:'#1e3a5f'}},
-        y:{ticks:{color:'#94a3b8'},grid:{color:'#1e3a5f'}}}}});
+        x:{ticks:{color:'#94a3b8',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:18},grid:{color:'#1e3a5f66'}},
+        y:{ticks:{color:'#94a3b8',font:{size:11}},grid:{color:'#1e3a5f66'},border:{dash:[4,4]}}}}});
 }
 
 function nbRenderLevelTable(){
