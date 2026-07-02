@@ -2669,11 +2669,11 @@ async function initAdjRWDashboard(){
 /* ════ PPFS Dashboard ════ */
 let PPFS_DATA=null,_ppfsInit=false;
 let ppfsMetric=2; // 0=คน,1=ครั้ง,2=บาท
-let ppfsYr='cmp'; // 'cmp','2567','2568','2569'
+let ppfsPaceSort={col:'v69',dir:'desc'};
 let ppfsSelSvc=null;
 let ppfsFProvs=null;
 let ppfsFTypeGrp='all';
-let ppfsChart1=null,ppfsChart2=null;
+let ppfsChart2=null;
 let ppfsHospPage=0;
 let ppfsSelHosps=[]; // hcodes ที่เลือก — กรอง Chart 1 (ว่าง = ระดับเขต)
 let ppfsHospQ='';    // คำค้นหาใน dropdown
@@ -2681,7 +2681,7 @@ const PPFS_PGSZ=25;
 const PPFS_YR_COL=['#64748b','#f59e0b','#22d3ee'];
 
 async function initPPFSDashboard(){
-  if(_ppfsInit){ppfsRenderChart1();if(ppfsSelSvc!==null)ppfsRenderChart2();return;}
+  if(_ppfsInit){ppfsRenderMain();if(ppfsSelSvc!==null)ppfsRenderChart2();return;}
   const body=document.getElementById('ppfs_body');if(!body)return;
   body.innerHTML='<div style="padding:60px;text-align:center;color:var(--mut)"><div style="font-size:32px;margin-bottom:12px">&#9203;</div><div>กำลังโหลดข้อมูล PPFS...</div></div>';
   try{const r=await fetch('_ppfs_data.json',{cache:'no-cache'});if(!r.ok)throw new Error('HTTP '+r.status);PPFS_DATA=await r.json();}
@@ -2693,7 +2693,7 @@ async function initPPFSDashboard(){
   ppfsRenderNarrative();
   ppfsUpdateScope();
   ppfsRenderHospChips();
-  ppfsRenderChart1();
+  ppfsRenderMain();
 }
 
 function ppfsRenderNarrative(){
@@ -2721,14 +2721,12 @@ function ppfsRenderNarrative(){
 
 function ppfsBuildHTML(){
   const D=PPFS_DATA;
-  const yrBtns=['cmp','2567','2568','2569'].map(y=>'<span class="pgsz-btn'+(y==='cmp'?' on':'')+'" id="ppfs-yr-'+y+'" onclick="ppfsSetYr(\''+y+'\')">'+(y==='cmp'?'เปรียบเทียบ':y)+'</span>').join('');
   const metBtns=['จำนวนคน','จำนวนครั้ง','เบิกจ่าย(บาท)'].map((m,i)=>'<span class="pgsz-btn'+(i===2?' on':'')+'" id="ppfs-m-'+i+'" onclick="ppfsSetMetric('+i+')">'+m+'</span>').join('');
   const provBtns='<span class="pgsz-btn on" id="ppfs-pv-all" onclick="ppfsToggleProv(-1)">ทั้งหมด</span>'+
     D.provs.map((p,i)=>'<span class="pgsz-btn on" id="ppfs-pv-'+i+'" onclick="ppfsToggleProv('+i+')">'+p+'</span>').join('');
   const tgBtns=['all',...D.type_grps].map(g=>'<span class="pgsz-btn'+(g==='all'?' on':'')+'" id="ppfs-tg-'+g+'" onclick="ppfsSetTypeGrp(\''+g+'\')">'+( g==='all'?'ทุกประเภท':g)+'</span>').join('');
   return '<div class="card filter-sticky" style="margin-bottom:12px">'+
     '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">'+
-    '<div><span style="font-size:11px;color:var(--mut);margin-right:6px">ปีงบ:</span>'+yrBtns+'</div>'+
     '<div><span style="font-size:11px;color:var(--mut);margin-right:6px">ตัวชี้วัด:</span>'+metBtns+'</div>'+
     '</div>'+
     '<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">'+
@@ -2748,8 +2746,13 @@ function ppfsBuildHTML(){
     '<div id="ppfs-kpi" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px"></div>'+
     '<div class="card" id="ppfs-narr" style="margin-bottom:12px;border-left:3px solid #22d3ee"></div>'+
     '<div class="card" style="margin-bottom:12px">'+
-    '<h3>&#128202; ผลงาน 26 กองทุน PPFS <span style="font-size:11px;font-weight:normal;color:var(--mut);margin-left:8px">คลิกแถบเพื่อเจาะรายหน่วยบริการ</span></h3>'+
-    '<div style="height:820px;overflow-x:auto"><canvas id="ppfs-chart1"></canvas></div></div>'+
+    '<h3>&#9201;&#65039; จังหวะการเบิกจ่าย 26 กองทุน ปีงบ 69 <span style="font-size:11px;font-weight:normal;color:var(--mut);margin-left:8px">คลิกชื่อกองทุนเพื่อเจาะรายหน่วยบริการ / คลิกหัวคอลัมน์เพื่อจัดเรียง</span></h3>'+
+    '<div class="hint" id="ppfs-pace-sub" style="margin-bottom:8px"></div>'+
+    '<div id="ppfs-pace" style="overflow-x:auto"></div></div>'+
+    '<div class="card" style="margin-bottom:12px">'+
+    '<h3>&#128506;&#65039; จังหวะรายจังหวัด &times; Top 12 กองทุน <span style="font-size:11px;font-weight:normal;color:var(--mut);margin-left:8px">เบิกจ่าย(บาท) ระดับเขตเสมอ · คลิกช่องเพื่อเจาะกองทุน+จังหวัดนั้น</span></h3>'+
+    '<div class="hint" style="margin-bottom:8px">สีของช่อง = จังหวะเบิกเทียบที่ควรเป็น ณ วันนี้: &#128994; &ge;90% &nbsp;&#128993; 60&ndash;90% &nbsp;&#128308; &lt;60% &nbsp;&middot; &ndash; = ฐานปี 68 น้อยเกินเปรียบเทียบ</div>'+
+    '<div id="ppfs-heat" style="overflow-x:auto"></div></div>'+
     '<div class="card" id="ppfs-c2-card" style="display:none;margin-bottom:12px">'+
     '<h3 id="ppfs-c2-title">&#128269; เจาะกองทุน</h3>'+
     '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0 4px">'+
@@ -2762,16 +2765,20 @@ function ppfsBuildHTML(){
     '<div id="ppfs-hosp-pg" style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"></div></div></div>';
 }
 
-function ppfsSetYr(y){
-  ppfsYr=y;
-  ['cmp','2567','2568','2569'].forEach(yr=>document.getElementById('ppfs-yr-'+yr)?.classList.toggle('on',yr===y));
-  ppfsRenderChart1();
+// สัดส่วนเวลาที่ผ่านของปีงบ 69 — parse จาก meta.as_of (เช่น "19 มิ.ย. 2569"), fallback 8.5/12
+function ppfsPaceFrac(){
+  const FM={'ต.ค.':1,'พ.ย.':2,'ธ.ค.':3,'ม.ค.':4,'ก.พ.':5,'มี.ค.':6,'เม.ย.':7,'พ.ค.':8,'มิ.ย.':9,'ก.ค.':10,'ส.ค.':11,'ก.ย.':12};
+  const m=String(PPFS_DATA?.meta?.as_of||'').match(/(\d+)\s+(\S+)/);
+  if(m&&FM[m[2]])return Math.min(1,((FM[m[2]]-1)+(+m[1])/30)/12);
+  return 8.5/12;
 }
+function ppfsPaceColor(p){return p>=90?'#34d399':p>=60?'#fbbf24':'#f87171';}
+function ppfsRenderMain(){ppfsRenderPaceTable();ppfsRenderHeatmap();}
 
 function ppfsSetMetric(m){
   ppfsMetric=m;
   [0,1,2].forEach(i=>document.getElementById('ppfs-m-'+i)?.classList.toggle('on',i===m));
-  ppfsRenderChart1();
+  ppfsRenderMain();
   if(ppfsSelSvc!==null){ppfsRenderChart2();ppfsRenderHospTable();}
 }
 
@@ -2813,40 +2820,97 @@ function ppfsRenderKPIs(){
     mkK('หน่วยบริการ',fmt(h69),'แห่งที่รายงาน ปีงบ 69');
 }
 
-function ppfsRenderChart1(){
-  const cv=document.getElementById('ppfs-chart1');if(!cv)return;
-  if(ppfsChart1){ppfsChart1.destroy();ppfsChart1=null;}
-  const D=PPFS_DATA,m=ppfsMetric;
-  const labels=D.svc_short;
-  let datasets;
-  if(ppfsYr==='cmp'){
-    datasets=D.years.map((yr,yi)=>({label:yr,data:D.svcs.map((_,si)=>ppfsGetC1Val(si,yi)),
-      backgroundColor:PPFS_YR_COL[yi]+'99',borderColor:PPFS_YR_COL[yi],borderWidth:1,borderRadius:3}));
-  } else {
-    const yi=D.years.indexOf(ppfsYr);
-    datasets=[{label:ppfsYr,data:D.svcs.map((_,si)=>ppfsGetC1Val(si,yi)),
-      backgroundColor:D.svcs.map((_,si)=>ppfsSelSvc===si?PPFS_YR_COL[yi]+'ff':PPFS_YR_COL[yi]+'77'),
-      borderColor:PPFS_YR_COL[yi],borderWidth:1,borderRadius:3}];
-  }
-  const c1W=cv.parentElement.clientWidth||840;
-  cv.width=c1W;cv.height=820;
-  cv.style.width=c1W+'px';cv.style.height='820px';
-  const fv=v=>m===2?fmtB(v):fmt(v);
-  ppfsChart1=new Chart(cv,{type:'bar',data:{labels,datasets},
-    options:{indexAxis:'y',responsive:false,maintainAspectRatio:false,devicePixelRatio:window.devicePixelRatio||2,
-      barPercentage:0.8,categoryPercentage:0.7,
-      onClick:(evt,els)=>{if(els.length)ppfsSelectSvc(els[0].index);},
-      plugins:{
-        legend:{position:'top',labels:{color:'#cbd5e1',font:{size:11},boxWidth:12,padding:12}},
-        tooltip:{backgroundColor:'#0d1f38',borderColor:'#1e3a5f',borderWidth:1,padding:10,
-          callbacks:{label:ctx=>` ${ctx.dataset.label}: ${fv(ctx.raw)}`}},
-      },
-      scales:{
-        x:{ticks:{color:'#94a3b8',font:{size:10},callback:v=>m===2?fmtB(v):fmt(v)},grid:{color:'#1e3a5f55'}},
-        y:{ticks:{color:'#e2e8f0',font:{size:11}},grid:{color:'#1e3a5f33'}},
-      },
-      animation:{duration:250},
-    }});
+function ppfsSetPaceSort(col){
+  ppfsPaceSort=ppfsPaceSort.col===col?{col,dir:ppfsPaceSort.dir==='desc'?'asc':'desc'}:{col,dir:'desc'};
+  ppfsRenderPaceTable();
+}
+
+function ppfsRenderPaceTable(){
+  const el=document.getElementById('ppfs-pace'),sub=document.getElementById('ppfs-pace-sub');
+  if(!el)return;
+  const D=PPFS_DATA,m=ppfsMetric,frac=ppfsPaceFrac();
+  const MET_LBL=['จำนวนคน','จำนวนครั้ง','เบิกจ่าย (บาท)'][m];
+  if(sub)sub.innerHTML='แถบ = ผลงานปี 69 ('+MET_LBL+') เทียบทั้งปี 68 &middot; <span style="color:#e2e8f0">ขีดขาว = ควรทำได้ ณ '+((D.meta&&D.meta.as_of)||'วันนี้')+' ('+(frac*100).toFixed(0)+'% ของปี)</span> &middot; Pace = ผลงานจริง &divide; ที่ควรได้ ณ วันนี้ &middot; &#128994; &ge;90% &#128993; 60&ndash;90% &#128308; &lt;60%'+(ppfsSelHosps.length?' &middot; <b style="color:#22d3ee">ขอบเขต: '+ppfsSelHosps.length+' หน่วยที่เลือก</b>':'');
+  const yi67=D.years.indexOf('2567'),yi68=D.years.indexOf('2568'),yi69=D.years.indexOf('2569');
+  let rows=D.svcs.map((name,si)=>{
+    const v67=ppfsGetC1Val(si,yi67),v68=ppfsGetC1Val(si,yi68),v69=ppfsGetC1Val(si,yi69);
+    const d69=D.svc_yr[si*3+yi69];const rate=d69[0]?d69[2]/d69[0]:0;
+    const pace=v68>0?v69/(v68*frac)*100:null;
+    return{si,name:(D.svc_short&&D.svc_short[si])||name,full:name,v67,v68,v69,rate,pace};
+  });
+  const c=ppfsPaceSort.col,dir=ppfsPaceSort.dir==='desc'?-1:1;
+  rows.sort((a,b)=>{const va=c==='pace'?(a.pace??-1):a[c]||0,vb=c==='pace'?(b.pace??-1):b[c]||0;return (va<vb?-1:va>vb?1:0)*dir;});
+  const fv=v=>m===2?fmtB(v):fmt(Math.round(v));
+  const arrow=k=>ppfsPaceSort.col===k?(ppfsPaceSort.dir==='desc'?' ▼':' ▲'):'';
+  const sth='position:sticky;top:0;background:#0f2744;z-index:2;cursor:pointer';
+  const stp='position:sticky;top:0;background:#0f2744;z-index:2';
+  let t='<table class="ranking-tbl" style="min-width:820px"><thead><tr>'+
+    '<th style="'+stp+'">#</th><th style="'+stp+'">กองทุน</th>'+
+    '<th style="'+stp+';min-width:220px">ความคืบหน้าเทียบทั้งปี 68</th>'+
+    '<th class="n" style="'+sth+'" onclick="ppfsSetPaceSort(\'pace\')">Pace'+arrow('pace')+'</th>'+
+    '<th class="n" style="'+sth+'" onclick="ppfsSetPaceSort(\'v69\')">ปี 69'+arrow('v69')+'</th>'+
+    '<th class="n" style="'+sth+'" onclick="ppfsSetPaceSort(\'v68\')">ปี 68'+arrow('v68')+'</th>'+
+    '<th class="n" style="'+sth+'" onclick="ppfsSetPaceSort(\'rate\')">บาท/คน 69'+arrow('rate')+'</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{
+    const sel=ppfsSelSvc===r.si;
+    const fillPct=r.v68>0?Math.min(r.v69/r.v68*100,100):0;
+    const over=r.v68>0&&r.v69>r.v68;
+    const col=r.pace===null?'#64748b':ppfsPaceColor(r.pace);
+    const bar='<div style="position:relative;height:16px;background:#1e3a5f44;border-radius:4px;overflow:visible">'+
+      '<div style="position:absolute;left:0;top:0;bottom:0;width:'+fillPct.toFixed(1)+'%;background:'+col+(sel?'':'bb')+';border-radius:4px"></div>'+
+      '<div style="position:absolute;left:'+(frac*100).toFixed(1)+'%;top:-2px;bottom:-2px;width:2px;background:#e2e8f0;border-radius:1px"></div>'+
+      (over?'<span style="position:absolute;right:4px;top:0;font-size:10px;color:#34d399;font-weight:700">เกินปี 68!</span>':'')+
+      '</div>';
+    const paceTxt=r.pace===null?'<span style="color:var(--mut)">ใหม่</span>':'<span style="color:'+ppfsPaceColor(r.pace)+';font-weight:700">'+r.pace.toFixed(0)+'%</span>';
+    t+='<tr'+(sel?' style="background:#13305a"':'')+'><td>'+(i+1)+'</td>'+
+      '<td title="'+r.full.replace(/"/g,'')+'"><span style="color:#22d3ee;cursor:pointer;text-decoration:underline" onclick="ppfsSelectSvc('+r.si+')">'+r.name.slice(0,34)+'</span></td>'+
+      '<td>'+bar+'</td><td class="n">'+paceTxt+'</td>'+
+      '<td class="n"><b>'+fv(r.v69)+'</b></td><td class="n">'+fv(r.v68)+'</td>'+
+      '<td class="n">'+(r.rate?r.rate.toFixed(0):'–')+'</td></tr>';
+  });
+  el.innerHTML=t+'</tbody></table>';
+}
+
+function ppfsHeatDrill(si,pi){
+  const D=PPFS_DATA;
+  ppfsFProvs=new Set([D.provs[pi]]);
+  document.getElementById('ppfs-pv-all')?.classList.remove('on');
+  D.provs.forEach((p,i)=>document.getElementById('ppfs-pv-'+i)?.classList.toggle('on',i===pi));
+  ppfsSelectSvc(si);
+}
+
+function ppfsRenderHeatmap(){
+  const el=document.getElementById('ppfs-heat');if(!el)return;
+  const D=PPFS_DATA,frac=ppfsPaceFrac();
+  const yi69=D.years.indexOf('2569');
+  const order=D.svcs.map((_,si)=>si).sort((a,b)=>D.svc_yr[b*3+yi69][2]-D.svc_yr[a*3+yi69][2]).slice(0,12);
+  const P=D.provs.length;
+  const s68=Array.from({length:P},()=>new Array(order.length).fill(0));
+  const s69=Array.from({length:P},()=>new Array(order.length).fill(0));
+  D.hosp.forEach(h=>{order.forEach((si,ci)=>{const d=h.d[String(si)];if(!d)return;s68[h.p][ci]+=d[5];s69[h.p][ci]+=d[8];});});
+  const shortLbl=si=>{const s=(D.svc_short&&D.svc_short[si])||D.svcs[si];const mm=s.match(/^[\d.]+/);return mm?mm[0].replace(/\.$/,''):s.slice(0,4);};
+  const cell=(a68,a69,click)=>{
+    const on=click?' onclick="'+click+'"':'';
+    if(a68<10000)return '<td'+on+' style="text-align:center;color:var(--mut)'+(click?';cursor:pointer':'')+'">–</td>';
+    const pace=a69/(a68*frac)*100;
+    const col=ppfsPaceColor(pace);
+    const alpha=pace>=90?0.18:pace>=60?0.22:Math.min(0.5,0.25+(60-Math.min(pace,60))/60*0.25);
+    return '<td'+on+' title="ปี68 '+fmtB(a68)+' / ปี69 '+fmtB(a69)+' บาท" style="text-align:center;background:'+col+Math.round(alpha*255).toString(16).padStart(2,'0')+';color:'+col+';font-weight:600'+(click?';cursor:pointer':'')+'">'+pace.toFixed(0)+'%</td>';
+  };
+  let t='<table class="ranking-tbl" style="min-width:760px"><thead><tr><th>จังหวัด \\ กองทุน</th>';
+  order.forEach(si=>{t+='<th class="n" title="'+D.svcs[si].replace(/"/g,'')+'" style="cursor:help">'+shortLbl(si)+'</th>';});
+  t+='</tr></thead><tbody>';
+  D.provs.forEach((p,pi)=>{
+    t+='<tr><td>'+p+'</td>';
+    order.forEach((si,ci)=>{t+=cell(s68[pi][ci],s69[pi][ci],'ppfsHeatDrill('+si+','+pi+')');});
+    t+='</tr>';});
+  // แถวรวมเขต
+  t+='<tr style="border-top:2px solid var(--line)"><td><b>เขต 1</b></td>';
+  order.forEach((si,ci)=>{
+    let a68=0,a69=0;for(let pi=0;pi<P;pi++){a68+=s68[pi][ci];a69+=s69[pi][ci];}
+    t+=cell(a68,a69,'ppfsSelectSvc('+si+')');});
+  t+='</tr></tbody></table>';
+  el.innerHTML=t;
 }
 
 function ppfsSelectSvc(si){
@@ -2859,7 +2923,7 @@ function ppfsSelectSvc(si){
   ppfsHospPage=0;
   ppfsRenderChart2();
   ppfsRenderHospTable();
-  ppfsRenderChart1(); // re-render to highlight selected bar
+  ppfsRenderMain(); // re-render to highlight selected bar
 }
 
 function ppfsGetFilteredHospForSvc(si){
@@ -2982,7 +3046,7 @@ function ppfsToggleHospSel(hcode){
   ppfsRenderHospDD();
   ppfsRenderHospChips();
   ppfsUpdateScope();
-  ppfsRenderChart1();
+  ppfsRenderMain();
 }
 
 function ppfsRenderHospChips(){
@@ -3006,7 +3070,7 @@ function ppfsClearHosps(){
   ppfsSelHosps=[];ppfsHospQ='';
   const inp=document.getElementById('ppfs-hosp-search');if(inp)inp.value='';
   const dd=document.getElementById('ppfs-hosp-dd');if(dd){dd.style.display='none';dd.innerHTML='';}
-  ppfsRenderHospChips();ppfsUpdateScope();ppfsRenderChart1();
+  ppfsRenderHospChips();ppfsUpdateScope();ppfsRenderMain();
 }
 /* ═══════════ END PPFS DASHBOARD ═══════════ */
 
