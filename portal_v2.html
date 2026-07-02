@@ -939,8 +939,9 @@ function nbRenderProvChart(rows){
   });
   const cv=document.getElementById('nb-prov-cv');if(!cv)return;
   if(_nbProvChart){_nbProvChart.destroy();_nbProvChart=null;}
-  // dynamic canvas width for many months
+  // dynamic canvas width for many months — ต้องตั้งทั้ง attribute (พื้นที่วาดจริง) และ CSS ไม่งั้นภาพยืด/เบลอ
   const minPxPerMonth=28,totalW=Math.max(cv.parentElement.clientWidth||600,visMs.length*minPxPerMonth);
+  cv.width=totalW;cv.height=380;
   cv.style.width=totalW+'px';cv.style.height='380px';
   _nbProvChart=new Chart(cv,{type:'line',
     data:{labels:visMs.map(nbYmThai),datasets},
