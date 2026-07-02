@@ -99,6 +99,7 @@ h2.sec{font-size:16px;margin:18px 0 10px;padding-left:10px;border-left:4px solid
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--card);padding:12px;border-radius:14px;margin-bottom:14px}
 .bar .lab{color:var(--mut);font-size:12px;margin-right:4px}
 .refsticky{position:sticky;top:48px;z-index:9;box-shadow:0 6px 14px rgba(0,0,0,.4)}
+.filter-sticky{position:sticky;top:48px;z-index:50;box-shadow:0 6px 14px rgba(0,0,0,.45)}
 .chip{cursor:pointer;border:1px solid var(--line);background:var(--card2);color:var(--ink);padding:5px 12px;border-radius:20px;font-size:12.5px;transition:.15s;user-select:none}
 .chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
 .chip.m.on{background:#34d399;border-color:#34d399;color:#06251a}.chip.t.on{background:#a78bfa;border-color:#a78bfa;color:#1a1340}
@@ -745,7 +746,7 @@ async function initNBDashboard(){
   const progHTML=typeof issueHbarHTML==='function'?issueHbarHTML(rws69nb,4687.42,2929.64):'';
   body.innerHTML=
     '<div id="nb-progress">'+progHTML+'</div>'+
-    '<div class="card" style="margin-bottom:12px">'+
+    '<div class="card filter-sticky" style="margin-bottom:12px">'+
       '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:10px">'+
         '<div><span style="font-size:11px;color:var(--mut);margin-right:6px">ปีงบ:</span>'+
           '<span class="pgsz-btn on" id="nb-fy-all" onclick="nbSetFY(\'all\')">ทั้งหมด</span>'+
@@ -3145,7 +3146,7 @@ function psBuildHTML(){
   const lvls=PS_LVL_ORDER.filter(l=>Object.values(D.hosp_meta).some(h=>h.l===l));
   const lvBtns='<span class="pgsz-btn on" id="ps-lv-all" onclick="psSetLevel(\'all\')">ทั้งหมด</span>'+
     lvls.map(l=>'<span class="pgsz-btn" id="ps-lv-'+l+'" onclick="psSetLevel(\''+l+'\')">'+l+'</span>').join('');
-  return '<div class="card" style="margin-bottom:12px">'+
+  return '<div class="card filter-sticky" style="margin-bottom:12px">'+
     '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px">'+
     '<span style="font-size:11px;color:var(--mut);margin-right:4px">&#128197; ปีงบ:</span>'+yrBtns+'</div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px">'+
