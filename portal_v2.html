@@ -730,8 +730,9 @@ async function initNBDashboard(){
   if(_nbInit){nbApplyFilters();return;}
   const body=document.getElementById('nb_body');if(!body)return;
   body.innerHTML='<div style="text-align:center;padding:60px;color:#94a3b8">⏳ กำลังโหลดข้อมูล NB &lt;1,500g…</div>';
-  try{const r=await fetch('_nb_data.json');NB_DATA=await r.json();}
-  catch(e){body.innerHTML='<div style="text-align:center;padding:60px;color:#f87171">โหลดข้อมูลไม่สำเร็จ</div>';return;}
+  try{const r=await fetch('_nb_data.json?v=20260702');NB_DATA=await r.json();
+    if(!NB_DATA.rows)throw new Error('โครงสร้างข้อมูลเก่า — กด Ctrl+F5 เพื่อ refresh');}
+  catch(e){body.innerHTML='<div style="text-align:center;padding:60px;color:#f87171">โหลดข้อมูลไม่สำเร็จ<br><span style="font-size:12px;color:#94a3b8">'+e.message+'</span><br><br><button onclick="_nbInit=false;initNBDashboard()" style="background:#132c4f;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:8px;padding:8px 18px;cursor:pointer;font-family:inherit">ลองใหม่</button></div>';return;}
   _nbInit=true;
   nbFProvs=new Set(NB_DATA.provinces);
   nbDateMinIdx=0; nbDateMaxIdx=(NB_DATA.months||[]).length-1;
@@ -3123,7 +3124,8 @@ async function initPsychDashboard(){
   if(_psychInit){psApply();return;}
   const body=document.getElementById('psych_body');if(!body)return;
   body.innerHTML='<div style="padding:60px;text-align:center;color:var(--mut)"><div style="font-size:32px;margin-bottom:12px">&#9203;</div><div>กำลังโหลดข้อมูลจิตเวช Homeward...</div></div>';
-  try{const r=await fetch('_psych_data.json');if(!r.ok)throw new Error('HTTP '+r.status);PSYCH_DATA=await r.json();}
+  try{const r=await fetch('_psych_data.json?v=20260702');if(!r.ok)throw new Error('HTTP '+r.status);PSYCH_DATA=await r.json();
+    if(!PSYCH_DATA.months)throw new Error('โครงสร้างข้อมูลเก่า — กด Ctrl+F5 เพื่อ refresh');}
   catch(e){body.innerHTML='<div style="padding:40px;text-align:center;color:var(--warn)"><b>โหลดข้อมูลไม่สำเร็จ</b><br><span style="font-size:12px;color:var(--mut)">'+e.message+'</span><br><br><button onclick="initPsychDashboard()" style="background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 18px;cursor:pointer;font-family:inherit">ลองใหม่</button></div>';return;}
   _psychInit=true;
   body.innerHTML=psBuildHTML();
