@@ -346,6 +346,7 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
   <span class="navbtn" data-pg="refer" onclick="go('refer')">ส่งต่อออกนอก</span>
   <span class="navbtn" data-pg="psych" onclick="go('psych')">จิตเวช</span>
   <span class="navbtn" data-pg="adjlow" onclick="go('adjlow')">adjRW&lt;0.5</span>
+  <span class="navbtn" data-pg="ppfs" onclick="go('ppfs')">PP กองทุน</span>
 </div>
 
 <section id="pg-home" class="page show">
@@ -535,6 +536,7 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
     </div>
   </div>
 </section>
+<section id="pg-ppfs" class="page"><div id="ppfs_body"></div></section>
 
 <script>/**
  * Skipped minification because the original files appears to be already minified.
@@ -585,12 +587,12 @@ function card(title,hint,inner,cls){return '<div class="card '+cls+'"><h3>'+titl
 function cv(id,h){return '<div class="'+(h||'med')+'"><canvas id="'+id+'"></canvas></div>';}
 function pdxTable(arr){let t='<div class="tblwrap"><table><tr><th>รหัส</th><th>โรค (PDX)</th><th class="n">เคส</th><th class="n">เงิน</th></tr>';arr.forEach(r=>{t+='<tr><td>'+r.pdx+'</td><td>'+(''+r.name).slice(0,34)+'</td><td class="n">'+fmt(r.cases)+'</td><td class="n">'+fmtB(r.baht)+'</td></tr>';});return t+'</table></div>';}
 
-const PAGES=['home','overview','tka','nb','refer','psych','adjlow'];
+const PAGES=['home','overview','tka','nb','refer','psych','adjlow','ppfs'];
 function go(id){
   PAGES.forEach(p=>{const el=C('pg-'+p);if(el)el.classList.toggle('show',p===id);});
   document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on',b.dataset.pg===id));
   window.scrollTo(0,0);
-  if(id==='home')renderHome();else if(id==='overview')renderOverview();else if(id==='tka'){tkaPageInit();return;}else if(id==='adjlow'){initAdjRWDashboard();return;}else if(id==='nb'){initNBDashboard();return;}else renderIssue(id);
+  if(id==='home')renderHome();else if(id==='overview')renderOverview();else if(id==='tka'){tkaPageInit();return;}else if(id==='adjlow'){initAdjRWDashboard();return;}else if(id==='nb'){initNBDashboard();return;}else if(id==='ppfs'){initPPFSDashboard();return;}else renderIssue(id);
 }
 
 function mkSparkSVG(vals,col){
@@ -2704,5 +2706,308 @@ async function initAdjRWDashboard(){
   _adjrwInitialized=true;
 }
 /* ═══════════ END adjRW DASHBOARD ═══════════ */
+
+/* ════ PPFS Dashboard ════ */
+let PPFS_DATA=null,_ppfsInit=false;
+let ppfsMetric=2; // 0=คน,1=ครั้ง,2=บาท
+let ppfsYr='cmp'; // 'cmp','2567','2568','2569'
+let ppfsSelSvc=null;
+let ppfsFProvs=null;
+let ppfsFTypeGrp='all';
+let ppfsChart1=null,ppfsChart2=null;
+let ppfsHospPage=0;
+let ppfsSelHosps=[]; // hcodes ที่เลือก — กรอง Chart 1 (ว่าง = ระดับเขต)
+let ppfsHospQ='';    // คำค้นหาใน dropdown
+const PPFS_PGSZ=25;
+const PPFS_YR_COL=['#64748b','#f59e0b','#22d3ee'];
+
+async function initPPFSDashboard(){
+  if(_ppfsInit){ppfsRenderChart1();if(ppfsSelSvc!==null)ppfsRenderChart2();return;}
+  const body=document.getElementById('ppfs_body');if(!body)return;
+  body.innerHTML='<div style="padding:60px;text-align:center;color:var(--mut)"><div style="font-size:32px;margin-bottom:12px">&#9203;</div><div>กำลังโหลดข้อมูล PPFS...</div></div>';
+  try{const r=await fetch('_ppfs_data.json');if(!r.ok)throw new Error('HTTP '+r.status);PPFS_DATA=await r.json();}
+  catch(e){body.innerHTML='<div style="padding:40px;text-align:center;color:var(--warn)"><b>โหลดข้อมูลไม่สำเร็จ</b><br><span style="font-size:12px;color:var(--mut)">'+e.message+'</span><br><br><button onclick="initPPFSDashboard()" style="background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 18px;cursor:pointer;font-family:inherit">ลองใหม่</button></div>';return;}
+  _ppfsInit=true;
+  ppfsFProvs=new Set(PPFS_DATA.provs);
+  body.innerHTML=ppfsBuildHTML();
+  ppfsRenderKPIs();
+  ppfsUpdateScope();
+  ppfsRenderHospChips();
+  ppfsRenderChart1();
+}
+
+function ppfsBuildHTML(){
+  const D=PPFS_DATA;
+  const yrBtns=['cmp','2567','2568','2569'].map(y=>'<span class="pgsz-btn'+(y==='cmp'?' on':'')+'" id="ppfs-yr-'+y+'" onclick="ppfsSetYr(\''+y+'\')">'+(y==='cmp'?'เปรียบเทียบ':y)+'</span>').join('');
+  const metBtns=['จำนวนคน','จำนวนครั้ง','เบิกจ่าย(บาท)'].map((m,i)=>'<span class="pgsz-btn'+(i===2?' on':'')+'" id="ppfs-m-'+i+'" onclick="ppfsSetMetric('+i+')">'+m+'</span>').join('');
+  const provBtns='<span class="pgsz-btn on" id="ppfs-pv-all" onclick="ppfsToggleProv(-1)">ทั้งหมด</span>'+
+    D.provs.map((p,i)=>'<span class="pgsz-btn on" id="ppfs-pv-'+i+'" onclick="ppfsToggleProv('+i+')">'+p+'</span>').join('');
+  const tgBtns=['all',...D.type_grps].map(g=>'<span class="pgsz-btn'+(g==='all'?' on':'')+'" id="ppfs-tg-'+g+'" onclick="ppfsSetTypeGrp(\''+g+'\')">'+( g==='all'?'ทุกประเภท':g)+'</span>').join('');
+  return '<div class="card" style="margin-bottom:12px">'+
+    '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">'+
+    '<div><span style="font-size:11px;color:var(--mut);margin-right:6px">ปีงบ:</span>'+yrBtns+'</div>'+
+    '<div><span style="font-size:11px;color:var(--mut);margin-right:6px">ตัวชี้วัด:</span>'+metBtns+'</div>'+
+    '</div>'+
+    '<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">'+
+    '<span style="font-size:11px;color:var(--mut)">&#127973; ขอบเขตกราฟที่ 1:</span>'+
+    '<span id="ppfs-scope" style="font-size:11px;font-weight:600;color:#22d3ee"></span>'+
+    '<span id="ppfs-clear-hosp" onclick="ppfsClearHosps()" style="display:none;font-size:11px;color:var(--warn);cursor:pointer;text-decoration:underline">ล้างทั้งหมด</span>'+
+    '</div>'+
+    '<div style="position:relative;max-width:440px">'+
+    '<input id="ppfs-hosp-search" type="text" placeholder="พิมพ์ชื่อหน่วยบริการ / รหัส เพื่อเลือกกรอง..." '+
+    'oninput="ppfsHospQ=this.value;ppfsRenderHospDD()" onfocus="ppfsRenderHospDD()" '+
+    'style="width:100%;background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-family:inherit;font-size:12px;box-sizing:border-box">'+
+    '<div id="ppfs-hosp-dd" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:30;margin-top:4px;max-height:280px;overflow-y:auto;background:#0f2744;border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>'+
+    '</div>'+
+    '<div id="ppfs-hosp-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>'+
+    '</div></div>'+
+    '<div id="ppfs-kpi" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px"></div>'+
+    '<div class="card" style="margin-bottom:12px">'+
+    '<h3>&#128202; ผลงาน 26 กองทุน PP <span style="font-size:11px;font-weight:normal;color:var(--mut);margin-left:8px">คลิกแถบเพื่อเจาะรายหน่วยบริการ</span></h3>'+
+    '<div style="height:820px;overflow-x:auto"><canvas id="ppfs-chart1"></canvas></div></div>'+
+    '<div class="card" id="ppfs-c2-card" style="display:none;margin-bottom:12px">'+
+    '<h3 id="ppfs-c2-title">&#128269; เจาะกองทุน</h3>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0 4px">'+
+    '<span style="font-size:11px;color:var(--mut);margin-right:4px">&#127758; จังหวัด:</span>'+provBtns+'</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 10px">'+
+    '<span style="font-size:11px;color:var(--mut);margin-right:4px">&#127973; ประเภท:</span>'+tgBtns+'</div>'+
+    '<h4 style="color:var(--mut);font-weight:normal;font-size:12px;margin:0 0 6px">&#128200; Top 20 หน่วยบริการ (ปีงบ 2568 vs 2569)</h4>'+
+    '<div id="ppfs-c2-wrap" style="overflow-x:auto"></div>'+
+    '<div style="margin-top:14px"><div id="ppfs-hosp-tbl"></div>'+
+    '<div id="ppfs-hosp-pg" style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"></div></div></div>';
+}
+
+function ppfsSetYr(y){
+  ppfsYr=y;
+  ['cmp','2567','2568','2569'].forEach(yr=>document.getElementById('ppfs-yr-'+yr)?.classList.toggle('on',yr===y));
+  ppfsRenderChart1();
+}
+
+function ppfsSetMetric(m){
+  ppfsMetric=m;
+  [0,1,2].forEach(i=>document.getElementById('ppfs-m-'+i)?.classList.toggle('on',i===m));
+  ppfsRenderChart1();
+  if(ppfsSelSvc!==null){ppfsRenderChart2();ppfsRenderHospTable();}
+}
+
+function ppfsToggleProv(idx){
+  const D=PPFS_DATA;
+  if(idx===-1){ppfsFProvs=new Set(D.provs);}
+  else{const p=D.provs[idx];if(ppfsFProvs.has(p)&&ppfsFProvs.size>1)ppfsFProvs.delete(p);else ppfsFProvs.add(p);}
+  const allSel=ppfsFProvs.size===D.provs.length;
+  document.getElementById('ppfs-pv-all')?.classList.toggle('on',allSel);
+  D.provs.forEach((p,i)=>document.getElementById('ppfs-pv-'+i)?.classList.toggle('on',ppfsFProvs.has(p)));
+  if(ppfsSelSvc!==null){ppfsRenderChart2();ppfsRenderHospTable();}
+}
+
+function ppfsSetTypeGrp(g){
+  ppfsFTypeGrp=g;
+  const D=PPFS_DATA;
+  ['all',...D.type_grps].forEach(tg=>document.getElementById('ppfs-tg-'+tg)?.classList.toggle('on',tg===g));
+  if(ppfsSelSvc!==null){ppfsRenderChart2();ppfsRenderHospTable();}
+}
+
+function ppfsRenderKPIs(){
+  const el=document.getElementById('ppfs-kpi');if(!el)return;
+  const D=PPFS_DATA;
+  const yr68i=D.years.indexOf('2568'),yr69i=D.years.indexOf('2569');
+  let p68=0,v68=0,a68=0,p69=0,v69=0,a69=0;
+  for(let si=0;si<D.svcs.length;si++){
+    const d68=D.svc_yr[si*3+yr68i],d69=D.svc_yr[si*3+yr69i];
+    p68+=d68[0];v68+=d68[1];a68+=d68[2];p69+=d69[0];v69+=d69[1];a69+=d69[2];
+  }
+  const pct=(a,b)=>b?((a-b)/b*100).toFixed(1):'—';
+  const badge=(v,prev)=>{const ch=pct(v,prev);const color=parseFloat(ch)>=0?'#34d399':'#f87171';return '<span style="font-size:10px;color:'+color+'">'+(parseFloat(ch)>=0?'+':'')+ch+'%</span>';};
+  const mkK=(lbl,val,sub)=>'<div class="card" style="text-align:center;padding:14px 10px"><div style="font-size:11px;color:var(--mut);margin-bottom:4px">'+lbl+'</div><div style="font-size:20px;font-weight:700;color:#f1f5f9">'+val+'</div><div style="font-size:11px;color:var(--mut);margin-top:4px">'+sub+'</div></div>';
+  const h69=D.hosp.filter(h=>Object.values(h.d).some(d=>d[6]>0||d[7]>0||d[8]>0)).length;
+  el.innerHTML=
+    mkK('ปีงบ 69 — คน',fmt(p69),'คน '+badge(p69,p68))+
+    mkK('ปีงบ 69 — ครั้ง',fmt(v69),'ครั้ง '+badge(v69,v68))+
+    mkK('ปีงบ 69 — เบิกจ่าย',fmtB(a69),'บาท '+badge(a69,a68))+
+    mkK('ปีงบ 68 — เบิกจ่าย',fmtB(a68),'บาท')+
+    mkK('หน่วยบริการ',fmt(h69),'แห่งที่รายงาน ปีงบ 69');
+}
+
+function ppfsRenderChart1(){
+  const cv=document.getElementById('ppfs-chart1');if(!cv)return;
+  if(ppfsChart1){ppfsChart1.destroy();ppfsChart1=null;}
+  const D=PPFS_DATA,m=ppfsMetric;
+  const labels=D.svc_short;
+  let datasets;
+  if(ppfsYr==='cmp'){
+    datasets=D.years.map((yr,yi)=>({label:yr,data:D.svcs.map((_,si)=>ppfsGetC1Val(si,yi)),
+      backgroundColor:PPFS_YR_COL[yi]+'99',borderColor:PPFS_YR_COL[yi],borderWidth:1,borderRadius:3}));
+  } else {
+    const yi=D.years.indexOf(ppfsYr);
+    datasets=[{label:ppfsYr,data:D.svcs.map((_,si)=>ppfsGetC1Val(si,yi)),
+      backgroundColor:D.svcs.map((_,si)=>ppfsSelSvc===si?PPFS_YR_COL[yi]+'ff':PPFS_YR_COL[yi]+'77'),
+      borderColor:PPFS_YR_COL[yi],borderWidth:1,borderRadius:3}];
+  }
+  cv.style.width=(cv.parentElement.clientWidth||840)+'px';cv.style.height='820px';
+  const fv=v=>m===2?fmtB(v):fmt(v);
+  ppfsChart1=new Chart(cv,{type:'bar',data:{labels,datasets},
+    options:{indexAxis:'y',responsive:false,maintainAspectRatio:false,devicePixelRatio:window.devicePixelRatio||2,
+      barPercentage:0.8,categoryPercentage:0.7,
+      onClick:(evt,els)=>{if(els.length)ppfsSelectSvc(els[0].index);},
+      plugins:{
+        legend:{position:'top',labels:{color:'#cbd5e1',font:{size:11},boxWidth:12,padding:12}},
+        tooltip:{backgroundColor:'#0d1f38',borderColor:'#1e3a5f',borderWidth:1,padding:10,
+          callbacks:{label:ctx=>` ${ctx.dataset.label}: ${fv(ctx.raw)}`}},
+      },
+      scales:{
+        x:{ticks:{color:'#94a3b8',font:{size:10},callback:v=>m===2?fmtB(v):fmt(v)},grid:{color:'#1e3a5f55'}},
+        y:{ticks:{color:'#e2e8f0',font:{size:11}},grid:{color:'#1e3a5f33'}},
+      },
+      animation:{duration:250},
+    }});
+}
+
+function ppfsSelectSvc(si){
+  ppfsSelSvc=si;
+  const D=PPFS_DATA;
+  const card=document.getElementById('ppfs-c2-card');
+  if(card){card.style.display='';setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),80);}
+  const title=document.getElementById('ppfs-c2-title');
+  if(title)title.textContent='🔍 เจาะกองทุน: '+D.svcs[si];
+  ppfsHospPage=0;
+  ppfsRenderChart2();
+  ppfsRenderHospTable();
+  ppfsRenderChart1(); // re-render to highlight selected bar
+}
+
+function ppfsGetFilteredHospForSvc(si){
+  const D=PPFS_DATA,s=String(si);
+  return D.hosp.filter(h=>ppfsFProvs.has(D.provs[h.p])&&(ppfsFTypeGrp==='all'||h.g===ppfsFTypeGrp)&&s in h.d)
+    .map(h=>{const d=h.d[s];return{hcode:h.h,name:h.n,prov:D.provs[h.p],type:h.g,yr67:d.slice(0,3),yr68:d.slice(3,6),yr69:d.slice(6,9)};});
+}
+
+function ppfsRenderChart2(){
+  if(ppfsChart2){ppfsChart2.destroy();ppfsChart2=null;}
+  const wrap=document.getElementById('ppfs-c2-wrap');if(!wrap||ppfsSelSvc===null)return;
+  const D=PPFS_DATA,m=ppfsMetric;
+  const hosps=ppfsGetFilteredHospForSvc(ppfsSelSvc).sort((a,b)=>b.yr69[m]-a.yr69[m]).slice(0,20);
+  if(!hosps.length){wrap.innerHTML='<div style="padding:20px;color:var(--mut);text-align:center">ไม่มีข้อมูลสำหรับตัวกรองที่เลือก</div>';return;}
+  wrap.innerHTML='<canvas id="ppfs-chart2"></canvas>';
+  const cv=document.getElementById('ppfs-chart2');
+  const h=Math.max(420,hosps.length*46+80);
+  cv.style.width=(wrap.clientWidth||800)+'px';cv.style.height=h+'px';
+  const fv=v=>m===2?fmtB(v):fmt(v);
+  ppfsChart2=new Chart(cv,{type:'bar',
+    data:{labels:hosps.map(h=>h.name.slice(0,30)),datasets:[
+      {label:'2568',data:hosps.map(h=>h.yr68[m]),backgroundColor:PPFS_YR_COL[1]+'88',borderColor:PPFS_YR_COL[1],borderWidth:1,borderRadius:2},
+      {label:'2569',data:hosps.map(h=>h.yr69[m]),backgroundColor:PPFS_YR_COL[2]+'bb',borderColor:PPFS_YR_COL[2],borderWidth:1,borderRadius:2},
+    ]},
+    options:{indexAxis:'y',responsive:false,maintainAspectRatio:false,devicePixelRatio:window.devicePixelRatio||2,
+      plugins:{
+        legend:{position:'top',labels:{color:'#cbd5e1',font:{size:11},boxWidth:12,padding:12}},
+        tooltip:{backgroundColor:'#0d1f38',borderColor:'#1e3a5f',borderWidth:1,padding:10,
+          callbacks:{label:ctx=>` ${ctx.dataset.label}: ${fv(ctx.raw)}`}},
+      },
+      scales:{
+        x:{ticks:{color:'#94a3b8',font:{size:10},callback:v=>m===2?fmtB(v):fmt(v)},grid:{color:'#1e3a5f55'}},
+        y:{ticks:{color:'#e2e8f0',font:{size:11}},grid:{color:'#1e3a5f33'}},
+      },
+      animation:{duration:250},
+    }});
+}
+
+function ppfsRenderHospTable(){
+  const el=document.getElementById('ppfs-hosp-tbl');
+  const pg=document.getElementById('ppfs-hosp-pg');
+  if(!el||ppfsSelSvc===null)return;
+  const m=ppfsMetric;
+  const hosps=ppfsGetFilteredHospForSvc(ppfsSelSvc).sort((a,b)=>b.yr69[m]-a.yr69[m]);
+  const total=hosps.length,start=ppfsHospPage*PPFS_PGSZ,slice=hosps.slice(start,start+PPFS_PGSZ);
+  const fv=(v)=>m===2?fmtB(v):fmt(v);
+  const sth='position:sticky;top:0;background:#0f2744;z-index:2';
+  let t='<div style="max-height:440px;overflow-y:auto"><table class="ranking-tbl"><thead><tr>'+
+    '<th style="'+sth+'">#</th><th style="'+sth+'">หน่วยบริการ</th>'+
+    '<th style="'+sth+'">จังหวัด</th><th style="'+sth+'">ประเภท</th>'+
+    '<th class="n" style="'+sth+'">2567</th><th class="n" style="'+sth+'">2568</th>'+
+    '<th class="n" style="'+sth+'">2569</th><th class="n" style="'+sth+'">%เปลี่ยน</th>'+
+    '</tr></thead><tbody>';
+  slice.forEach((h,i)=>{
+    const v68=h.yr68[m],v69=h.yr69[m];
+    const ch=v68>0?((v69-v68)/v68*100):null;
+    const chTxt=ch===null?'—':'<span style="color:'+(ch>=0?'#34d399':'#f87171')+'">'+(ch>=0?'+':'')+ch.toFixed(1)+'%</span>';
+    const typeCls={'รพศ.':'f3','รพท.':'f2','รพช.':'f1'}[h.type]||'';
+    t+='<tr><td>'+(start+i+1)+'</td><td>'+h.name.slice(0,32)+'</td><td>'+h.prov+'</td>'+
+      '<td><span class="badge '+typeCls+'">'+h.type+'</span></td>'+
+      '<td class="n">'+fv(h.yr67[m])+'</td><td class="n">'+fv(h.yr68[m])+'</td>'+
+      '<td class="n"><b>'+fv(h.yr69[m])+'</b></td><td class="n">'+chTxt+'</td></tr>';
+  });
+  el.innerHTML=t+'</tbody></table></div>';
+  if(pg){const pages=Math.ceil(total/PPFS_PGSZ);
+    pg.innerHTML='<span style="font-size:11px;color:var(--mut)">'+total+' หน่วยบริการ</span>'+
+      (pages>1?Array.from({length:pages},(_,i)=>'<button class="pgsz-btn'+(i===ppfsHospPage?' on':'')+'" onclick="ppfsHospPage='+i+';ppfsRenderHospTable()">'+(i+1)+'</button>').join(''):'');}
+}
+// Chart 1 value: ระดับเขต (svc_yr) หรือผลรวมเฉพาะ รพ. ที่เลือก
+function ppfsGetC1Val(si,yi){
+  const D=PPFS_DATA,m=ppfsMetric;
+  if(!ppfsSelHosps.length)return D.svc_yr[si*3+yi][m];
+  return ppfsSelHosps.reduce((s,hc)=>{
+    const h=D.hosp.find(x=>x.h===hc);if(!h)return s;
+    const d=h.d[String(si)];return d?s+d[yi*3+m]:s;
+  },0);
+}
+
+function ppfsRenderHospDD(){
+  const dd=document.getElementById('ppfs-hosp-dd');if(!dd)return;
+  const q=(ppfsHospQ||'').trim().toLowerCase();
+  if(!q){dd.style.display='none';dd.innerHTML='';return;}
+  const D=PPFS_DATA;
+  const matched=D.hosp.filter(h=>h.n.toLowerCase().includes(q)||String(h.h).includes(q));
+  if(!matched.length){dd.style.display='';dd.innerHTML='<div style="padding:10px;color:var(--mut);font-size:12px">ไม่พบหน่วยบริการ</div>';return;}
+  const byProv={};
+  matched.slice(0,80).forEach(h=>{(byProv[D.provs[h.p]]=byProv[D.provs[h.p]]||[]).push(h);});
+  let html='';
+  Object.keys(byProv).forEach(pv=>{
+    html+='<div style="padding:4px 10px;font-size:10px;color:var(--mut);background:#0b1e38;position:sticky;top:0">'+pv+'</div>';
+    byProv[pv].forEach(h=>{
+      const sel=ppfsSelHosps.includes(h.h);
+      html+='<div onclick="ppfsToggleHospSel(\''+h.h+'\')" style="padding:6px 10px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;'+(sel?'background:#12385f':'')+'">'+
+        '<span style="color:'+(sel?'#22d3ee':'var(--mut)')+'">'+(sel?'&#9745;':'&#9744;')+'</span>'+
+        '<span style="color:var(--ink);flex:1">'+h.n+'</span>'+
+        '<span style="color:var(--mut);font-size:10px">'+h.g+'</span></div>';
+    });
+  });
+  if(matched.length>80)html+='<div style="padding:6px 10px;font-size:10px;color:var(--mut)">แสดง 80 จาก '+matched.length+' รายการ — พิมพ์เพิ่มเพื่อค้นหาให้แคบลง</div>';
+  dd.style.display='';dd.innerHTML=html;
+}
+
+function ppfsToggleHospSel(hcode){
+  const i=ppfsSelHosps.indexOf(hcode);
+  if(i>=0)ppfsSelHosps.splice(i,1);else ppfsSelHosps.push(hcode);
+  ppfsRenderHospDD();
+  ppfsRenderHospChips();
+  ppfsUpdateScope();
+  ppfsRenderChart1();
+}
+
+function ppfsRenderHospChips(){
+  const el=document.getElementById('ppfs-hosp-chips');if(!el)return;
+  const D=PPFS_DATA;
+  el.innerHTML=ppfsSelHosps.map(hc=>{
+    const h=D.hosp.find(x=>x.h===hc);const nm=h?h.n:hc;
+    return '<span style="display:inline-flex;align-items:center;gap:6px;background:#12385f;border:1px solid #22d3ee55;border-radius:14px;padding:3px 10px;font-size:11px;color:var(--ink)">'+nm+
+      '<span onclick="ppfsToggleHospSel(\''+hc+'\')" style="cursor:pointer;color:var(--warn);font-weight:700">&times;</span></span>';
+  }).join('');
+}
+
+function ppfsUpdateScope(){
+  const sc=document.getElementById('ppfs-scope');
+  const cl=document.getElementById('ppfs-clear-hosp');
+  if(sc)sc.textContent=ppfsSelHosps.length?('รวม '+ppfsSelHosps.length+' หน่วยบริการที่เลือก'):'ระดับเขต 1 ทั้งหมด';
+  if(cl)cl.style.display=ppfsSelHosps.length?'':'none';
+}
+
+function ppfsClearHosps(){
+  ppfsSelHosps=[];ppfsHospQ='';
+  const inp=document.getElementById('ppfs-hosp-search');if(inp)inp.value='';
+  const dd=document.getElementById('ppfs-hosp-dd');if(dd){dd.style.display='none';dd.innerHTML='';}
+  ppfsRenderHospChips();ppfsUpdateScope();ppfsRenderChart1();
+}
+/* ═══════════ END PPFS DASHBOARD ═══════════ */
 </script>
 </body></html>
