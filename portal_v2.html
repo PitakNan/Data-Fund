@@ -722,6 +722,9 @@ const NB_PGSZ=20;
 const NB_PROV_COLORS=['#22d3ee','#f59e0b','#a78bfa','#34d399','#f472b6','#60a5fa','#fb923c','#4ade80'];
 const NB_TH_MONTHS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 let _nbProvChart=null,nbDateMinIdx=0,nbDateMaxIdx=0;
+// row = [pIdx, yr, hcode, pdx, baht, adjrw, mi]
+const NBI={p:0,y:1,h:2,x:3,b:4,a:5,m:6};
+function nbLvlCls(l){return l==='A'||l==='S'?'rag-g':l==='F2'||l==='F3'?'rag-r':(l||'').startsWith('M')?'rag-a':'rag-n';}
 
 async function initNBDashboard(){
   if(_nbInit){nbApplyFilters();return;}
@@ -730,8 +733,8 @@ async function initNBDashboard(){
   try{const r=await fetch('_nb_data.json');NB_DATA=await r.json();}
   catch(e){body.innerHTML='<div style="text-align:center;padding:60px;color:#f87171">โหลดข้อมูลไม่สำเร็จ</div>';return;}
   _nbInit=true;
-  nbFProvs=new Set(NB_DATA.filters.provinces);
-  nbDateMinIdx=0; nbDateMaxIdx=(NB_DATA.filters.months||[]).length-1;
+  nbFProvs=new Set(NB_DATA.provinces);
+  nbDateMinIdx=0; nbDateMaxIdx=(NB_DATA.months||[]).length-1;
   if(!document.getElementById('nb-slider-css')){
     const s=document.createElement('style');s.id='nb-slider-css';
     s.textContent='#nb-smin,#nb-smax{position:absolute;width:100%;pointer-events:none;-webkit-appearance:none;appearance:none;background:transparent;height:24px;margin:0}#nb-smin::-webkit-slider-thumb,#nb-smax::-webkit-slider-thumb{pointer-events:all;-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#22d3ee;cursor:pointer;border:2px solid #0f2744;box-shadow:0 0 4px #22d3ee88}#nb-smin::-moz-range-thumb,#nb-smax::-moz-range-thumb{pointer-events:all;width:14px;height:14px;border-radius:50%;background:#22d3ee;cursor:pointer;border:2px solid #0f2744}';
@@ -745,7 +748,7 @@ async function initNBDashboard(){
       '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:10px">'+
         '<div><span style="font-size:11px;color:var(--mut);margin-right:6px">ปีงบ:</span>'+
           '<span class="pgsz-btn on" id="nb-fy-all" onclick="nbSetFY(\'all\')">ทั้งหมด</span>'+
-          NB_DATA.filters.years.map(y=>'<span class="pgsz-btn" id="nb-fy-'+y+'" onclick="nbSetFY(\''+y+'\')">ปีงบ '+y+'</span>').join('')+
+          NB_DATA.years.map(y=>'<span class="pgsz-btn" id="nb-fy-'+y+'" onclick="nbSetFY(\''+y+'\')">ปีงบ '+y+'</span>').join('')+
         '</div>'+
         '<div><span style="font-size:11px;color:var(--mut);margin-right:6px">ระดับ:</span>'+
           '<span class="pgsz-btn on" id="nb-lv-all" onclick="nbSetLevel(\'all\')">ทั้งหมด</span>'+
@@ -753,12 +756,12 @@ async function initNBDashboard(){
         '</div>'+
       '</div>'+
       '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'+
-        '<span style="font-size:11px;color:var(--mut)">จังหวัด (กราฟ+ตาราง):</span>'+
+        '<span style="font-size:11px;color:var(--mut)">จังหวัด:</span>'+
         '<span class="pgsz-btn on" id="nb-pv-all" onclick="nbToggleProv(\'all\')">ทั้งหมด</span>'+
-        NB_DATA.filters.provinces.map((p,i)=>'<span class="pgsz-btn on" id="nb-pv-'+i+'" onclick="nbToggleProv('+i+')" style="border-left:3px solid '+NB_PROV_COLORS[i]+'">'+p+'</span>').join('')+
+        NB_DATA.provinces.map((p,i)=>'<span class="pgsz-btn on" id="nb-pv-'+i+'" onclick="nbToggleProv('+i+')" style="border-left:3px solid '+NB_PROV_COLORS[i]+'">'+p+'</span>').join('')+
       '</div>'+
       '<div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #1e3a5f">'+
-        '<span style="font-size:11px;color:var(--mut);white-space:nowrap">&#128197; ช่วงเวลา (กราฟ):</span>'+
+        '<span style="font-size:11px;color:var(--mut);white-space:nowrap">&#128197; ช่วงเวลา (กรองทุกส่วน):</span>'+
         '<span id="nb-smin-lbl" style="font-size:11px;color:#22d3ee;min-width:56px"></span>'+
         '<div id="nb-slider-wrap" style="position:relative;flex:1;min-width:180px;height:24px">'+
           '<div style="position:absolute;top:10px;left:0;right:0;height:4px;background:#1e3a5f;border-radius:2px">'+
@@ -771,15 +774,16 @@ async function initNBDashboard(){
       '</div>'+
     '</div>'+
     '<div id="nb-kpi" class="grid" style="margin-bottom:12px"></div>'+
+    '<div class="card" id="nb-narr" style="margin-bottom:12px;border-left:3px solid #22d3ee"></div>'+
     '<div class="card" style="margin-bottom:12px">'+
-      '<h3>&#128200; แนวโน้มรายเดือน รายจังหวัด (เคส)</h3>'+
+      '<h3>&#128200; แนวโน้มรายเดือน รายจังหวัด (เคส) <span id="nb-chart-range-lbl" style="font-size:11px;font-weight:normal;color:var(--mut)"></span></h3>'+
       '<div style="height:380px;overflow-x:auto"><canvas id="nb-prov-cv"></canvas></div>'+
-      '<div class="hint" style="margin-top:6px">⚠️ ปีงบ 69 ข้อมูลยังไม่ครบปี — เส้นลงในช่วงท้ายไม่ใช่แนวโน้มที่แท้จริง</div>'+
+      '<div class="hint" style="margin-top:6px">⚠️ ปีงบ 69 ข้อมูลยังไม่ครบปี — เส้นลงในช่วงท้ายไม่ใช่แนวโน้มที่แท้จริง · ข้อมูลปีงบ 68 ส่วนใหญ่ (~88%) ระบุวันที่กระจุกช่วง ต.ค.–ธ.ค.67 ตามงวดการคืนข้อมูล สปสช. — จุดพีคช่วงนั้นไม่ใช่การกระจายจริงของการเกิด</div>'+
     '</div>'+
     '<div class="grid" style="margin-bottom:12px">'+
       '<div class="card c6"><h3>&#127973; ระดับหน่วยบริการ (ศักยภาพ NICU)</h3><div class="tblwrap" id="nb-level-tbl"></div></div>'+
     '</div>'+
-    '<div class="card" style="margin-bottom:12px"><h3>&#128300; ตารางโรค (PDX) ใน NB &lt;1,500g</h3>'+
+    '<div class="card" style="margin-bottom:12px"><h3>&#128300; ตารางโรค (PDX) ใน NB &lt;1,500g <span style="font-size:11px;font-weight:normal;color:var(--mut)">คลิกชื่อโรคเพื่อดูรายโรงพยาบาล</span></h3>'+
       '<div class="tblwrap" id="nb-pdx-tbl"></div>'+
       '<div id="nb-pdx-pg" style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"></div>'+
     '</div>'+
@@ -805,54 +809,85 @@ function nbSetFY(y){
   nbApplyFilters();
 }
 function nbToggleProv(idx){
-  const PROVS=NB_DATA.filters.provinces;
+  const PROVS=NB_DATA.provinces;
   if(idx==='all'){nbFProvs=new Set(PROVS);}
   else{
     const p=PROVS[idx];
     if(nbFProvs.has(p)&&nbFProvs.size>1)nbFProvs.delete(p);
     else nbFProvs.add(p);
   }
-  nbHospPage=0;
-  // update chip styles
+  nbHospPage=0;nbPDXPage=0;
   const allSel=nbFProvs.size===PROVS.length;
   document.getElementById('nb-pv-all')?.classList.toggle('on',allSel);
   PROVS.forEach((p,i)=>document.getElementById('nb-pv-'+i)?.classList.toggle('on',nbFProvs.has(p)));
   nbApplyFilters();
 }
 function nbSetLevel(l){
-  nbFLevel=l;nbHospPage=0;
+  nbFLevel=l;nbHospPage=0;nbPDXPage=0;
   document.querySelectorAll('[id^="nb-lv-"]').forEach(b=>b.classList.toggle('on',b.id==='nb-lv-'+(l==='all'?'all':l)));
   nbApplyFilters();
 }
-function nbApplyFilters(){if(!NB_DATA)return;nbUpdateKPIs();nbRenderProvChart();nbRenderLevelTable();nbRenderPDXTable();nbRenderHospTable();}
 
-function nbFilteredHosps(){
-  return NB_DATA.hospitals.filter(h=>{
-    if(nbFProvs&&!nbFProvs.has(h.prov))return false;
-    if(nbFLevel!=='all'&&h.level!==nbFLevel)return false;
+function nbRows(){
+  const D=NB_DATA;
+  const provAll=nbFProvs.size===D.provinces.length;
+  return D.rows.filter(r=>{
+    if(nbFY!=='all'&&r[NBI.y]!==nbFY)return false;
+    if(!provAll&&!nbFProvs.has(D.provinces[r[NBI.p]]))return false;
+    if(nbFLevel!=='all'&&(D.hosp_meta[r[NBI.h]]?.l||'')!==nbFLevel)return false;
+    const mi=r[NBI.m];if(mi<nbDateMinIdx||mi>nbDateMaxIdx)return false;
     return true;
   });
 }
-function nbGetHospCases(h){return nbFY==='all'?h.cases:(h.yr&&h.yr[nbFY])||0;}
 
-function nbUpdateKPIs(){
-  const hs=nbFilteredHosps();
-  const cases=hs.reduce((s,h)=>s+nbGetHospCases(h),0);
-  const baht=nbFY==='all'?hs.reduce((s,h)=>s+h.baht,0):0;
-  const f23=hs.filter(h=>h.f23).reduce((s,h)=>s+nbGetHospCases(h),0);
+function nbApplyFilters(){
+  if(!NB_DATA)return;
+  const rows=nbRows();
+  nbUpdateKPIs(rows);nbRenderNarrative(rows);nbRenderProvChart(rows);
+  nbRenderLevelTable(rows);nbRenderPDXTable(rows);nbRenderHospTable(rows);
+}
+
+function nbUpdateKPIs(rows){
+  const D=NB_DATA;let baht=0,adj=0,f23=0;
+  rows.forEach(r=>{baht+=r[NBI.b];adj+=r[NBI.a];const l=D.hosp_meta[r[NBI.h]]?.l;if(l==='F2'||l==='F3')f23++;});
+  const cases=rows.length;
   const f23pct=cases?+(f23/cases*100).toFixed(1):0;
-  const adjSum=hs.reduce((s,h)=>s+(h.avg_adjrw*nbGetHospCases(h)),0);
-  const avgAdj=cases?+(adjSum/cases).toFixed(4):0;
+  const avgAdj=cases?+(adj/cases).toFixed(4):0;
   const el=document.getElementById('nb-kpi');if(!el)return;
   el.innerHTML=kpi('เคสทั้งหมด',fmt(cases),'เคส')+kpi('ใน F2/F3',fmt(f23),'เคส')+
     kpi('% F2/F3',f23pct+'%',f23pct>10?'⚠️ >10%':'✅ ≤10%')+kpi('AdjRW เฉลี่ย',avgAdj,'')+
-    (nbFY==='all'?kpi('มูลค่า',fmtB(baht),'บาท'):'');
+    kpi('มูลค่า',fmtB(baht),'บาท');
+}
+
+function nbRenderNarrative(rows){
+  const el=document.getElementById('nb-narr');if(!el)return;
+  const D=NB_DATA;const n=rows.length;
+  if(!n){el.innerHTML='<div style="color:var(--mut)">ไม่มีข้อมูลตามตัวกรองที่เลือก</div>';return;}
+  let baht=0,f23=0;const pdxc={},prov={};
+  rows.forEach(r=>{baht+=r[NBI.b];const l=D.hosp_meta[r[NBI.h]]?.l;if(l==='F2'||l==='F3')f23++;
+    pdxc[r[NBI.x]]=(pdxc[r[NBI.x]]||0)+1;
+    const pv=D.provinces[r[NBI.p]];prov[pv]=(prov[pv]||0)+1;});
+  const topX=Object.entries(pdxc).sort((a,b)=>b[1]-a[1])[0];
+  const topP=Object.entries(prov).sort((a,b)=>b[1]-a[1])[0];
+  const f23pct=f23/n*100;
+  const yrLabel=nbFY==='all'?'ปีงบ 66–69':'ปีงบ '+nbFY;
+  let scope=(nbFProvs.size<D.provinces.length)?('เฉพาะ '+[...nbFProvs].join(', ')):'ทั้งเขต 1';
+  if(nbFLevel!=='all')scope+=' ระดับ '+nbFLevel;
+  const ms=D.months;
+  const rangeTxt=(nbDateMinIdx>0||nbDateMaxIdx<ms.length-1)?' ช่วง '+nbYmThai(ms[nbDateMinIdx])+' – '+nbYmThai(ms[nbDateMaxIdx]):'';
+  const xname=D.pdx_names[topX[0]]?.n||'';
+  el.innerHTML='<div style="font-size:13px;line-height:1.9;color:var(--ink)">'+
+    '<b style="color:#22d3ee">&#128161; สรุป</b> — '+scope+' '+yrLabel+rangeTxt+' มีทารกแรกเกิด นน.&lt;1,500g <b>'+fmt(n)+' เคส</b> มูลค่ารวม <b>'+fmtB(baht)+' บาท</b>. '+
+    'รักษาในหน่วยระดับ F2/F3 (ศักยภาพ NICU จำกัด) <b style="color:'+(f23pct>10?'#f87171':'#34d399')+'">'+fmt(f23)+' เคส ('+f23pct.toFixed(1)+'%)</b> '+(f23pct>10?'&#9888;&#65039; เกินเกณฑ์เฝ้าระวัง 10%':'&#9989; ไม่เกินเกณฑ์ 10%')+'. '+
+    'วินิจฉัยที่พบมากสุดคือ <b>'+topX[0]+'</b> '+(xname?'('+xname.slice(0,42)+') ':'')+'<b>'+fmt(topX[1])+' เคส</b>. '+
+    'จังหวัดที่มีเคสมากสุดคือ <b>'+topP[0]+'</b> ('+(topP[1]/n*100).toFixed(0)+'% ของเคสที่กรอง)'+
+    '</div>';
 }
 
 function nbYmThai(ym){const[y,m]=ym.split('-');return NB_TH_MONTHS[+m-1]+' '+(+y+543).toString().slice(-2);}
 
 function nbSliderChange(which){
-  const allMs=NB_DATA.filters.months||[];if(!allMs.length)return;
+  const allMs=NB_DATA.months||[];if(!allMs.length)return;
   const smin=document.getElementById('nb-smin'),smax=document.getElementById('nb-smax');if(!smin||!smax)return;
   let lo=+smin.value,hi=+smax.value;
   if(which==='min'&&lo>hi){lo=hi;smin.value=lo;}
@@ -867,11 +902,12 @@ function nbSliderChange(which){
   if(maxL)maxL.textContent=nbYmThai(allMs[hi]);
   const rangeL=document.getElementById('nb-chart-range-lbl');
   if(rangeL)rangeL.textContent='('+nbYmThai(allMs[lo])+' – '+nbYmThai(allMs[hi])+')';
-  nbRenderProvChart();
+  nbPDXPage=0;nbHospPage=0;
+  nbApplyFilters();
 }
 
 function nbInitSlider(){
-  const allMs=NB_DATA.filters.months||[];if(!allMs.length)return;
+  const allMs=NB_DATA.months||[];if(!allMs.length)return;
   const mx=allMs.length-1;
   const smin=document.getElementById('nb-smin'),smax=document.getElementById('nb-smax');if(!smin||!smax)return;
   smin.max=mx;smin.value=0;smax.max=mx;smax.value=mx;
@@ -885,17 +921,19 @@ function nbInitSlider(){
   if(track)track.style.cssText='position:absolute;height:100%;border-radius:2px;background:#22d3ee44;left:0%;width:100%';
 }
 
-function nbRenderProvChart(){
-  const allMs=NB_DATA.filters.months||[];
+function nbRenderProvChart(rows){
+  const allMs=NB_DATA.months||[];
   const visMs=allMs.slice(nbDateMinIdx,nbDateMaxIdx+1);
   if(!visMs.length)return;
-  const ALL_PROVS=NB_DATA.filters.provinces;
+  const ALL_PROVS=NB_DATA.provinces;
   const selProvs=ALL_PROVS.filter(p=>nbFProvs&&nbFProvs.has(p));
-  const pmLookup={};
-  (NB_DATA.prov_month||[]).forEach(e=>{pmLookup[e.prov+'|'+e.ym]=e.cases;});
+  const cnt={};
+  (rows||nbRows()).forEach(r=>{const mi=r[NBI.m];if(mi<0)return;
+    (cnt[r[NBI.p]]=cnt[r[NBI.p]]||new Array(allMs.length).fill(0))[mi]++;});
   const datasets=selProvs.map(p=>{
     const ci=ALL_PROVS.indexOf(p),col=NB_PROV_COLORS[ci%NB_PROV_COLORS.length];
-    return{label:p,data:visMs.map(ym=>pmLookup[p+'|'+ym]||0),
+    const a=cnt[ci]||[];
+    return{label:p,data:visMs.map((_,i)=>a[nbDateMinIdx+i]||0),
       borderColor:col,backgroundColor:col+'18',tension:0.2,pointRadius:visMs.length>18?0:3,pointHoverRadius:6,fill:false,borderWidth:2.5,pointBorderWidth:0,pointBackgroundColor:col};
   });
   const cv=document.getElementById('nb-prov-cv');if(!cv)return;
@@ -915,15 +953,16 @@ function nbRenderProvChart(){
         y:{ticks:{color:'#94a3b8',font:{size:11}},grid:{color:'#1e3a5f66'},border:{dash:[4,4]}}}}});
 }
 
-function nbRenderLevelTable(){
+function nbRenderLevelTable(rows){
   const el=document.getElementById('nb-level-tbl');if(!el)return;
-  const lvls=NB_DATA.level_yr.map(r=>({lvl:r.lvl,cases:nbFY==='all'?r.cases:(r.yr&&r.yr[nbFY])||0})).filter(r=>r.cases>0).sort((a,b)=>b.cases-a.cases);
+  const D=NB_DATA;const lv={};
+  rows.forEach(r=>{const l=D.hosp_meta[r[NBI.h]]?.l||'–';lv[l]=(lv[l]||0)+1;});
+  const lvls=Object.entries(lv).map(([lvl,cases])=>({lvl,cases})).sort((a,b)=>b.cases-a.cases);
   const total=lvls.reduce((s,r)=>s+r.cases,0);
   let t='<table class="ranking-tbl"><tr><th>ระดับ</th><th class="n">เคส</th><th class="n">%</th></tr>';
   lvls.forEach(r=>{
-    const cls=r.lvl==='A'||r.lvl==='S'?'rag-g':r.lvl==='F2'||r.lvl==='F3'?'rag-r':r.lvl.startsWith('M')?'rag-a':'rag-n';
     const pct=total?+(r.cases/total*100).toFixed(1):0;
-    t+='<tr><td><span class="'+cls+'">'+r.lvl+'</span></td><td class="n">'+fmt(r.cases)+'</td><td class="n">'+pct+'%</td></tr>';
+    t+='<tr><td><span class="'+nbLvlCls(r.lvl)+'">'+r.lvl+'</span></td><td class="n">'+fmt(r.cases)+'</td><td class="n">'+pct+'%</td></tr>';
   });
   el.innerHTML=t+'</table>';
 }
@@ -931,13 +970,20 @@ function nbRenderLevelTable(){
 function nbSetPDXSort(col){
   if(nbPDXSort.col===col)nbPDXSort.dir=nbPDXSort.dir==='desc'?'asc':'desc';
   else{nbPDXSort.col=col;nbPDXSort.dir='desc';}
-  nbPDXPage=0;nbRenderPDXTable();
+  nbPDXPage=0;nbRenderPDXTable(nbRows());
 }
 
-function nbRenderPDXTable(){
+function nbAggPdx(rows){
+  const D=NB_DATA;const m={};
+  rows.forEach(r=>{const k=r[NBI.x];const e=m[k]=m[k]||{pdx:k,name:D.pdx_names[k]?.n||'',cases:0,baht:0,adj:0};
+    e.cases++;e.baht+=r[NBI.b];e.adj+=r[NBI.a];});
+  return Object.values(m);
+}
+
+function nbRenderPDXTable(rows){
   const el=document.getElementById('nb-pdx-tbl');const pg=document.getElementById('nb-pdx-pg');if(!el)return;
-  let list=NB_DATA.pdx.map(d=>({...d,_c:nbFY==='all'?d.cases:(d.yr&&d.yr[nbFY])||0})).filter(d=>d._c>0);
-  const sk={cases:d=>d._c,sum_adjrw:d=>d.sum_adjrw||0,baht:d=>d.baht}[nbPDXSort.col]||(d=>d._c);
+  let list=nbAggPdx(rows||nbRows());
+  const sk={cases:d=>d.cases,sum_adjrw:d=>d.adj,baht:d=>d.baht}[nbPDXSort.col]||(d=>d.cases);
   list=list.sort((a,b)=>nbPDXSort.dir==='desc'?sk(b)-sk(a):sk(a)-sk(b));
   const total=list.length,start=nbPDXPage*NB_PGSZ,slice=list.slice(start,start+NB_PGSZ);
   const arr=c=>c===nbPDXSort.col?(nbPDXSort.dir==='desc'?'▼':'▲'):'⇅';
@@ -947,7 +993,9 @@ function nbRenderPDXTable(){
     '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetPDXSort(\'cases\')">'+arr('cases')+' เคส</th>'+
     '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetPDXSort(\'sum_adjrw\')">'+arr('sum_adjrw')+' SumAdjRW</th>'+
     '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetPDXSort(\'baht\')">'+arr('baht')+' มูลค่า</th></tr></thead><tbody>';
-  slice.forEach(r=>{t+='<tr><td>'+r.pdx+'</td><td>'+(''+r.name).slice(0,38)+'</td><td class="n">'+fmt(r._c)+'</td><td class="n">'+((r.sum_adjrw||0).toFixed(2))+'</td><td class="n">'+fmtB(r.baht)+'</td></tr>';});
+  slice.forEach(r=>{t+='<tr><td>'+r.pdx+'</td>'+
+    '<td><span style="color:#38bdf8;cursor:pointer;text-decoration:underline" onclick="nbOpenPdxModal(\''+r.pdx+'\')">'+(''+(r.name||r.pdx)).slice(0,38)+'</span></td>'+
+    '<td class="n">'+fmt(r.cases)+'</td><td class="n">'+(r.adj.toFixed(2))+'</td><td class="n">'+fmtB(r.baht)+'</td></tr>';});
   el.innerHTML=t+'</tbody></table></div>';
   if(pg){const pages=Math.ceil(total/NB_PGSZ);pg.innerHTML='<span style="font-size:11px;color:var(--mut)">'+total+' รหัส</span>'+(pages>1?Array.from({length:pages},(_,i)=>'<button class="pgsz-btn'+(i===nbPDXPage?' on':'')+'" onclick="nbPDXPage='+i+';nbRenderPDXTable()">'+( i+1)+'</button>').join(''):'');}
 }
@@ -955,13 +1003,21 @@ function nbRenderPDXTable(){
 function nbSetHospSort(col){
   if(nbHospSort.col===col)nbHospSort.dir=nbHospSort.dir==='desc'?'asc':'desc';
   else{nbHospSort.col=col;nbHospSort.dir='desc';}
-  nbHospPage=0;nbRenderHospTable();
+  nbHospPage=0;nbRenderHospTable(nbRows());
 }
 
-function nbRenderHospTable(){
+function nbAggHosp(rows){
+  const D=NB_DATA;const m={};
+  rows.forEach(r=>{const k=r[NBI.h];const meta=D.hosp_meta[k]||{};
+    const e=m[k]=m[k]||{hcode:k,name:meta.n||k,level:meta.l||'',prov:D.provinces[meta.p]||'',cases:0,baht:0,adj:0};
+    e.cases++;e.baht+=r[NBI.b];e.adj+=r[NBI.a];});
+  return Object.values(m);
+}
+
+function nbRenderHospTable(rows){
   const el=document.getElementById('nb-hosp-tbl');const pg=document.getElementById('nb-hosp-pg');if(!el)return;
-  const sk={cases:h=>h._c,sum_adjrw:h=>h.sum_adjrw||0,baht:h=>h.baht}[nbHospSort.col]||(h=>h._c);
-  const list=nbFilteredHosps().map(h=>({...h,_c:nbGetHospCases(h)})).filter(h=>h._c>0).sort((a,b)=>nbHospSort.dir==='desc'?sk(b)-sk(a):sk(a)-sk(b));
+  const sk={cases:h=>h.cases,sum_adjrw:h=>h.adj,baht:h=>h.baht}[nbHospSort.col]||(h=>h.cases);
+  const list=nbAggHosp(rows||nbRows()).sort((a,b)=>nbHospSort.dir==='desc'?sk(b)-sk(a):sk(a)-sk(b));
   const total=list.length,start=nbHospPage*NB_PGSZ,slice=list.slice(start,start+NB_PGSZ);
   const arr=c=>c===nbHospSort.col?(nbHospSort.dir==='desc'?'▼':'▲'):'⇅';
   const sth='position:sticky;top:0;background:#0f2744;z-index:2';
@@ -971,26 +1027,60 @@ function nbRenderHospTable(){
     '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetHospSort(\'sum_adjrw\')">'+arr('sum_adjrw')+' SumAdjRW</th>'+
     '<th class="n" style="'+sth+';cursor:pointer" onclick="nbSetHospSort(\'baht\')">'+arr('baht')+' มูลค่า</th></tr></thead><tbody>';
   slice.forEach((h,i)=>{
-    const cls=h.level==='A'||h.level==='S'?'rag-g':h.level==='F2'||h.level==='F3'?'rag-r':h.level.startsWith('M')?'rag-a':'rag-n';
-    t+='<tr><td>'+(start+i+1)+'</td><td style="cursor:pointer;color:#38bdf8" onclick="nbOpenHospModal(\''+h.hcode+'\')">'+h.name.slice(0,28)+'</td><td>'+h.prov+'</td><td><span class="'+cls+'">'+h.level+'</span></td><td class="n">'+fmt(h._c)+'</td><td class="n">'+((h.sum_adjrw||0).toFixed(2))+'</td><td class="n">'+fmtB(h.baht)+'</td></tr>';
+    t+='<tr><td>'+(start+i+1)+'</td><td style="cursor:pointer;color:#38bdf8" onclick="nbOpenHospModal(\''+h.hcode+'\')">'+h.name.slice(0,28)+'</td><td>'+h.prov+'</td><td><span class="'+nbLvlCls(h.level)+'">'+(h.level||'–')+'</span></td><td class="n">'+fmt(h.cases)+'</td><td class="n">'+(h.adj.toFixed(2))+'</td><td class="n">'+fmtB(h.baht)+'</td></tr>';
   });
   el.innerHTML=t+'</tbody></table></div>';
   if(pg){const pages=Math.ceil(total/NB_PGSZ);pg.innerHTML='<span style="font-size:11px;color:var(--mut)">'+total+' โรงพยาบาล</span>'+(pages>1?Array.from({length:pages},(_,i)=>'<button class="pgsz-btn'+(i===nbHospPage?' on':'')+'" onclick="nbHospPage='+i+';nbRenderHospTable()">'+( i+1)+'</button>').join(''):'');}
 }
 
 function nbOpenHospModal(hcode){
-  const h=NB_DATA.hospitals.find(x=>x.hcode===hcode);if(!h)return;
-  const pdxList=NB_DATA.hosp_pdx[hcode]||[];
+  const D=NB_DATA;const meta=D.hosp_meta[hcode]||{};
+  const rows=nbRows().filter(r=>r[NBI.h]===hcode);
   const modal=document.getElementById('nb-modal');
   const title=document.getElementById('nb-modal-title');
   const body=document.getElementById('nb-modal-body');
   if(!modal||!title||!body)return;
-  const cls=h.level==='A'||h.level==='S'?'rag-g':h.level==='F2'||h.level==='F3'?'rag-r':h.level.startsWith('M')?'rag-a':'rag-n';
-  title.innerHTML=h.name+' <span class="'+cls+'" style="font-size:12px">'+h.level+'</span> · '+h.prov;
+  let baht=0,adj=0;const pm={};
+  rows.forEach(r=>{baht+=r[NBI.b];adj+=r[NBI.a];
+    const k=r[NBI.x];const e=pm[k]=pm[k]||{pdx:k,name:D.pdx_names[k]?.n||'',cases:0,baht:0};e.cases++;e.baht+=r[NBI.b];});
+  const pdxList=Object.values(pm).sort((a,b)=>b.cases-a.cases).slice(0,10);
+  const n=rows.length;
+  const scope=(nbFY!=='all'?'ปีงบ '+nbFY:'ทุกปีงบ')+' · ตามตัวกรองปัจจุบัน';
+  title.innerHTML=(meta.n||hcode)+' <span class="'+nbLvlCls(meta.l)+'" style="font-size:12px">'+(meta.l||'–')+'</span> · '+(D.provinces[meta.p]||'')+' <span style="font-size:11px;color:var(--mut);font-weight:normal">('+scope+')</span>';
   let t='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">'+
-    kpi('เคสทั้งหมด',fmt(h.cases),'เคส')+kpi('AdjRW เฉลี่ย',h.avg_adjrw.toFixed(4),'')+kpi('มูลค่า',fmtB(h.baht),'บาท')+'</div>'+
+    kpi('เคส',fmt(n),'เคส')+kpi('AdjRW เฉลี่ย',n?(adj/n).toFixed(4):'–','')+kpi('มูลค่า',fmtB(baht),'บาท')+'</div>'+
+    '<h4 style="color:var(--mut);font-weight:normal;font-size:12px;margin:0 0 6px">Top 10 การวินิจฉัย (PDX) — คลิกชื่อโรคเพื่อดูรายโรงพยาบาล</h4>'+
     '<div class="tblwrap"><table class="ranking-tbl"><tr><th>รหัส</th><th>โรค (PDX)</th><th class="n">เคส</th><th class="n">มูลค่า</th></tr>';
-  pdxList.forEach(p=>{t+='<tr><td>'+p.pdx+'</td><td>'+(''+p.name).slice(0,36)+'</td><td class="n">'+fmt(p.cases)+'</td><td class="n">'+fmtB(p.baht)+'</td></tr>';});
+  pdxList.forEach(p=>{t+='<tr><td>'+p.pdx+'</td><td><span style="color:#38bdf8;cursor:pointer;text-decoration:underline" onclick="nbOpenPdxModal(\''+p.pdx+'\')">'+(''+(p.name||p.pdx)).slice(0,36)+'</span></td><td class="n">'+fmt(p.cases)+'</td><td class="n">'+fmtB(p.baht)+'</td></tr>';});
+  t+='</table></div>';
+  body.innerHTML=t;
+  modal.style.display='block';document.body.style.overflow='hidden';
+}
+
+function nbOpenPdxModal(pdx){
+  const D=NB_DATA;const info=D.pdx_names[pdx]||{};
+  const rows=nbRows().filter(r=>r[NBI.x]===pdx);
+  const modal=document.getElementById('nb-modal');
+  const title=document.getElementById('nb-modal-title');
+  const body=document.getElementById('nb-modal-body');
+  if(!modal||!title||!body)return;
+  let baht=0,adj=0;const hm={};
+  rows.forEach(r=>{baht+=r[NBI.b];adj+=r[NBI.a];
+    const k=r[NBI.h];const meta=D.hosp_meta[k]||{};
+    const e=hm[k]=hm[k]||{hcode:k,name:meta.n||k,level:meta.l||'',prov:D.provinces[meta.p]||'',cases:0,baht:0,adj:0};
+    e.cases++;e.baht+=r[NBI.b];e.adj+=r[NBI.a];});
+  const hospArr=Object.values(hm).sort((a,b)=>b.cases-a.cases);
+  const n=rows.length;
+  const scope=(nbFY!=='all'?'ปีงบ '+nbFY:'ทุกปีงบ')+' · ตามตัวกรองปัจจุบัน';
+  title.innerHTML=pdx+' <span style="font-weight:normal;font-size:13px">'+(info.n||'')+'</span> <span style="font-size:11px;color:var(--mut);font-weight:normal">('+scope+')</span>';
+  let t='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">'+
+    kpi('เคส',fmt(n),'เคส')+kpi('AdjRW เฉลี่ย',n?(adj/n).toFixed(4):'–','')+kpi('มูลค่า',fmtB(baht),'บาท')+'</div>'+
+    '<h4 style="color:var(--mut);font-weight:normal;font-size:12px;margin:0 0 6px">โรงพยาบาลที่รักษาโรคนี้ ('+hospArr.length+' แห่ง) — คลิกชื่อ รพ. เพื่อดูรายละเอียด</h4>'+
+    '<div style="max-height:380px;overflow-y:auto"><table class="ranking-tbl"><tr><th>#</th><th>โรงพยาบาล</th><th>จังหวัด</th><th>ระดับ</th><th class="n">เคส</th><th class="n">SumAdjRW</th><th class="n">มูลค่า</th></tr>';
+  hospArr.forEach((h,i)=>{t+='<tr><td>'+(i+1)+'</td>'+
+    '<td><span style="color:#38bdf8;cursor:pointer;text-decoration:underline" onclick="nbOpenHospModal(\''+h.hcode+'\')">'+h.name.slice(0,30)+'</span></td>'+
+    '<td>'+h.prov+'</td><td><span class="'+nbLvlCls(h.level)+'">'+(h.level||'–')+'</span></td>'+
+    '<td class="n"><b>'+fmt(h.cases)+'</b></td><td class="n">'+h.adj.toFixed(2)+'</td><td class="n">'+fmtB(h.baht)+'</td></tr>';});
   t+='</table></div>';
   body.innerHTML=t;
   modal.style.display='block';document.body.style.overflow='hidden';
@@ -3014,13 +3104,20 @@ function ppfsClearHosps(){
 let PSYCH_DATA=null,_psychInit=false;
 let psFYears=null;   // Set<year> | null=ทั้งหมด
 let psFProvs=null;   // Set<provName> | null=ทั้งหมด
+let psFGrps=null;    // Set<pdxGroup> | null=ทั้งหมด
+let psFLevel='all';  // ระดับหน่วยบริการ | 'all'
 let psPdxSort={col:'cases',dir:'desc'},psPdxPage=0;
 let psHospSort={col:'cases',dir:'desc'},psHospPage=0;
 const PS_PGSZ=20;
 let psGrpChart=null,psTrendChart=null;
 const PS_GRP_CLR={'F1x':'#f472b6','F2x':'#a78bfa','F3x':'#22d3ee','F4x':'#34d399','F0x':'#fbbf24','F5x':'#fb923c','F6x':'#60a5fa','F7x':'#f87171','F8x':'#4ade80','F9x':'#38bdf8','อื่นๆ':'#94a3b8'};
-// row = [pIdx, yr, hcode, pdx, baht, adjrw, re]
-const PSI={p:0,y:1,h:2,x:3,b:4,a:5,r:6};
+const PS_LVL_ORDER=['A','S','M1','M2','F1','F2','F3'];
+const PS_TH_M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function psYmLabel(ym){const y=+ym.slice(0,4),m=+ym.slice(5,7);return PS_TH_M[m-1]+String((y+543)%100).padStart(2,'0');}
+function psReColor(rr){return rr>=20?'#f87171':rr>=10?'#fbbf24':'#34d399';}
+function psGrpList(){return [...new Set(Object.values(PSYCH_DATA.pdx_names).map(p=>p.g))].sort();}
+// row = [pIdx, yr, hcode, pdx, baht, adjrw, re, mi]  (mi = index ใน months)
+const PSI={p:0,y:1,h:2,x:3,b:4,a:5,r:6,m:7};
 
 async function initPsychDashboard(){
   if(_psychInit){psApply();return;}
@@ -3039,22 +3136,32 @@ function psBuildHTML(){
     D.years.map(y=>'<span class="pgsz-btn" id="ps-yr-'+y+'" onclick="psToggleYear(\''+y+'\')">ปีงบ '+y+'</span>').join('');
   const pvBtns='<span class="pgsz-btn on" id="ps-pv-all" onclick="psToggleProv(null)">ทั้งหมด</span>'+
     D.provinces.map((p,i)=>'<span class="pgsz-btn on" id="ps-pv-'+i+'" onclick="psToggleProv('+i+')">'+p+'</span>').join('');
+  const grps=psGrpList();
+  const grBtns='<span class="pgsz-btn on" id="ps-gr-all" onclick="psToggleGrp(null)">ทั้งหมด</span>'+
+    grps.map(g=>'<span class="pgsz-btn on" id="ps-gr-'+g+'" onclick="psToggleGrp(\''+g+'\')"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+(PS_GRP_CLR[g]||'#94a3b8')+';margin-right:4px"></span>'+g+'</span>').join('');
+  const lvls=PS_LVL_ORDER.filter(l=>Object.values(D.hosp_meta).some(h=>h.l===l));
+  const lvBtns='<span class="pgsz-btn on" id="ps-lv-all" onclick="psSetLevel(\'all\')">ทั้งหมด</span>'+
+    lvls.map(l=>'<span class="pgsz-btn" id="ps-lv-'+l+'" onclick="psSetLevel(\''+l+'\')">'+l+'</span>').join('');
   return '<div class="card" style="margin-bottom:12px">'+
     '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px">'+
     '<span style="font-size:11px;color:var(--mut);margin-right:4px">&#128197; ปีงบ:</span>'+yrBtns+'</div>'+
-    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px">'+
     '<span style="font-size:11px;color:var(--mut);margin-right:4px">&#127758; จังหวัด:</span>'+pvBtns+'</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px">'+
+    '<span style="font-size:11px;color:var(--mut);margin-right:4px">&#129504; กลุ่มโรค:</span>'+grBtns+'</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">'+
+    '<span style="font-size:11px;color:var(--mut);margin-right:4px">&#127973; ระดับ:</span>'+lvBtns+'</div>'+
     '</div>'+
     '<div id="ps-kpi" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px"></div>'+
     '<div class="card" id="ps-narr" style="margin-bottom:12px;border-left:3px solid #22d3ee"></div>'+
     '<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:12px">'+
-    '<div class="card"><h3>&#128200; แนวโน้มรายปีงบ <span style="font-size:11px;font-weight:normal;color:var(--mut)">(เคส + มูลค่า)</span></h3>'+
+    '<div class="card"><h3>&#128200; แนวโน้มรายเดือน <span style="font-size:11px;font-weight:normal;color:var(--mut)">(เคส + Readmit 28วัน — ทุกปีงบ ตามตัวกรองจังหวัด/กลุ่มโรค/ระดับ)</span></h3>'+
     '<div style="height:300px"><canvas id="ps-trend"></canvas></div></div>'+
-    '<div class="card"><h3>&#129504; กลุ่มโรค (PDX group)</h3>'+
+    '<div class="card"><h3>&#129504; กลุ่มโรค (PDX group) <span style="font-size:11px;font-weight:normal;color:var(--mut)">คลิกชิ้นเพื่อกรอง</span></h3>'+
     '<div style="height:300px"><canvas id="ps-grp"></canvas></div></div>'+
     '</div>'+
     '<div class="card" style="margin-bottom:12px"><h3>&#128138; กลุ่มโรคจิตเวช</h3><div id="ps-grp-tbl" style="overflow-x:auto"></div></div>'+
-    '<div class="card" style="margin-bottom:12px"><h3>&#128300; รายการวินิจฉัย (PDX) <span style="font-size:11px;font-weight:normal;color:var(--mut)">คลิกหัวคอลัมน์เพื่อจัดเรียง</span></h3><div id="ps-pdx-tbl"></div><div id="ps-pdx-pg" style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"></div></div>'+
+    '<div class="card" style="margin-bottom:12px"><h3>&#128300; รายการวินิจฉัย (PDX) <span style="font-size:11px;font-weight:normal;color:var(--mut)">คลิกชื่อโรคเพื่อดูรายโรงพยาบาล / คลิกหัวคอลัมน์เพื่อจัดเรียง</span></h3><div id="ps-pdx-tbl"></div><div id="ps-pdx-pg" style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"></div></div>'+
     '<div class="card" style="margin-bottom:12px"><h3>&#127973; รายโรงพยาบาล <span style="font-size:11px;font-weight:normal;color:var(--mut)">คลิกชื่อ รพ. เพื่อดู PDX / คลิกหัวคอลัมน์เพื่อจัดเรียง</span></h3><div id="ps-hosp-tbl"></div><div id="ps-hosp-pg" style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"></div></div>'+
     '<div id="ps-modal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(3,10,22,.72);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto" onclick="psCloseModal(event)">'+
     '<div id="ps-modal-box" style="background:#0f2744;border:1px solid var(--line);border-radius:12px;max-width:720px;width:100%;padding:20px" onclick="event.stopPropagation()"></div></div>';
@@ -3081,10 +3188,30 @@ function psToggleProv(idx){
   psPdxPage=0;psHospPage=0;psApply();
 }
 
+function psToggleGrp(g){
+  const all=psGrpList();
+  if(g===null){psFGrps=null;}
+  else{if(!psFGrps)psFGrps=new Set(all);
+    if(psFGrps.has(g)&&psFGrps.size>1)psFGrps.delete(g);else psFGrps.add(g);
+    if(psFGrps.size===all.length)psFGrps=null;}
+  document.getElementById('ps-gr-all')?.classList.toggle('on',psFGrps===null);
+  all.forEach(k=>document.getElementById('ps-gr-'+k)?.classList.toggle('on',psFGrps===null||psFGrps.has(k)));
+  psPdxPage=0;psHospPage=0;psApply();
+}
+
+function psSetLevel(l){
+  psFLevel=l;
+  document.getElementById('ps-lv-all')?.classList.toggle('on',l==='all');
+  PS_LVL_ORDER.forEach(k=>document.getElementById('ps-lv-'+k)?.classList.toggle('on',l===k));
+  psPdxPage=0;psHospPage=0;psApply();
+}
+
 function psRows(applyYear){
   const D=PSYCH_DATA;
   return D.rows.filter(r=>{
     if(psFProvs&&!psFProvs.has(D.provinces[r[PSI.p]]))return false;
+    if(psFGrps&&!psFGrps.has(D.pdx_names[r[PSI.x]]?.g||'อื่นๆ'))return false;
+    if(psFLevel!=='all'&&(D.hosp_meta[r[PSI.h]]?.l||'')!==psFLevel)return false;
     if(applyYear&&psFYears&&!psFYears.has(r[PSI.y]))return false;
     return true;
   });
@@ -3129,7 +3256,9 @@ function psRenderNarrative(rows){
   const gname=(D.group_names&&D.group_names[topG[0]])||topG[0];
   const xname=D.pdx_names[topX[0]]?.n||'';
   const yrLabel=psFYears?('ปีงบ '+[...psFYears].sort().join(', ')):'ปีงบ 66–69';
-  const pvLabel=psFProvs?('เฉพาะ '+[...psFProvs].join(', ')):'ทั้งเขต 1';
+  let pvLabel=psFProvs?('เฉพาะ '+[...psFProvs].join(', ')):'ทั้งเขต 1';
+  if(psFGrps)pvLabel+=' กลุ่ม '+[...psFGrps].sort().join(', ');
+  if(psFLevel!=='all')pvLabel+=' ระดับ '+psFLevel;
   el.innerHTML='<div style="font-size:13px;line-height:1.9;color:var(--ink)">'+
     '<b style="color:#22d3ee">&#128161; สรุป</b> — '+pvLabel+' '+yrLabel+' มีบริการจิตเวช Homeward <b>'+fmt(n)+' ครั้ง</b> '+
     'มูลค่ารวม <b>'+fmtB(baht)+' บาท</b> '+
@@ -3143,25 +3272,27 @@ function psRenderNarrative(rows){
 function psRenderTrend(){
   const cv=document.getElementById('ps-trend');if(!cv)return;
   if(psTrendChart){psTrendChart.destroy();psTrendChart=null;}
-  const D=PSYCH_DATA;const rows=psRows(false); // province filter only
-  const by={};D.years.forEach(y=>by[y]={n:0,b:0});
-  rows.forEach(r=>{if(by[r[PSI.y]]){by[r[PSI.y]].n++;by[r[PSI.y]].b+=r[PSI.b];}});
-  const labels=D.years.map(y=>'ปีงบ '+y);
+  const D=PSYCH_DATA;const rows=psRows(false); // timeline เต็ม — ไม่กรองปี (กรอง จังหวัด/กลุ่ม/ระดับ)
+  const M=D.months.length;
+  const n=new Array(M).fill(0),reN=new Array(M).fill(0),bt=new Array(M).fill(0);
+  rows.forEach(r=>{const mi=r[PSI.m];if(mi>=0){n[mi]++;reN[mi]+=r[PSI.r];bt[mi]+=r[PSI.b];}});
+  const labels=D.months.map(psYmLabel);
+  const rr=n.map((c,i)=>c?+(reN[i]/c*100).toFixed(1):null);
   psTrendChart=new Chart(cv,{data:{labels,datasets:[
-    {type:'bar',label:'เคส',data:D.years.map(y=>by[y].n),backgroundColor:'#22d3ee',yAxisID:'y',borderRadius:3},
-    {type:'line',label:'มูลค่า (บาท)',data:D.years.map(y=>by[y].b),borderColor:'#fbbf24',backgroundColor:'#fbbf24',yAxisID:'y1',tension:.3,pointRadius:3,borderWidth:2}
+    {type:'bar',label:'เคส/เดือน',data:n,backgroundColor:'#22d3ee',yAxisID:'y',borderRadius:2},
+    {type:'line',label:'Readmit 28วัน (%)',data:rr,borderColor:'#fbbf24',backgroundColor:'#fbbf24',yAxisID:'y1',tension:.25,pointRadius:2,borderWidth:2,spanGaps:true}
   ]},options:{responsive:true,maintainAspectRatio:false,devicePixelRatio:window.devicePixelRatio||2,
     plugins:{legend:{position:'bottom',labels:{color:'#cbd5e1',boxWidth:12,font:{size:11}}},
       tooltip:{backgroundColor:'#0d1f38',borderColor:'#1e3a5f',borderWidth:1,padding:10,
-        callbacks:{label:c=>c.dataset.yAxisID==='y1'?' '+fmtB(c.raw)+' บาท':' '+fmt(c.raw)+' เคส'}}},
-    scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'#1e3a5f55'}},
+        callbacks:{label:c=>c.dataset.yAxisID==='y1'?' Readmit 28วัน: '+(c.raw==null?'–':c.raw+'%')+' ('+fmt(reN[c.dataIndex])+' ครั้ง)':' '+fmt(c.raw)+' เคส · '+fmtB(bt[c.dataIndex])+' บาท'}}},
+    scales:{x:{ticks:{color:'#94a3b8',font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:16},grid:{color:'#1e3a5f55'}},
       y:{position:'left',ticks:{color:'#22d3ee'},grid:{color:'#1e3a5f33'}},
-      y1:{position:'right',ticks:{color:'#fbbf24',callback:v=>fmtB(v)},grid:{drawOnChartArea:false}}}}});
+      y1:{position:'right',min:0,ticks:{color:'#fbbf24',callback:v=>v+'%'},grid:{drawOnChartArea:false}}}}});
 }
 
 function psAggGroups(rows){
   const D=PSYCH_DATA;const g={};
-  rows.forEach(r=>{const k=D.pdx_names[r[PSI.x]]?.g||'อื่นๆ';(g[k]=g[k]||{cases:0,baht:0,adj:0}).cases++;g[k].baht+=r[PSI.b];g[k].adj+=r[PSI.a];});
+  rows.forEach(r=>{const k=D.pdx_names[r[PSI.x]]?.g||'อื่นๆ';(g[k]=g[k]||{cases:0,baht:0,adj:0,re:0}).cases++;g[k].baht+=r[PSI.b];g[k].adj+=r[PSI.a];g[k].re+=r[PSI.r];});
   return Object.entries(g).map(([k,v])=>({group:k,label:(D.group_names&&D.group_names[k])||k,...v})).sort((a,b)=>b.cases-a.cases);
 }
 
@@ -3172,6 +3303,7 @@ function psRenderGroups(rows){
   psGrpChart=new Chart(cv,{type:'doughnut',data:{labels:arr.map(a=>a.group),
     datasets:[{data:arr.map(a=>a.cases),backgroundColor:arr.map(a=>PS_GRP_CLR[a.group]||'#94a3b8'),borderColor:'#0f2744',borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,devicePixelRatio:window.devicePixelRatio||2,cutout:'58%',
+      onClick:(e,els)=>{if(els.length)psToggleGrp(arr[els[0].index].group);},
       plugins:{legend:{position:'right',labels:{color:'#cbd5e1',boxWidth:12,font:{size:11}}},
         tooltip:{backgroundColor:'#0d1f38',borderColor:'#1e3a5f',borderWidth:1,padding:10,
           callbacks:{label:c=>{const t=arr.reduce((s,a)=>s+a.cases,0);return ' '+c.label+': '+fmt(c.raw)+' ('+(c.raw/t*100).toFixed(1)+'%)';}}}}}});
@@ -3180,16 +3312,18 @@ function psRenderGroups(rows){
 function psRenderGrpTable(rows){
   const el=document.getElementById('ps-grp-tbl');if(!el)return;
   const arr=psAggGroups(rows);const tot=arr.reduce((s,a)=>s+a.cases,0)||1;
-  let t='<table class="ranking-tbl"><thead><tr><th>กลุ่มโรค</th><th class="n">เคส</th><th class="n">สัดส่วน</th><th class="n">มูลค่า</th><th class="n">SumAdjRW</th><th class="n">AdjRW เฉลี่ย</th></tr></thead><tbody>';
-  arr.forEach(a=>{t+='<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+(PS_GRP_CLR[a.group]||'#94a3b8')+';margin-right:6px"></span>'+a.label+'</td>'+
+  let t='<table class="ranking-tbl"><thead><tr><th>กลุ่มโรค</th><th class="n">เคส</th><th class="n">สัดส่วน</th><th class="n">มูลค่า</th><th class="n">SumAdjRW</th><th class="n">AdjRW เฉลี่ย</th><th class="n">Readmit 28วัน</th></tr></thead><tbody>';
+  arr.forEach(a=>{const rr=a.cases?a.re/a.cases*100:0;
+    t+='<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+(PS_GRP_CLR[a.group]||'#94a3b8')+';margin-right:6px"></span>'+a.label+'</td>'+
     '<td class="n"><b>'+fmt(a.cases)+'</b></td><td class="n">'+(a.cases/tot*100).toFixed(1)+'%</td>'+
-    '<td class="n">'+fmtB(a.baht)+'</td><td class="n">'+fmt(Math.round(a.adj))+'</td><td class="n">'+(a.cases?(a.adj/a.cases).toFixed(3):'–')+'</td></tr>';});
+    '<td class="n">'+fmtB(a.baht)+'</td><td class="n">'+fmt(Math.round(a.adj))+'</td><td class="n">'+(a.cases?(a.adj/a.cases).toFixed(3):'–')+'</td>'+
+    '<td class="n"><span style="color:'+psReColor(rr)+'">'+rr.toFixed(1)+'%</span> <span style="color:var(--mut);font-size:10px">('+fmt(a.re)+')</span></td></tr>';});
   el.innerHTML=t+'</tbody></table>';
 }
 
 function psAggPdx(rows){
   const D=PSYCH_DATA;const m={};
-  rows.forEach(r=>{const k=r[PSI.x];const e=m[k]=m[k]||{pdx:k,name:D.pdx_names[k]?.n||'',group:D.pdx_names[k]?.g||'อื่นๆ',cases:0,baht:0,adj:0};e.cases++;e.baht+=r[PSI.b];e.adj+=r[PSI.a];});
+  rows.forEach(r=>{const k=r[PSI.x];const e=m[k]=m[k]||{pdx:k,name:D.pdx_names[k]?.n||'',group:D.pdx_names[k]?.g||'อื่นๆ',cases:0,baht:0,adj:0,re:0};e.cases++;e.baht+=r[PSI.b];e.adj+=r[PSI.a];e.re+=r[PSI.r];});
   return Object.values(m);
 }
 
@@ -3198,6 +3332,7 @@ function psSortArr(arr,sort){
   return arr.sort((a,b)=>{let va,vb;
     if(c==='avgrw'){va=a.cases?a.adj/a.cases:0;vb=b.cases?b.adj/b.cases:0;}
     else if(c==='sumrw'){va=a.adj;vb=b.adj;}
+    else if(c==='rerate'){va=a.cases?a.re/a.cases:0;vb=b.cases?b.re/b.cases:0;}
     else{va=a[c]||0;vb=b[c]||0;}
     return (va<vb?-1:va>vb?1:0)*dir;});
 }
@@ -3218,11 +3353,15 @@ function psRenderPdxTable(rows){
     '<th class="n" style="'+sth+'" onclick="psSetPdxSort(\'cases\')">เคส'+arrow('cases')+'</th>'+
     '<th class="n" style="'+sth+'" onclick="psSetPdxSort(\'sumrw\')">SumAdjRW'+arrow('sumrw')+'</th>'+
     '<th class="n" style="'+sth+'" onclick="psSetPdxSort(\'avgrw\')">AdjRW/ครั้ง'+arrow('avgrw')+'</th>'+
-    '<th class="n" style="'+sth+'" onclick="psSetPdxSort(\'baht\')">มูลค่า'+arrow('baht')+'</th></tr></thead><tbody>';
-  slice.forEach((p,i)=>{t+='<tr><td>'+(start+i+1)+'</td><td>'+p.pdx+'</td><td title="'+(p.name||'').replace(/"/g,'')+'">'+(p.name||'').slice(0,38)+'</td>'+
+    '<th class="n" style="'+sth+'" onclick="psSetPdxSort(\'baht\')">มูลค่า'+arrow('baht')+'</th>'+
+    '<th class="n" style="'+sth+'" onclick="psSetPdxSort(\'rerate\')">Readmit 28วัน'+arrow('rerate')+'</th></tr></thead><tbody>';
+  slice.forEach((p,i)=>{const rr=p.cases?p.re/p.cases*100:0;
+    t+='<tr><td>'+(start+i+1)+'</td><td>'+p.pdx+'</td>'+
+    '<td title="'+(p.name||'').replace(/"/g,'')+'"><span style="color:#22d3ee;cursor:pointer;text-decoration:underline" onclick="psOpenPdx(\''+p.pdx+'\')">'+(p.name||p.pdx).slice(0,38)+'</span></td>'+
     '<td><span style="color:'+(PS_GRP_CLR[p.group]||'#94a3b8')+'">'+p.group+'</span></td>'+
     '<td class="n"><b>'+fmt(p.cases)+'</b></td><td class="n">'+fmt(Math.round(p.adj))+'</td>'+
-    '<td class="n">'+(p.cases?(p.adj/p.cases).toFixed(3):'–')+'</td><td class="n">'+fmtB(p.baht)+'</td></tr>';});
+    '<td class="n">'+(p.cases?(p.adj/p.cases).toFixed(3):'–')+'</td><td class="n">'+fmtB(p.baht)+'</td>'+
+    '<td class="n"><span style="color:'+psReColor(rr)+'">'+rr.toFixed(1)+'%</span></td></tr>';});
   el.innerHTML=t+'</tbody></table></div>';
   if(pg){const pages=Math.ceil(total/PS_PGSZ);
     pg.innerHTML='<span style="font-size:11px;color:var(--mut)">'+total+' รหัสโรค</span>'+
@@ -3292,10 +3431,42 @@ function psOpenHosp(hcode){
     mkK('เคส',fmt(n),'ครั้ง')+mkK('มูลค่า',fmtB(baht),'บาท')+mkK('AdjRW เฉลี่ย',n?(adj/n).toFixed(3):'–','')+mkK('Readmit 28วัน',n?(re/n*100).toFixed(1)+'%':'–',fmt(re)+' ครั้ง')+'</div>'+
     '<h4 style="color:var(--mut);font-weight:normal;font-size:12px;margin:0 0 6px">Top 10 การวินิจฉัย (PDX)</h4>'+
     '<table class="ranking-tbl"><thead><tr><th>รหัส</th><th>โรค</th><th>กลุ่ม</th><th class="n">เคส</th><th class="n">มูลค่า</th></tr></thead><tbody>';
-  pdxArr.forEach(p=>{t+='<tr><td>'+p.pdx+'</td><td title="'+(p.name||'').replace(/"/g,'')+'">'+(p.name||'').slice(0,32)+'</td>'+
+  pdxArr.forEach(p=>{t+='<tr><td>'+p.pdx+'</td><td title="'+(p.name||'').replace(/"/g,'')+'"><span style="color:#22d3ee;cursor:pointer;text-decoration:underline" onclick="psOpenPdx(\''+p.pdx+'\')">'+(p.name||p.pdx).slice(0,32)+'</span></td>'+
     '<td><span style="color:'+(PS_GRP_CLR[p.group]||'#94a3b8')+'">'+p.group+'</span></td>'+
     '<td class="n"><b>'+fmt(p.cases)+'</b></td><td class="n">'+fmtB(p.baht)+'</td></tr>';});
   box.innerHTML=t+'</tbody></table>';
+  modal.style.display='flex';
+}
+
+function psOpenPdx(pdx){
+  const D=PSYCH_DATA;const rows=psRows(true).filter(r=>r[PSI.x]===pdx);
+  const info=D.pdx_names[pdx]||{};
+  const box=document.getElementById('ps-modal-box');const modal=document.getElementById('ps-modal');
+  if(!box||!modal)return;
+  let baht=0,adj=0,re=0;const hm={};
+  rows.forEach(r=>{baht+=r[PSI.b];adj+=r[PSI.a];re+=r[PSI.r];
+    const k=r[PSI.h];const meta=D.hosp_meta[k]||{};
+    const e=hm[k]=hm[k]||{hcode:k,name:meta.n||k,level:meta.l||'',prov:D.provinces[meta.p]||'',cases:0,baht:0,re:0};
+    e.cases++;e.baht+=r[PSI.b];e.re+=r[PSI.r];});
+  const hospArr=Object.values(hm).sort((a,b)=>b.cases-a.cases);
+  const n=rows.length;
+  const yrLabel=psFYears?('ปีงบ '+[...psFYears].sort().join(', ')):'ทุกปีงบ';
+  const mkK=(lbl,val,sub)=>'<div style="flex:1;text-align:center;background:var(--card2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--mut)">'+lbl+'</div><div style="font-size:17px;font-weight:700;color:#f1f5f9">'+val+'</div><div style="font-size:10px;color:var(--mut)">'+sub+'</div></div>';
+  let t='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'+
+    '<div><div style="font-size:16px;font-weight:700;color:#f1f5f9">'+pdx+' <span style="font-weight:normal;font-size:13px">'+(info.n||'')+'</span></div>'+
+    '<div style="font-size:12px;color:var(--mut)">กลุ่ม <span style="color:'+(PS_GRP_CLR[info.g]||'#94a3b8')+'">'+(info.g||'–')+'</span> · '+yrLabel+' · ตามตัวกรองปัจจุบัน</div></div>'+
+    '<span onclick="psCloseModal()" style="cursor:pointer;color:var(--mut);font-size:22px;line-height:1">&times;</span></div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:14px">'+
+    mkK('เคส',fmt(n),'ครั้ง')+mkK('มูลค่า',fmtB(baht),'บาท')+mkK('AdjRW เฉลี่ย',n?(adj/n).toFixed(3):'–','')+mkK('Readmit 28วัน',n?(re/n*100).toFixed(1)+'%':'–',fmt(re)+' ครั้ง')+'</div>'+
+    '<h4 style="color:var(--mut);font-weight:normal;font-size:12px;margin:0 0 6px">โรงพยาบาลที่รักษาโรคนี้ ('+hospArr.length+' แห่ง) — คลิกชื่อ รพ. เพื่อดูรายละเอียด</h4>'+
+    '<div style="max-height:380px;overflow-y:auto"><table class="ranking-tbl"><thead><tr><th>#</th><th>โรงพยาบาล</th><th>จังหวัด</th><th>ระดับ</th><th class="n">เคส</th><th class="n">มูลค่า</th><th class="n">Readmit 28วัน</th></tr></thead><tbody>';
+  hospArr.forEach((h,i)=>{const rr=h.cases?h.re/h.cases*100:0;
+    t+='<tr><td>'+(i+1)+'</td>'+
+    '<td><span style="color:#22d3ee;cursor:pointer;text-decoration:underline" onclick="psOpenHosp(\''+h.hcode+'\')">'+(h.name||'').slice(0,34)+'</span></td>'+
+    '<td>'+h.prov+'</td><td>'+(h.level||'–')+'</td>'+
+    '<td class="n"><b>'+fmt(h.cases)+'</b></td><td class="n">'+fmtB(h.baht)+'</td>'+
+    '<td class="n"><span style="color:'+psReColor(rr)+'">'+rr.toFixed(1)+'%</span></td></tr>';});
+  box.innerHTML=t+'</tbody></table></div>';
   modal.style.display='flex';
 }
 
