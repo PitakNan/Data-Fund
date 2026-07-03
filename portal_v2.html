@@ -979,7 +979,9 @@ function renderHome(){
   }
   const IS=HOME_CARDS.issues;
   // TKA จาก const ฝังในหน้า — sync กับหน้า TKA เสมอ
-  const tkaCard={asof:'ข้อมูลถึง เม.ย.69',yearly:[{yr:'69',c:TKA_TOTAL,b:TKA_R1_VAL_ACT}],extra:{rev:(PROV_DATA['ทั้งหมด']||{}).revision||0}};
+  const tkaMonthlyAll=(PROV_DATA['ทั้งหมด']||{}).monthly||[],tkaValAll=TKA_VAL_MONTHLY['ทั้งหมด']||[];
+  const tka68C=tkaMonthlyAll[0]?tkaMonthlyAll[0].cases:0,tka68B=tkaValAll[0]||0; // ก.ย.68 = เดือนสุดท้ายปีงบ 2568
+  const tkaCard={asof:'ข้อมูลถึง เม.ย.69',yearly:[{yr:'68',c:tka68C,b:tka68B},{yr:'69',c:TKA_TOTAL-tka68C,b:TKA_R1_VAL_ACT-tka68B}],extra:{rev:(PROV_DATA['ทั้งหมด']||{}).revision||0}};
   const gd=k=>k==='tka'?tkaCard:IS[k];
   const IP_KEYS=['adjlow','refer','psych','nb','tka']; // ประเด็น IP (นับเป็นเคส) — PPFS แยกหน่วยนับ
   const totOf=k=>gd(k).yearly.reduce((s,r)=>({c:s.c+r.c,b:s.b+r.b}),{c:0,b:0});
