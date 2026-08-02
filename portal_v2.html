@@ -571,7 +571,7 @@ const PROVPAL=['#38bdf8','#34d399','#fbbf24','#f472b6','#a78bfa','#fb7185','#4ad
 const ICOL={overview:'#22d3ee',tka:'#f472b6',nb:'#34d399',refer:'#38bdf8',psych:'#a78bfa',adjlow:'#fbbf24',ppfs:'#fb923c'};
 const ICON={overview:'📊',tka:'🦵',nb:'👶',refer:'🔁',psych:'🧠',adjlow:'📉',ppfs:'💊'};
 const TITLE={tka:'TKA ผ่าตัดข้อเข่าเทียม',nb:'NB น้ำหนักน้อย <1,500g',refer:'ส่งต่อออกนอก สป.สธ.',psych:'จิตเวช homeward',adjlow:'adjRW < 0.5 (ความซับซ้อนต่ำ)',ppfs:'PPFS กองทุน PP'};
-const DESC={tka:'อายุ-เพศ ผ่าซ้ำ อุปกรณ์ ค่าใช้จ่าย',nb:'ศักยภาพ NICU ตามระดับหน่วย LOS',refer:'Flow ต้นทาง→ปลายทาง เงินรั่วออกนอกระบบ',psych:'Readmission ระดับหน่วย LOS',adjlow:'LOS_Group การกระจาย adjRW รายโรค',ppfs:'26 กองทุน เปรียบเทียบ 3 ปี รายหน่วยบริการ'};
+const DESC={tka:'โควตาปีงบ · ส่งเคลม · อายุ-เพศ · ผ่าซ้ำ',nb:'ศักยภาพ NICU ตามระดับหน่วย LOS',refer:'Flow ต้นทาง→ปลายทาง เงินรั่วออกนอกระบบ',psych:'Readmission ระดับหน่วย LOS',adjlow:'LOS_Group การกระจาย adjRW รายโรค',ppfs:'26 กองทุน เปรียบเทียบ 3 ปี รายหน่วยบริการ'};
 const fmt=n=>Math.round(n).toLocaleString('en-US');
 const fmtB=n=>n>=1e9?(n/1e9).toFixed(2)+' พันล้าน':n>=1e6?(n/1e6).toFixed(1)+' ล้าน':fmt(n);
 const C=id=>document.getElementById(id);
@@ -1010,11 +1010,13 @@ function renderHome(){
   }
   const IS=HOME_CARDS.issues;
   // TKA จาก const ฝังในหน้า — sync กับหน้า TKA เสมอ
-  // อัปเดต 2026-08-03: สลับฐานทั้งหมดมาใช้ไฟล์ CSV เดียวกับกราฟเทรนด์ (วันที่จำหน่าย) — TKA_TOTAL/TKA_R1_VAL_ACT
-  // ตอนนี้คือยอด "ปีงบ 2569 ถึงปัจจุบัน" ล้วนๆ แล้ว (ไม่ต้องลบ tka68C ออกอีกต่อไปแบบเดิมก่อน 08-03)
-  // ปีงบ 68 = ยอดเต็มปีจริงจากไฟล์เดียวกัน (ต.ค.67–ก.ย.68) แทนของเดิมที่เป็นแค่เดือน ก.ย.68 เดือนเดียว (145 เคส)
-  const tka68C=3088,tka68B=177122959;
-  const tkaCard={asof:'ข้อมูลถึง 22 มิ.ย.69',yearly:[{yr:'68',c:tka68C,b:tka68B},{yr:'69',c:TKA_TOTAL,b:TKA_R1_VAL_ACT}],extra:{rev:(PROV_DATA['ทั้งหมด']||{}).revision||0}};
+  // ⭐ อัปเดต 2026-08-03 (รอบ 2): เปลี่ยนเป็นฐาน "ส่งเคลม" ให้ตรงกับหน้า TKA —
+  // โควตาถูกใช้เมื่อส่งเคลมเข้าระบบ ไม่ใช่เมื่อผ่าตัด · รอบปีงบเคลม = 16 ก.ย. ถึง 15 ก.ย. ปีถัดไป
+  // ⚠️ แสดงแค่ 2 ปีงบ เพราะปีงบเคลม 66-67 ตัวเลขบิดเบี้ยวหนักจากรอบ reconcile ที่ตกคนละปีงบ
+  //    (ปีงบ 66 = 136 เคส, ปีงบ 67 = 5,399 เคส) เอามาทำ sparkline/YoY แล้วสื่อสารผิด
+  const tkaCard={asof:'เคลมถึง 25 มิ.ย.69',
+    yearly:[{yr:'68',c:3220,b:183961226},{yr:'69',c:TKA_CLAIM.total,b:TKA_CLAIM.baht}],
+    extra:{rev:(PROV_DATA['ทั้งหมด']||{}).revision||0,left:TKA_TARGET_YEAR-TKA_CLAIM.total}};
   const gd=k=>k==='tka'?tkaCard:IS[k];
   const IP_KEYS=['adjlow','refer','psych','nb','tka']; // ประเด็น IP (นับเป็นเคส) — PPFS แยกหน่วยนับ
   const totOf=k=>gd(k).yearly.reduce((s,r)=>({c:s.c+r.c,b:s.b+r.b}),{c:0,b:0});
@@ -1050,7 +1052,7 @@ function renderHome(){
   // ---- การ์ดรายประเด็น ----
   const insightLine=k=>{
     const x=gd(k).extra||{};
-    if(k==='tka')return '🦵 ผ่าซ้ำ (Revision) '+fmt(x.rev)+' ครั้ง · โควตาเขตปี 69 = '+TKA_TARGET_YEAR.toLocaleString()+' เข่า';
+    if(k==='tka')return '🦵 โควตาเขต '+TKA_TARGET_YEAR.toLocaleString()+' เข่า — ส่งเคลมแล้ว '+fmt(TKA_CLAIM.total)+' คงเหลือ '+fmt(x.left)+' เข่า ('+(TKA_CLAIM.total/TKA_TARGET_YEAR*100).toFixed(0)+'%)';
     if(k==='nb')return '👶 อยู่ในหน่วย F2/F3 '+fmt(x.f23)+' เคส ('+x.f23_pct+'%) — เกณฑ์เฝ้าระวัง 10%';
     if(k==='psych')return '🔁 Readmission 28 วัน '+x.re_pct+'% ของครั้งบริการ';
     if(k==='refer')return '🏥 '+(''+x.top_dest).slice(0,26)+' รับมากสุด '+x.top_dest_pct+'%';
@@ -1058,6 +1060,10 @@ function renderHome(){
     if(k==='ppfs')return '💰 เบิกจ่ายปี 69 เทียบทั้งปี 68: '+(x.ch_pct>=0?'+':'')+x.ch_pct+'% (ยังไม่ครบปี) · '+fmt(x.p69)+' คน';
     return '';};
   const unitOf=k=>k==='ppfs'?'ครั้ง':'เคส';
+  // TKA เทียบ YoY ตรงๆ ไม่ได้ — ปีงบ 69 เพิ่งผ่าน 9.5/12 เดือน ยอดย่อมน้อยกว่าปี 68 ที่ครบรอบ
+  // จะอ่านเป็น "ลด 15%" ทั้งที่ความจริงเคลมเร็วกว่าจังหวะจนโควตาจะไม่พอ → เทียบกับจังหวะที่ควรเป็นแทน
+  const tkaPaceText=()=>{const pace=TKA_TARGET_YEAR*TKA_CLAIM.elapsed/12,d=Math.round((TKA_CLAIM.total-pace)/pace*100);
+    return d>=0?'&#8599; เคลมเร็วกว่าจังหวะ '+d+'%':'&#8600; เคลมช้ากว่าจังหวะ '+Math.abs(d)+'%';};
   function mkYrBlock(k,yrs,lastYr,col){
     const unit=unitOf(k);
     const hero=yrs.find(r=>r.yr===lastYr);
@@ -1077,8 +1083,9 @@ function renderHome(){
     const d=gd(k);
     const yrs=[...d.yearly].sort((a,b)=>a.yr>b.yr?1:-1);
     const lastYr=yrs[yrs.length-1].yr;
-    const spk=mkSparkSVG(yrs.map(r=>r.c),ICOL[k]);
-    const trendTxt=mkTrendText(yrs.map(r=>({yr:r.yr,cases:r.c})),lastYr);
+    // TKA: sparkline ใช้ยอดเคลมรายเดือน (เห็นจังหวะใช้โควตา) แทน 2 จุดรายปีที่สื่อสารผิด
+    const spk=k==='tka'?mkSparkSVG(TKA_CLAIM.cases,ICOL[k]):mkSparkSVG(yrs.map(r=>r.c),ICOL[k]);
+    const trendTxt=k==='tka'?tkaPaceText():mkTrendText(yrs.map(r=>({yr:r.yr,cases:r.c})),lastYr);
     h+='<div class="pcard" style="--cc:'+ICOL[k]+'" onclick="go(\''+k+'\')">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
         '<div><div class="ic">'+ICON[k]+'</div><h3>'+TITLE[k]+'</h3></div>'+
