@@ -5,17 +5,35 @@ export from สปสช. Produces JSON fragments that get hand-merged into the
 HOSP_MONTH_PDX / PROV_DATA / TKA_VAL_MONTHLY / TKA_MONTHS constants embedded
 in portal_v2.html.
 
-Source file is Windows-874 (TIS-620) encoded. Convert to UTF-8 first:
+คู่กับ extract_tka_claim.py (ฐาน "ส่งเคลม") — ไฟล์นี้คือฐาน "ผ่าตัด/วันจำหน่าย"
 
-  powershell -Command "$sr=New-Object System.IO.StreamReader('<src>.csv',[System.Text.Encoding]::GetEncoding(874)); $sw=New-Object System.IO.StreamWriter('<out>_utf8.csv',$false,[System.Text.Encoding]::UTF8); $sw.Write($sr.ReadToEnd()); $sr.Close(); $sw.Close()"
+── วิธีรีเฟรชเมื่อได้ไฟล์ CSV งวดใหม่จาก สปสช. ─────────────────────────
+1. แก้ SRC ด้านล่างให้ชี้ไฟล์ใหม่ (หรือส่ง path เป็น argv[1])
+2. รัน  `python extract_tka.py`  (Windows ตั้ง PYTHONIOENCODING=utf-8 ก่อน)
+3. ผลลัพธ์ 5 ไฟล์ออกที่โฟลเดอร์ _TKA/ → เอาไปวางแทน const ใน portal_v2.html
+   out_hosp_month_pdx.json → HOSP_MONTH_PDX · out_prov_data.json → PROV_DATA
+   out_val_monthly.json → TKA_VAL_MONTHLY · out_months.json → TKA_MONTHS
+   out_quota_base.json → ตัวเลขอ้างอิงโควตา (ยังไม่ได้ใช้ในหน้าเว็บ รอ CFO ตัดสิน)
+4. ถ้ามีรหัส Pdx ใหม่ที่ยังไม่มีคำอ่านไทย ให้เพิ่มใน _TKA/pdx_names.json
+
+⚠️ ประวัติ: ไฟล์งวดนี้ (250626) เป็น UTF-8 อยู่แล้ว จึงอ่านตรงจาก OneDrive ได้เลย
+   (เดิมสคริปต์ชี้ไปสำเนา tka_utf8.csv ในโฟลเดอร์ temp ของเซสชันเก่า ซึ่งจะหายเมื่อ temp ถูกล้าง
+   — ตรวจ sha256 แล้วสำเนานั้นตรงกับต้นฉบับทุกไบต์ จึงเลิกใช้สำเนา แก้เมื่อ 2026-08-03)
+   ถ้างวดหน้าได้ไฟล์ Windows-874 (TIS-620) มา ให้แปลงเป็น UTF-8 ก่อนด้วยคำสั่งนี้:
+   powershell -Command "$sr=New-Object System.IO.StreamReader('<src>.csv',[System.Text.Encoding]::GetEncoding(874)); $sw=New-Object System.IO.StreamWriter('<out>_utf8.csv',$false,[System.Text.Encoding]::UTF8); $sw.Write($sr.ReadToEnd()); $sr.Close(); $sw.Close()"
 """
 import csv
 import json
+import os
 import re
 import sys
 from collections import defaultdict
 
-SRC = r"C:\Users\LENOVO\AppData\Local\Temp\claude\D--\e7652e36-e3cc-43cb-8c3e-a3ede2bb42a6\scratchpad\tka_utf8.csv"
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT_DIR = os.path.join(HERE, '_TKA')
+SRC = sys.argv[1] if len(sys.argv) > 1 else (
+    r"D:\OneDrive\Share Rh1-New\8. ประชุม\คณะทำงาน M&E\2569"
+    r"\2026-06-26 ข้อมูล TKA ย้อนหลัง 5 ปี จาก สปสช\detail_data_TKA(250626).csv")
 
 # column indices (positional — avoids Thai unicode-normalization key mismatches)
 C_FY_SVC, C_FY_GB, C_PROV_HCODE, C_HNAME, C_HCODE, C_HTYPE, C_PID, C_TRANID, \
@@ -56,8 +74,7 @@ HCODE_HTYPE_FALLBACK = {
 
 # code -> Thai name harvested from the existing embedded HOSP_MONTH_PDX blob
 # (codes not covered here default to the code itself, matching prior behaviour)
-with open(r"C:\Users\LENOVO\AppData\Local\Temp\claude\D--\e7652e36-e3cc-43cb-8c3e-a3ede2bb42a6\scratchpad\pdx_names.json",
-          encoding='utf-8-sig') as f:
+with open(os.path.join(OUT_DIR, 'pdx_names.json'), encoding='utf-8-sig') as f:
     PDX_NAMES = json.load(f)
 
 
@@ -273,7 +290,7 @@ def main():
     print(f"TKA_TOTAL (real, FY{current_fy} to date) = {tka_total}", file=sys.stderr)
     print(f"quota_base (real FY{basis_fy}) = {quota_base}", file=sys.stderr)
 
-    out_dir = r"C:\Users\LENOVO\AppData\Local\Temp\claude\D--\e7652e36-e3cc-43cb-8c3e-a3ede2bb42a6\scratchpad"
+    out_dir = OUT_DIR
     with open(out_dir + r"\out_hosp_month_pdx.json", 'w', encoding='utf-8') as f:
         json.dump(hmp, f, ensure_ascii=False, separators=(',', ':'))
     with open(out_dir + r"\out_prov_data.json", 'w', encoding='utf-8') as f:

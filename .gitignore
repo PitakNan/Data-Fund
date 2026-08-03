@@ -1,0 +1,3 @@
+# ผลลัพธ์กลางทางของ extract_tka.py — สร้างใหม่ได้ตลอดด้วย `python extract_tka.py`
+# และตัวจริงถูกฝังใน portal_v2.html แล้ว จึงไม่ต้องเก็บในระบบ (out_hosp_month_pdx.json ~380 KB)
+_TKA/out_*.json
