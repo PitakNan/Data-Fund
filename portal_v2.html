@@ -468,7 +468,9 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
     <div class="card-hd">
       <div><span class="card-title">&#129518; ปีที่จำหน่าย &times; ปีที่เคลม</span>
         <div style="font-size:10px;color:var(--mut);margin-top:2px" id="tkaMxSub"></div></div>
-      <button class="tka-fold" id="tkaMxFold" onclick="tkaToggleMx()">&#9662; ยุบ</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="quota-tog"><button class="quota-tog-btn on" id="mxtog1" onclick="tkaSetMxMode('prov')">รายจังหวัด</button><button class="quota-tog-btn" id="mxtog2" onclick="tkaSetMxMode('hosp')">รายหน่วยบริการ</button></div>
+        <button class="tka-fold" id="tkaMxFold" onclick="tkaToggleMx()">&#9662; ยุบ</button></div>
     </div>
     <div class="card-bd" id="tkaMxBody" style="overflow-x:auto"></div>
   </div>
@@ -1940,21 +1942,48 @@ function tkaRenderLag(){
 /* ══ 🧮 ตารางไขว้ ปีที่จำหน่าย × ปีที่เคลม (2026-08-03 ตามที่ CFO ขอ) ══
    ช่องทแยง (เคลมปีเดียวกับที่จำหน่าย) = ปกติ · ช่องขวาของทแยง = เคลมข้ามปี (ยิ่งไกลยิ่งแดง)
    หน่วยบริการยุบไว้เป็นค่าเริ่มต้น คลิกชื่อเพื่อกางดูรายปีที่จำหน่าย */
-let tkaMxOpen=true,tkaMxExp=null;
+let tkaMxOpen=true,tkaMxExp=null,tkaMxMode='prov';
 function tkaMxToggleHosp(h){tkaMxExp=tkaMxExp===h?null:h;tkaRenderMx();}
+function tkaSetMxMode(m){
+  if(tkaMxMode===m)return;
+  tkaMxMode=m;tkaMxExp=null;
+  document.getElementById('mxtog1').classList.toggle('on',m==='prov');
+  document.getElementById('mxtog2').classList.toggle('on',m==='hosp');
+  tkaRenderMx();
+}
+/* รวมแถวราย รพ. ขึ้นเป็นรายจังหวัด — บวก tot/c[]/sum/nl และเอา min ของ mn, max ของ mx
+   (ไม่ได้เฉลี่ยของค่าเฉลี่ย จึงได้ AVG ที่ถูกต้อง) */
+function tkaMxByProv(hosps){
+  const acc={};
+  hosps.forEach(x=>{
+    const g=acc[x.p]=acc[x.p]||{h:x.p,p:'',tot:0,rows:{},nHosp:0};
+    g.tot+=x.tot;g.nHosp++;
+    x.rows.forEach(r=>{
+      const a=g.rows[r.dy]=g.rows[r.dy]||{dy:r.dy,tot:0,c:TKA_MX.cy.map(()=>0),sum:0,nl:0,mn:null,mx:null};
+      a.tot+=r.tot;r.c.forEach((v,i)=>a.c[i]+=v);
+      if(r.nl){a.sum+=r.sum;a.nl+=r.nl;a.mn=a.mn===null?r.mn:Math.min(a.mn,r.mn);a.mx=a.mx===null?r.mx:Math.max(a.mx,r.mx);}
+    });
+  });
+  return Object.values(acc).map(g=>({...g,rows:Object.values(g.rows).sort((a,b)=>a.dy-b.dy)}))
+    .sort((a,b)=>b.tot-a.tot);
+}
 function tkaRenderMx(){
   const bd=document.getElementById('tkaMxBody');if(!bd||!tkaMxOpen)return;
-  const M=TKA_MX,isAll=tkaCurrProv==='ทั้งหมด';
+  const M=TKA_MX,isAll=tkaCurrProv==='ทั้งหมด',byProv=tkaMxMode==='prov';
   const hosps=isAll?M.hosp:M.hosp.filter(x=>x.p===tkaCurrProv);
+  const groups=byProv?tkaMxByProv(hosps):hosps;
+  const unit=byProv?'จังหวัด':'รพ.';
   document.getElementById('tkaMxSub').innerHTML=
-    'เคสที่จำหน่ายปีไหน ไปส่งเคลมปีไหน &middot; คลิกชื่อ รพ. เพื่อกางรายปี'+
+    `เคสที่จำหน่ายปีไหน ไปส่งเคลมปีไหน &middot; คลิกชื่อ${unit}เพื่อกางรายปี`+
     (isAll?'':` &middot; เฉพาะ จ.${tkaCurrProv}`);
   // รวมของ scope ที่กำลังดู (ทั้งเขต = ใช้ region ตรงๆ / เลือกจังหวัด = บวกจาก รพ. ในจังหวัดนั้น)
   let scopeRows;
   if(isAll)scopeRows=M.region;
   else{const acc={};hosps.forEach(x=>x.rows.forEach(r=>{
-      const a=acc[r.dy]=acc[r.dy]||{dy:r.dy,tot:0,c:M.cy.map(()=>0)};
-      a.tot+=r.tot;r.c.forEach((v,i)=>a.c[i]+=v);}));
+      const a=acc[r.dy]=acc[r.dy]||{dy:r.dy,tot:0,c:M.cy.map(()=>0),sum:0,nl:0,mn:null,mx:null};
+      a.tot+=r.tot;r.c.forEach((v,i)=>a.c[i]+=v);
+      // ต้องรวมฟิลด์ระยะเวลาด้วย ไม่งั้นคอลัมน์ MIN/MAX/AVG ของแถว "รวม จ.X" จะว่าง
+      if(r.nl){a.sum+=r.sum;a.nl+=r.nl;a.mn=a.mn===null?r.mn:Math.min(a.mn,r.mn);a.mx=a.mx===null?r.mx:Math.max(a.mx,r.mx);}}));
     scopeRows=Object.values(acc).sort((a,b)=>a.dy-b.dy);}
   const cell=(v,dy,cy)=>{
     if(!v)return '<td class="td-r" style="color:rgba(255,255,255,.13)">–</td>';
@@ -1983,7 +2012,7 @@ function tkaRenderMx(){
       lagCells(rows)+'</tr>';};
   const NC=M.cy.length+5;
   let h=`<table style="min-width:820px"><thead>
-    <tr><th rowspan="2" style="vertical-align:bottom">หน่วยบริการ / ปีที่จำหน่าย</th>
+    <tr><th rowspan="2" style="vertical-align:bottom">${byProv?'จังหวัด':'หน่วยบริการ'} / ปีที่จำหน่าย</th>
         <th rowspan="2" style="text-align:right;vertical-align:bottom">จำนวนเคส<br>ที่จำหน่าย</th>
         <th colspan="${M.cy.length}" style="text-align:center;background:rgba(255,255,255,.04)">ปีงบที่ส่งเคลม</th>
         <th colspan="3" style="text-align:center;background:rgba(255,255,255,.04);border-left:1px solid var(--line)">ระยะเวลา จำหน่าย &rarr; ส่งเคลม (วัน)</th></tr>
@@ -1993,9 +2022,12 @@ function tkaRenderMx(){
         ${isAll?'รวมทั้งเขต 1':'รวม จ.'+tkaCurrProv}</td></tr>`;
   h+=scopeRows.map(r=>dRow('ปีงบ '+r.dy,r,true)).join('');
   h+=sumRow('<b>รวมทุกปี</b>',scopeRows,'');
-  h+=`<tr><td colspan="${NC}" style="padding:9px 8px 3px;font-size:11px;font-weight:700;color:var(--mut)">รายหน่วยบริการ (${hosps.length} แห่ง)</td></tr>`;
-  hosps.forEach(x=>{
-    h+=sumRow((tkaMxExp===x.h?'&#9662; ':'&#9656; ')+x.h+(isAll?` <span style="font-weight:400;color:var(--mut);font-size:10px">${x.p}</span>`:''),
+  h+=`<tr><td colspan="${NC}" style="padding:9px 8px 3px;font-size:11px;font-weight:700;color:var(--mut)">`+
+     (byProv?`รายจังหวัด (${groups.length} จังหวัด)`:`รายหน่วยบริการ (${groups.length} แห่ง)`)+`</td></tr>`;
+  groups.forEach(x=>{
+    const tag=byProv?` <span style="font-weight:400;color:var(--mut);font-size:10px">${x.nHosp} รพ.</span>`
+                    :(isAll?` <span style="font-weight:400;color:var(--mut);font-size:10px">${x.p}</span>`:'');
+    h+=sumRow((tkaMxExp===x.h?'&#9662; ':'&#9656; ')+x.h+tag,
               x.rows,`tkaMxToggleHosp('${x.h.replace(/'/g,"\\'")}')`);
     if(tkaMxExp===x.h)h+=x.rows.map(r=>dRow('ปีงบ '+r.dy,r,true)).join('');
   });
