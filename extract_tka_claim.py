@@ -23,7 +23,8 @@ from datetime import datetime
 TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 PROVS = ['เชียงราย','เชียงใหม่','ลำปาง','น่าน','ลำพูน','พะเยา','แพร่','แม่ฮ่องสอน']
 CSV = r"D:\OneDrive\Share Rh1-New\8. ประชุม\คณะทำงาน M&E\2569\2026-06-26 ข้อมูล TKA ย้อนหลัง 5 ปี จาก สปสช\detail_data_TKA(250626).csv"
-(FY,_b,HCPROV,HN,HC,_f,PID,TR,_i,AGEMAIN,_k,SEX,ADM,DIS,SEND,PDX,_o,_p,REV,ITEM,HMAIN,PROV,MNAME,MVAL)=range(24)
+(FY,GB,HCPROV,HN,HC,_f,PID,TR,_i,AGEMAIN,_k,SEX,ADM,DIS,SEND,PDX,_o,_p,REV,ITEM,HMAIN,PROV,MNAME,MVAL)=range(24)
+# FY(0)='ปีงบฯ บริการ' (= ปีงบของวันจำหน่าย ตรวจแล้วตรง 100%) · GB(1)='ปีงบฯส่งข้อมูล GB' (= ปีงบที่เคลม ตัวเลขทางการ)
 # ⚠️ คนละคอลัมน์กัน อย่าสลับ: PROV(21)='จังหวัด hmain' = จังหวัดหน่วยบริการประจำของผู้ป่วย
 #    (dashboard ใช้ตัวนี้ทุกที่) · HCPROV(2)='จังหวัด hcode' = จังหวัดของ รพ. ที่ผ่าตัด/ส่งเคลมจริง
 #    ใช้ HCPROV เฉพาะสถิติ lag เพราะเป็นเรื่องพฤติกรรมการส่งเคลมของ รพ. และทำให้ยอด รพ. รวมได้ตรงจังหวัดพอดี
@@ -55,7 +56,7 @@ for row in rows:
     if c is None:
         try: sd = ps(row[SEND])
         except Exception: sd = None
-        c = {'send': sd, 'disch': pd_(row[DIS]), 'fy': row[FY], 'prov': row[PROV], 'baht': 0.0,
+        c = {'send': sd, 'disch': pd_(row[DIS]), 'fy': row[FY], 'gb': row[GB], 'prov': row[PROV], 'baht': 0.0,
              'hc': row[HC], 'hcprov': row[HCPROV], 'req': 0.0, 'paid': 0.0,
              'hname': HNAME.get(row[HC]) or row[HN].strip().replace('รพ. ', 'รพ.') or f'Hcode {row[HC]}'}
         cs[k] = c
@@ -234,8 +235,38 @@ print(f"  วันเดียวมากสุด {batch['topDay']} = {batch[
 print(f"  lag เฉลี่ย: ในก้อน {batch['bigMean']} วัน · ส่งตามปกติ {batch['normMean']} (มัธยฐาน {batch['normMed']})")
 print(f"  รอบปีงบ 2569 วันเดียวมากสุด {batch['curMaxDay']} เคส -> ไม่มีก้อนปน ✅")
 
+# ── ④ ตารางไขว้ ปีที่จำหน่าย × ปีที่เคลม รายหน่วยบริการ (ตามที่ CFO ขอ 2026-08-03)
+#    แถว  = ปีงบที่จำหน่าย → ใช้คอลัมน์ 'ปีงบฯ บริการ' ของ สปสช. โดยตรง (ตรวจแล้วตรงกับปีงบของวันจำหน่าย 100%)
+#    คอลัมน์ = ปีงบที่ส่งเคลม → ใช้คอลัมน์ 'ปีงบฯส่งข้อมูล GB' ของ สปสช. (ตัวเลขทางการ)
+#    ⚠️ กฎ 16 ก.ย. ที่ dashboard ใช้ตรงกับ GB 99.05% — ต่างกัน 125 เคสที่ส่ง 16–25 ก.ย.2565
+#       ซึ่ง สปสช. นับเป็นปีงบ 65 (ปีนั้นใช้เส้นตัดคนละวัน) · ปีงบ 67/68/69 ตรงกันเป๊ะทุกเคส
+gb_num = lambda g: int(g.replace('ปีงบฯ ', '')) + 2500
+mx_cases = [c for c in cs.values() if c['send']]
+DY = sorted({int(c['fy']) for c in mx_cases})
+CY = sorted({gb_num(c['gb']) for c in mx_cases})
+def mx_rows(pool):
+    out_rows = []
+    for dy in DY:
+        g = [c for c in pool if int(c['fy']) == dy]
+        if not g: continue
+        cnt = Counter(gb_num(c['gb']) for c in g)
+        out_rows.append({'dy': dy, 'tot': len(g), 'c': [cnt.get(y, 0) for y in CY]})
+    return out_rows
+mx_hosp = []
+for hc in {c['hc'] for c in mx_cases}:
+    pool = [c for c in mx_cases if c['hc'] == hc]
+    mx_hosp.append({'h': pool[0]['hname'], 'p': pool[0]['hcprov'], 'tot': len(pool), 'rows': mx_rows(pool)})
+mx_hosp.sort(key=lambda r: -r['tot'])
+matrix = {'dy': DY, 'cy': CY, 'region': mx_rows(mx_cases), 'hosp': mx_hosp}
+print(f"\n{'═'*72}\n④ ตารางไขว้ ปีจำหน่าย × ปีเคลม (ทั้งเขต, hmain=01)\n{'═'*72}")
+print('ปีจำหน่าย\\ปีเคลม'.ljust(18) + 'รวม'.rjust(8) + ''.join(str(y).rjust(9) for y in CY))
+for r in matrix['region']:
+    print(f"  ปีงบ {r['dy']}".ljust(18) + f"{r['tot']:,}".rjust(8) + ''.join((f"{v:,}" if v else '-').rjust(9) for v in r['c']))
+print('  รวม'.ljust(18) + f"{sum(r['tot'] for r in matrix['region']):,}".rjust(8)
+      + ''.join(f"{sum(r['c'][i] for r in matrix['region']):,}".rjust(9) for i in range(len(CY))))
+
 out = {
-    'cross': cross_out, 'batch': batch,
+    'cross': cross_out, 'batch': batch, 'matrix': matrix,
     'lag': {'all': lag_all, 'prov': lag_prov, 'hosp': lag_hosp,
             'by_fy': {fy: stats([d for c, d in lag_cases if c['fy'] == fy])
                       for fy in sorted({c['fy'] for c, _ in lag_cases})}},

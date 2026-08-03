@@ -465,6 +465,14 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
     <div class="card-bd" id="tkaLagBody"></div>
   </div>
   <div class="tka-card" style="margin-bottom:12px">
+    <div class="card-hd">
+      <div><span class="card-title">&#129518; ปีที่จำหน่าย &times; ปีที่เคลม</span>
+        <div style="font-size:10px;color:var(--mut);margin-top:2px" id="tkaMxSub"></div></div>
+      <button class="tka-fold" id="tkaMxFold" onclick="tkaToggleMx()">&#9662; ยุบ</button>
+    </div>
+    <div class="card-bd" id="tkaMxBody" style="overflow-x:auto"></div>
+  </div>
+  <div class="tka-card" style="margin-bottom:12px">
     <div class="card-hd"><span class="card-title">&#128161; จุดสังเกตสำคัญ &mdash; อ่านตัวเลขหน้านี้อย่างไร</span></div>
     <div class="card-bd" id="tkaNotes"></div>
   </div>
@@ -1673,6 +1681,39 @@ const TKA_LAG={
     {h:"รพ.สันทราย",p:"เชียงใหม่",hc:"11130",n:82,mean:10.5,med:6,p90:23,max:57,w30:92.7},
     {h:"รพ.สูงเม่น",p:"แพร่",hc:"11169",n:57,mean:7.5,med:7,p90:9,max:21,w30:100}]
 };
+/* 🧮 ตารางไขว้ ปีที่จำหน่าย × ปีที่เคลม (สร้างจาก extract_tka_claim.py คีย์ matrix)
+   แถว dy = คอลัมน์ "ปีงบฯ บริการ" (ตรงกับปีงบของวันจำหน่าย 100%) · คอลัมน์ cy = "ปีงบฯส่งข้อมูล GB" ของ สปสช. */
+const TKA_MX={
+  dy:[2565,2566,2567,2568,2569],cy:[2565,2566,2567,2568,2569],
+  region:[{dy:2565,tot:2043,c:[1849,11,183,0,0]},{dy:2566,tot:2675,c:[0,0,2675,0,0]},{dy:2567,tot:3060,c:[0,0,2541,519,0]},{dy:2568,tot:3088,c:[0,0,0,2701,387]},{dy:2569,tot:2335,c:[0,0,0,0,2335]}],
+  hosp:[
+    {h:"รพ.ลำพูน",p:"ลำพูน",tot:1787,rows:[{dy:2565,tot:290,c:[257,0,33,0,0]},{dy:2566,tot:409,c:[0,0,409,0,0]},{dy:2567,tot:452,c:[0,0,416,36,0]},{dy:2568,tot:393,c:[0,0,0,347,46]},{dy:2569,tot:243,c:[0,0,0,0,243]}]},
+    {h:"รพ.เชียงรายประชานุเคราะห์",p:"เชียงราย",tot:1708,rows:[{dy:2565,tot:270,c:[240,2,28,0,0]},{dy:2566,tot:374,c:[0,0,374,0,0]},{dy:2567,tot:401,c:[0,0,343,58,0]},{dy:2568,tot:369,c:[0,0,0,301,68]},{dy:2569,tot:294,c:[0,0,0,0,294]}]},
+    {h:"รพ.ลำปาง",p:"ลำปาง",tot:1587,rows:[{dy:2565,tot:255,c:[229,1,25,0,0]},{dy:2566,tot:295,c:[0,0,295,0,0]},{dy:2567,tot:341,c:[0,0,189,152,0]},{dy:2568,tot:401,c:[0,0,0,356,45]},{dy:2569,tot:295,c:[0,0,0,0,295]}]},
+    {h:"รพ.แพร่",p:"แพร่",tot:1183,rows:[{dy:2565,tot:196,c:[175,0,21,0,0]},{dy:2566,tot:278,c:[0,0,278,0,0]},{dy:2567,tot:282,c:[0,0,245,37,0]},{dy:2568,tot:256,c:[0,0,0,231,25]},{dy:2569,tot:171,c:[0,0,0,0,171]}]},
+    {h:"รพ.นครพิงค์",p:"เชียงใหม่",tot:1069,rows:[{dy:2565,tot:227,c:[222,1,4,0,0]},{dy:2566,tot:225,c:[0,0,225,0,0]},{dy:2567,tot:173,c:[0,0,135,38,0]},{dy:2568,tot:261,c:[0,0,0,229,32]},{dy:2569,tot:183,c:[0,0,0,0,183]}]},
+    {h:"รพ.น่าน",p:"น่าน",tot:882,rows:[{dy:2565,tot:154,c:[146,0,8,0,0]},{dy:2566,tot:150,c:[0,0,150,0,0]},{dy:2567,tot:202,c:[0,0,185,17,0]},{dy:2568,tot:199,c:[0,0,0,176,23]},{dy:2569,tot:177,c:[0,0,0,0,177]}]},
+    {h:"รพ.พะเยา",p:"พะเยา",tot:834,rows:[{dy:2565,tot:142,c:[124,0,18,0,0]},{dy:2566,tot:168,c:[0,0,168,0,0]},{dy:2567,tot:192,c:[0,0,158,34,0]},{dy:2568,tot:183,c:[0,0,0,163,20]},{dy:2569,tot:149,c:[0,0,0,0,149]}]},
+    {h:"รพ.จอมทอง",p:"เชียงใหม่",tot:658,rows:[{dy:2565,tot:149,c:[147,0,2,0,0]},{dy:2566,tot:140,c:[0,0,140,0,0]},{dy:2567,tot:154,c:[0,0,147,7,0]},{dy:2568,tot:138,c:[0,0,0,130,8]},{dy:2569,tot:77,c:[0,0,0,0,77]}]},
+    {h:"รพ.ฝาง",p:"เชียงใหม่",tot:606,rows:[{dy:2565,tot:103,c:[88,2,13,0,0]},{dy:2566,tot:143,c:[0,0,143,0,0]},{dy:2567,tot:155,c:[0,0,134,21,0]},{dy:2568,tot:119,c:[0,0,0,106,13]},{dy:2569,tot:86,c:[0,0,0,0,86]}]},
+    {h:"รพ.เชียงคำ",p:"พะเยา",tot:446,rows:[{dy:2565,tot:49,c:[40,5,4,0,0]},{dy:2566,tot:84,c:[0,0,84,0,0]},{dy:2567,tot:108,c:[0,0,96,12,0]},{dy:2568,tot:122,c:[0,0,0,113,9]},{dy:2569,tot:83,c:[0,0,0,0,83]}]},
+    {h:"รพ.สันทราย",p:"เชียงใหม่",tot:428,rows:[{dy:2565,tot:32,c:[29,0,3,0,0]},{dy:2566,tot:88,c:[0,0,88,0,0]},{dy:2567,tot:124,c:[0,0,90,34,0]},{dy:2568,tot:108,c:[0,0,0,102,6]},{dy:2569,tot:76,c:[0,0,0,0,76]}]},
+    {h:"รพ.สันป่าตอง",p:"เชียงใหม่",tot:394,rows:[{dy:2565,tot:9,c:[7,0,2,0,0]},{dy:2566,tot:97,c:[0,0,97,0,0]},{dy:2567,tot:143,c:[0,0,135,8,0]},{dy:2568,tot:55,c:[0,0,0,37,18]},{dy:2569,tot:90,c:[0,0,0,0,90]}]},
+    {h:"รพ.แม่จัน",p:"เชียงราย",tot:375,rows:[{dy:2565,tot:44,c:[42,0,2,0,0]},{dy:2566,tot:59,c:[0,0,59,0,0]},{dy:2567,tot:68,c:[0,0,53,15,0]},{dy:2568,tot:117,c:[0,0,0,101,16]},{dy:2569,tot:87,c:[0,0,0,0,87]}]},
+    {h:"รพ.แม่สาย",p:"เชียงราย",tot:250,rows:[{dy:2565,tot:51,c:[45,0,6,0,0]},{dy:2566,tot:25,c:[0,0,25,0,0]},{dy:2567,tot:61,c:[0,0,55,6,0]},{dy:2568,tot:74,c:[0,0,0,70,4]},{dy:2569,tot:39,c:[0,0,0,0,39]}]},
+    {h:"รพร.ปัว",p:"น่าน",tot:235,rows:[{dy:2565,tot:14,c:[10,0,4,0,0]},{dy:2566,tot:38,c:[0,0,38,0,0]},{dy:2567,tot:42,c:[0,0,31,11,0]},{dy:2568,tot:84,c:[0,0,0,58,26]},{dy:2569,tot:57,c:[0,0,0,0,57]}]},
+    {h:"รพ.สูงเม่น",p:"แพร่",tot:204,rows:[{dy:2566,tot:3,c:[0,0,3,0,0]},{dy:2567,tot:78,c:[0,0,73,5,0]},{dy:2568,tot:69,c:[0,0,0,66,3]},{dy:2569,tot:54,c:[0,0,0,0,54]}]},
+    {h:"รพ.ศูนย์การแพทย์ ม.แม่ฟ้าหลวง",p:"เชียงราย",tot:145,rows:[{dy:2565,tot:15,c:[11,0,4,0,0]},{dy:2566,tot:31,c:[0,0,31,0,0]},{dy:2567,tot:27,c:[0,0,17,10,0]},{dy:2568,tot:45,c:[0,0,0,41,4]},{dy:2569,tot:27,c:[0,0,0,0,27]}]},
+    {h:"รพ.มหาราชนครเชียงใหม่ มช.",p:"เชียงใหม่",tot:109,rows:[{dy:2565,tot:21,c:[18,0,3,0,0]},{dy:2566,tot:27,c:[0,0,27,0,0]},{dy:2567,tot:24,c:[0,0,18,6,0]},{dy:2568,tot:28,c:[0,0,0,21,7]},{dy:2569,tot:9,c:[0,0,0,0,9]}]},
+    {h:"รพ.พาน",p:"เชียงราย",tot:79,rows:[{dy:2568,tot:30,c:[0,0,0,22,8]},{dy:2569,tot:49,c:[0,0,0,0,49]}]},
+    {h:"รพ.ศรีสังวาลย์",p:"แม่ฮ่องสอน",tot:73,rows:[{dy:2565,tot:11,c:[8,0,3,0,0]},{dy:2566,tot:10,c:[0,0,10,0,0]},{dy:2567,tot:14,c:[0,0,3,11,0]},{dy:2568,tot:7,c:[0,0,0,3,4]},{dy:2569,tot:31,c:[0,0,0,0,31]}]},
+    {h:"รพ.ศิริเวช ลำพูน",p:"ลำพูน",tot:66,rows:[{dy:2565,tot:2,c:[2,0,0,0,0]},{dy:2566,tot:27,c:[0,0,27,0,0]},{dy:2567,tot:9,c:[0,0,8,1,0]},{dy:2568,tot:17,c:[0,0,0,16,1]},{dy:2569,tot:11,c:[0,0,0,0,11]}]},
+    {h:"รพ.เวียงสา",p:"น่าน",tot:39,rows:[{dy:2569,tot:39,c:[0,0,0,0,39]}]},
+    {h:"รพ.เชียงใหม่ใกล้หมอ",p:"เชียงใหม่",tot:31,rows:[{dy:2565,tot:8,c:[8,0,0,0,0]},{dy:2566,tot:4,c:[0,0,4,0,0]},{dy:2567,tot:5,c:[0,0,5,0,0]},{dy:2568,tot:9,c:[0,0,0,9,0]},{dy:2569,tot:5,c:[0,0,0,0,5]}]},
+    {h:"รพ.มหาวิทยาลัยพะเยา",p:"พะเยา",tot:8,rows:[{dy:2565,tot:1,c:[1,0,0,0,0]},{dy:2567,tot:1,c:[0,0,1,0,0]},{dy:2568,tot:3,c:[0,0,0,2,1]},{dy:2569,tot:3,c:[0,0,0,0,3]}]},
+    {h:"รพ.เอกชน (Hcode 42186)",p:"ลำพูน",tot:4,rows:[{dy:2567,tot:4,c:[0,0,4,0,0]}]},
+    {h:"รพ.ค่ายสุรศักดิ์มนตรี",p:"ลำปาง",tot:1,rows:[{dy:2568,tot:1,c:[0,0,0,1,0]}]}]
+};
 /* HOSP_MONTHLY (จังหวัด→เดือน→[{hosp,cases}]) — derive จาก HOSP_MONTH_PDX ข้อมูลจริง (ของเดิมหายไปตอน re-extract b04c8fb ทำให้ popup กราฟเทรนด์พัง) */
 const HOSP_MONTHLY={};
 Object.entries(HOSP_MONTH_PDX).forEach(([hosp,months])=>{
@@ -1726,7 +1767,7 @@ function tkaNormMonthly(monthly,prov){
   }
   return TKA_MONTHS.map((lbl,i)=>({label:lbl,cases:map[lbl]||0,value:vals[i]}));
 }
-function tkaRender(){const d=PROV_DATA[tkaCurrProv];const isAll=tkaCurrProv==='ทั้งหมด';tkaRenderHero(d,isAll);tkaRenderIndicators(d,isAll);tkaRenderDemo(d);tkaRenderTrend(tkaNormMonthly(d.monthly,tkaCurrProv));tkaRenderPdx(d);tkaRenderHosp(d,isAll);tkaRenderAgePie();tkaRenderQuota(isAll);tkaRenderGap();tkaRenderLag();tkaRenderNotes();}
+function tkaRender(){const d=PROV_DATA[tkaCurrProv];const isAll=tkaCurrProv==='ทั้งหมด';tkaRenderHero(d,isAll);tkaRenderIndicators(d,isAll);tkaRenderDemo(d);tkaRenderTrend(tkaNormMonthly(d.monthly,tkaCurrProv));tkaRenderPdx(d);tkaRenderHosp(d,isAll);tkaRenderAgePie();tkaRenderQuota(isAll);tkaRenderGap();tkaRenderLag();tkaRenderMx();tkaRenderNotes();}
 
 /* ── กราฟแท่งคู่ ผ่าตัดจริง vs ส่งเคลม (รวม 2 กราฟเดิมเป็นกราฟเดียว 2026-08-03) ── */
 function tkaGapGrouped(canvasId,labels,vA,vB,cA,cB,dimLastA){
@@ -1895,6 +1936,68 @@ function tkaRenderLag(){
     ⚠️ จังหวัดในตารางนี้คือ<b>จังหวัดของหน่วยบริการที่ส่งเคลม</b> (คอลัมน์ &ldquo;จังหวัด hcode&rdquo;) ต่างจากตารางอื่นในหน้านี้
     ที่ใช้จังหวัดของหน่วยบริการประจำผู้ป่วย (&ldquo;จังหวัด hmain&rdquo;) ยอดรายจังหวัดจึงต่างกันได้เล็กน้อย &middot; * = เคสน้อยกว่า 10 ค่าเฉลี่ยแกว่งง่าย</div>`;
   bd.innerHTML=h;
+}
+/* ══ 🧮 ตารางไขว้ ปีที่จำหน่าย × ปีที่เคลม (2026-08-03 ตามที่ CFO ขอ) ══
+   ช่องทแยง (เคลมปีเดียวกับที่จำหน่าย) = ปกติ · ช่องขวาของทแยง = เคลมข้ามปี (ยิ่งไกลยิ่งแดง)
+   หน่วยบริการยุบไว้เป็นค่าเริ่มต้น คลิกชื่อเพื่อกางดูรายปีที่จำหน่าย */
+let tkaMxOpen=true,tkaMxExp=null;
+function tkaMxToggleHosp(h){tkaMxExp=tkaMxExp===h?null:h;tkaRenderMx();}
+function tkaRenderMx(){
+  const bd=document.getElementById('tkaMxBody');if(!bd||!tkaMxOpen)return;
+  const M=TKA_MX,isAll=tkaCurrProv==='ทั้งหมด';
+  const hosps=isAll?M.hosp:M.hosp.filter(x=>x.p===tkaCurrProv);
+  document.getElementById('tkaMxSub').innerHTML=
+    'เคสที่จำหน่ายปีไหน ไปส่งเคลมปีไหน &middot; คลิกชื่อ รพ. เพื่อกางรายปี'+
+    (isAll?'':` &middot; เฉพาะ จ.${tkaCurrProv}`);
+  // รวมของ scope ที่กำลังดู (ทั้งเขต = ใช้ region ตรงๆ / เลือกจังหวัด = บวกจาก รพ. ในจังหวัดนั้น)
+  let scopeRows;
+  if(isAll)scopeRows=M.region;
+  else{const acc={};hosps.forEach(x=>x.rows.forEach(r=>{
+      const a=acc[r.dy]=acc[r.dy]||{dy:r.dy,tot:0,c:M.cy.map(()=>0)};
+      a.tot+=r.tot;r.c.forEach((v,i)=>a.c[i]+=v);}));
+    scopeRows=Object.values(acc).sort((a,b)=>a.dy-b.dy);}
+  const cell=(v,dy,cy)=>{
+    if(!v)return '<td class="td-r" style="color:rgba(255,255,255,.13)">–</td>';
+    const gapY=cy-dy,col=gapY===0?'var(--accent)':gapY===1?'var(--warn)':'var(--danger)';
+    const bg=gapY===0?'rgba(34,211,238,.07)':gapY===1?'rgba(251,191,36,.07)':'rgba(248,113,113,.09)';
+    return `<td class="td-r" style="color:${col};background:${bg};font-weight:${gapY?700:400}">${v.toLocaleString()}</td>`;
+  };
+  const dRow=(nm,r,ind)=>`<tr><td style="${ind?'padding-left:22px;color:var(--mut)':''}">${nm}</td>`+
+    `<td class="td-r" style="color:var(--ink);font-weight:600">${r.tot.toLocaleString()}</td>`+
+    M.cy.map((cy,i)=>cell(r.c[i],r.dy,cy)).join('')+'</tr>';
+  const sumRow=(nm,rows,clk)=>{const t=rows.reduce((s,r)=>s+r.tot,0),cs=M.cy.map((_,i)=>rows.reduce((s,r)=>s+r.c[i],0));
+    return `<tr${clk?` style="cursor:pointer" onclick="${clk}"`:''}><td style="font-weight:600">${nm}</td>`+
+      `<td class="td-r" style="font-weight:700;color:var(--ink)">${t.toLocaleString()}</td>`+
+      cs.map(v=>`<td class="td-r" style="color:${v?'var(--mut)':'rgba(255,255,255,.13)'}">${v?v.toLocaleString():'–'}</td>`).join('')+'</tr>';};
+  let h=`<table style="min-width:660px"><thead>
+    <tr><th rowspan="2" style="vertical-align:bottom">หน่วยบริการ / ปีที่จำหน่าย</th>
+        <th rowspan="2" style="text-align:right;vertical-align:bottom">จำนวนเคส<br>ที่จำหน่าย</th>
+        <th colspan="${M.cy.length}" style="text-align:center;background:rgba(255,255,255,.04)">ปีงบที่ส่งเคลม</th></tr>
+    <tr>${M.cy.map(y=>`<th style="text-align:right">${y}</th>`).join('')}</tr></thead><tbody>`;
+  h+=`<tr><td colspan="${M.cy.length+2}" style="padding:7px 8px 3px;font-size:11px;font-weight:700;color:var(--accent);background:rgba(34,211,238,.04)">
+        ${isAll?'รวมทั้งเขต 1':'รวม จ.'+tkaCurrProv}</td></tr>`;
+  h+=scopeRows.map(r=>dRow('ปีงบ '+r.dy,r,true)).join('');
+  h+=sumRow('<b>รวมทุกปี</b>',scopeRows,'');
+  h+=`<tr><td colspan="${M.cy.length+2}" style="padding:9px 8px 3px;font-size:11px;font-weight:700;color:var(--mut)">รายหน่วยบริการ (${hosps.length} แห่ง)</td></tr>`;
+  hosps.forEach(x=>{
+    h+=sumRow((tkaMxExp===x.h?'&#9662; ':'&#9656; ')+x.h+(isAll?` <span style="font-weight:400;color:var(--mut);font-size:10px">${x.p}</span>`:''),
+              x.rows,`tkaMxToggleHosp('${x.h.replace(/'/g,"\\'")}')`);
+    if(tkaMxExp===x.h)h+=x.rows.map(r=>dRow('ปีงบ '+r.dy,r,true)).join('');
+  });
+  h+=`</tbody></table>
+    <div class="fn">ตัวเลขในช่อง = จำนวนเคส &middot; <span style="color:var(--accent)">ฟ้า</span> = เคลมในปีงบเดียวกับที่จำหน่าย
+      &middot; <span style="color:var(--warn)">เหลือง</span> = เคลมช้าไป 1 ปีงบ &middot; <span style="color:var(--danger)">แดง</span> = ช้าเกิน 1 ปีงบ<br>
+      <b>ปีที่จำหน่าย</b> = คอลัมน์ &ldquo;ปีงบฯ บริการ&rdquo; ของ สปสช. (ตรวจแล้วตรงกับปีงบของวันจำหน่ายครบ 100%) &middot;
+      <b>ปีที่เคลม</b> = คอลัมน์ &ldquo;ปีงบฯส่งข้อมูล GB&rdquo; ของ สปสช.<br>
+      ⚠️ ยอดรวมคอลัมน์ปีงบ 2569 = ${TKA_MX.region.reduce((s,r)=>s+r.c[TKA_MX.cy.indexOf(2569)],0).toLocaleString()} เคส
+      ตรงกับฐานส่งเคลมที่ใช้ทั้งหน้านี้ &middot; ปีงบ 2565–2566 ตัวเลขบิดเบี้ยวจากรอบ reconcile (ดูกล่องอธิบายในการ์ดด้านบน)</div>`;
+  bd.innerHTML=h;
+}
+function tkaToggleMx(){
+  tkaMxOpen=!tkaMxOpen;
+  document.getElementById('tkaMxBody').style.display=tkaMxOpen?'':'none';
+  document.getElementById('tkaMxFold').innerHTML=tkaMxOpen?'&#9662; ยุบ':'&#9656; ขยาย';
+  if(tkaMxOpen)tkaRenderMx();
 }
 function tkaToggleLag(){
   tkaLagOpen=!tkaLagOpen;
