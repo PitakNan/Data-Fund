@@ -457,6 +457,14 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
     </div>
   </div>
   <div class="tka-card" style="margin-bottom:12px">
+    <div class="card-hd">
+      <div><span class="card-title">&#9203; ระยะเวลา จำหน่าย &rarr; ส่งเคลม</span>
+        <div style="font-size:10px;color:var(--mut);margin-top:2px" id="tkaLagSub"></div></div>
+      <button class="tka-fold" id="tkaLagFold" onclick="tkaToggleLag()">&#9662; ยุบ</button>
+    </div>
+    <div class="card-bd" id="tkaLagBody"></div>
+  </div>
+  <div class="tka-card" style="margin-bottom:12px">
     <div class="card-hd"><span class="card-title">&#128161; จุดสังเกตสำคัญ &mdash; อ่านตัวเลขหน้านี้อย่างไร</span></div>
     <div class="card-bd" id="tkaNotes"></div>
   </div>
@@ -1623,6 +1631,48 @@ const TKA_CLAIM={
   gapDisch:[278,300,241,258,295,324,230,339,70],
   gapClaim:[101,255,267,257,264,321,293,302,275]
 };
+/* ⏱️ ระยะเวลา จำหน่าย→ส่งเคลม (วัน) ของเคสที่ส่งเคลมในรอบปีงบ 2569 — สร้างจาก extract_tka_claim.py
+   จังหวัด = จังหวัดของ รพ. ที่ส่งเคลม (คอลัมน์ "จังหวัด hcode") คนละตัวกับ PROV_DATA ที่ใช้ "จังหวัด hmain" */
+const TKA_LAG={
+  cross:{all:{n:387,baht:22628981,mean:35.9,paidPct:99.7},edge:{n:364,baht:20885551,mean:27.5,paidPct:100},stuck:{n:23,baht:1743430,mean:169.2,paidPct:95.7},bucket:[{lbl:"≤30 วัน",n:261},{lbl:"31–45",n:64},{lbl:"46–90",n:32},{lbl:"91–180",n:25},{lbl:">180",n:5}],topHosp:[{h:"รพ.เชียงรายประชานุเคราะห์",n:12,mean:112},{h:"รพ.นครพิงค์",n:3,mean:189},{h:"รพ.น่าน",n:3,mean:157},{h:"รพ.มหาราชนครเชียงใหม่ มช.",n:2,mean:461},{h:"รพ.จอมทอง",n:1,mean:115},{h:"รพ.ฝาง",n:1,mean:281},{h:"รพร.ปัว",n:1,mean:188}]},
+  batch:{days:6,sendDays:840,nAll:13201,nBig:5218,pctBig:39.5,topDay:"2023-09-26",topN:2436,topFrom:"2022-02-21",topTo:"2023-08-26",bigMean:203.8,normMean:40.7,normMed:23,curMaxDay:54},
+  all:{n:2722,mean:24.2,med:21,p90:37,max:493,w30:83.1},
+  byFy:{2568:{n:387,mean:35.9,med:23,p90:70,max:493,w30:67.4},2569:{n:2335,mean:22.2,med:20,p90:34,max:236,w30:85.7}},
+  prov:[
+    {p:"แม่ฮ่องสอน",n:35,mean:40.3,med:32,p90:61,max:160,w30:45.7},
+    {p:"เชียงราย",n:596,mean:29.2,med:23,p90:58,max:136,w30:63.8},
+    {p:"น่าน",n:322,mean:27.5,med:25,p90:33,max:236,w30:80.7},
+    {p:"เชียงใหม่",n:610,mean:27,med:22,p90:41,max:493,w30:80.3},
+    {p:"ลำปาง",n:340,mean:21.2,med:21,p90:25,max:29,w30:100},
+    {p:"แพร่",n:253,mean:19.8,med:22,p90:30,max:46,w30:91.7},
+    {p:"พะเยา",n:265,mean:17.9,med:16,p90:28,max:108,w30:92.1},
+    {p:"ลำพูน",n:301,mean:15.8,med:16,p90:20,max:34,w30:99.7}],
+  hosp:[
+    {h:"รพ.มหาราชนครเชียงใหม่ มช.",p:"เชียงใหม่",hc:"13780",n:16,mean:88.7,med:39,p90:429,max:493,w30:18.8},
+    {h:"รพ.ศรีสังวาลย์",p:"แม่ฮ่องสอน",hc:"10719",n:35,mean:40.3,med:32,p90:61,max:160,w30:45.7},
+    {h:"รพ.มหาวิทยาลัยพะเยา",p:"พะเยา",hc:"41347",n:4,mean:38.5,med:49,p90:55,max:55,w30:50},
+    {h:"รพร.ปัว",p:"น่าน",hc:"11453",n:83,mean:36.3,med:31,p90:38,max:188,w30:45.8},
+    {h:"รพ.เชียงรายประชานุเคราะห์",p:"เชียงราย",hc:"10674",n:362,mean:36,med:33,p90:82,max:136,w30:46.4},
+    {h:"รพ.สันป่าตอง",p:"เชียงใหม่",hc:"11128",n:108,mean:31.8,med:29,p90:48,max:77,w30:51.9},
+    {h:"รพ.นครพิงค์",p:"เชียงใหม่",hc:"10713",n:215,mean:30,med:22,p90:29,max:225,w30:91.6},
+    {h:"รพ.จอมทอง",p:"เชียงใหม่",hc:"11119",n:85,mean:29.3,med:28,p90:43,max:115,w30:74.1},
+    {h:"รพ.น่าน",p:"น่าน",hc:"10716",n:200,mean:26.4,med:23,p90:30,max:236,w30:92.5},
+    {h:"รพ.ศูนย์การแพทย์ ม.แม่ฟ้าหลวง",p:"เชียงราย",hc:"41509",n:31,mean:23.9,med:19,p90:51,max:68,w30:77.4},
+    {h:"รพ.แพร่",p:"แพร่",hc:"10715",n:196,mean:23.4,med:25,p90:31,max:46,w30:89.3},
+    {h:"รพ.ลำปาง",p:"ลำปาง",hc:"10672",n:340,mean:21.2,med:21,p90:25,max:29,w30:100},
+    {h:"รพ.แม่สาย",p:"เชียงราย",hc:"11194",n:43,mean:21.1,med:20,p90:29,max:31,w30:93},
+    {h:"รพ.พะเยา",p:"พะเยา",hc:"10717",n:169,mean:19.3,med:17,p90:28,max:108,w30:91.1},
+    {h:"รพ.ศิริเวช ลำพูน",p:"ลำพูน",hc:"14555",n:12,mean:19.1,med:22,p90:25,max:26,w30:100},
+    {h:"รพ.พาน",p:"เชียงราย",hc:"11190",n:57,mean:18.7,med:21,p90:31,max:34,w30:86},
+    {h:"รพ.ฝาง",p:"เชียงใหม่",hc:"11125",n:99,mean:17.7,med:13,p90:29,max:281,w30:90.9},
+    {h:"รพ.แม่จัน",p:"เชียงราย",hc:"11192",n:103,mean:16,med:17,p90:26,max:35,w30:96.1},
+    {h:"รพ.ลำพูน",p:"ลำพูน",hc:"10714",n:289,mean:15.7,med:15,p90:20,max:34,w30:99.7},
+    {h:"รพ.เชียงคำ",p:"พะเยา",hc:"10718",n:92,mean:14.5,med:13,p90:22,max:66,w30:95.7},
+    {h:"รพ.เวียงสา",p:"น่าน",hc:"11177",n:39,mean:14.1,med:12,p90:25,max:38,w30:94.9},
+    {h:"รพ.เชียงใหม่ใกล้หมอ",p:"เชียงใหม่",hc:"14550",n:5,mean:12,med:12,p90:22,max:22,w30:100},
+    {h:"รพ.สันทราย",p:"เชียงใหม่",hc:"11130",n:82,mean:10.5,med:6,p90:23,max:57,w30:92.7},
+    {h:"รพ.สูงเม่น",p:"แพร่",hc:"11169",n:57,mean:7.5,med:7,p90:9,max:21,w30:100}]
+};
 /* HOSP_MONTHLY (จังหวัด→เดือน→[{hosp,cases}]) — derive จาก HOSP_MONTH_PDX ข้อมูลจริง (ของเดิมหายไปตอน re-extract b04c8fb ทำให้ popup กราฟเทรนด์พัง) */
 const HOSP_MONTHLY={};
 Object.entries(HOSP_MONTH_PDX).forEach(([hosp,months])=>{
@@ -1676,7 +1726,7 @@ function tkaNormMonthly(monthly,prov){
   }
   return TKA_MONTHS.map((lbl,i)=>({label:lbl,cases:map[lbl]||0,value:vals[i]}));
 }
-function tkaRender(){const d=PROV_DATA[tkaCurrProv];const isAll=tkaCurrProv==='ทั้งหมด';tkaRenderHero(d,isAll);tkaRenderIndicators(d,isAll);tkaRenderDemo(d);tkaRenderTrend(tkaNormMonthly(d.monthly,tkaCurrProv));tkaRenderPdx(d);tkaRenderHosp(d,isAll);tkaRenderAgePie();tkaRenderQuota(isAll);tkaRenderGap();tkaRenderNotes();}
+function tkaRender(){const d=PROV_DATA[tkaCurrProv];const isAll=tkaCurrProv==='ทั้งหมด';tkaRenderHero(d,isAll);tkaRenderIndicators(d,isAll);tkaRenderDemo(d);tkaRenderTrend(tkaNormMonthly(d.monthly,tkaCurrProv));tkaRenderPdx(d);tkaRenderHosp(d,isAll);tkaRenderAgePie();tkaRenderQuota(isAll);tkaRenderGap();tkaRenderLag();tkaRenderNotes();}
 
 /* ── กราฟแท่งคู่ ผ่าตัดจริง vs ส่งเคลม (รวม 2 กราฟเดิมเป็นกราฟเดียว 2026-08-03) ── */
 function tkaGapGrouped(canvasId,labels,vA,vB,cA,cB,dimLastA){
@@ -1738,12 +1788,120 @@ function tkaRenderGap(){
    `<div style="margin-top:10px;padding:9px 12px;background:var(--card2);border-radius:8px;font-size:11.5px;line-height:1.7;color:var(--mut)">
       แท่งม่วงกับแท่งฟ้าในแต่ละเดือนคือ<b style="color:var(--ink)">เคสชุดเดียวกัน ${sd.toLocaleString()} เคส</b> (ผ่าตัดปีงบ 2569) แค่นับคนละวัน &mdash;
       โดยเฉลี่ยมีเคส <b style="color:#fbbf24">~${avgGap} เคส</b> ที่ผ่าตัดแล้วแต่ยังไม่ได้ส่งเคลม
-      (ส่งเบิกช้ากว่าจำหน่ายเฉลี่ยราว <b style="color:#fbbf24">24 วัน</b>)<br>
+      (ส่งเบิกช้ากว่าจำหน่ายเฉลี่ย <b style="color:#fbbf24">${TKA_LAG.all.mean} วัน</b> &mdash; ดูรายละเอียดในการ์ดถัดไป)<br>
       <span style="color:#f87171">&#9888;&#65039; แท่ง&#8220;ผ่าตัดจริง&#8221;ของเดือนสุดท้าย (มิ.ย.69) เป็นเส้นประ</span> เพราะเคสที่เพิ่งจำหน่ายยังส่งเบิกไม่ทัน จึงยังไม่เข้าไฟล์
       &mdash; <b style="color:var(--ink)">ไม่ใช่ผลงานลดลงจริง</b> ส่วนแท่ง&#8220;ส่งเคลม&#8221;ครบถึงวันตัดข้อมูลแล้ว
     </div>`;
 }
 
+/* ══ ⏱️ ระยะเวลา จำหน่าย → ส่งเคลม (2026-08-03) ══════════════════════
+   ยาวเต็มแถบ = 60 วัน (2 เท่าของเกณฑ์อ้างอิง 30 วัน) · ค่าที่เกินถูกตัดปลาย แต่ตัวเลขด้านขวายังเป็นค่าจริง
+   แถบจาง = p90 (ช้าสุดของ 90% แรก) · แถบเข้ม = ค่าเฉลี่ย → เห็นทั้งค่ากลางและการกระจายในแถบเดียว */
+let tkaLagOpen=true,tkaLagExp=null;
+const LAG_MAX=60;
+const tkaLagColor=m=>m<=20?'#34d399':m<=30?'#22d3ee':m<=45?'#fbbf24':'#f87171';
+function tkaLagRow(o,nm,sub,onclk){
+  const col=tkaLagColor(o.mean),w=v=>Math.min(100,v/LAG_MAX*100).toFixed(1);
+  const small=o.n<10?'<span style="color:var(--warn)" title="จำนวนเคสน้อย ค่าเฉลี่ยแกว่งง่าย">*</span>':'';
+  return `<div class="lag-row${sub?' lsub':''}${onclk?' clk':''}"${onclk?` onclick="${onclk}"`:''} title="ช้าสุด ${o.max} วัน · ส่งใน 30 วัน ${o.w30}%">
+    <div class="lag-nm">${onclk?(tkaLagExp===o.p?'&#9662; ':'&#9656; '):''}${nm}${small}</div>
+    <div class="lag-trk">
+      <div class="lag-p90" style="width:${w(o.p90)}%;background:${col}"></div>
+      <div class="lag-avg" style="width:${w(o.mean)}%;background:${col}"></div>
+      <div class="lag-mk30" style="left:50%"></div>
+      <div class="lag-mk" style="left:${w(TKA_LAG.all.mean)}%"></div>
+    </div>
+    <div class="lag-val"><b style="color:${col}">${o.mean.toFixed(1)}</b> <span class="s">วัน</span>
+      <span class="s">&middot; กลาง ${o.med} &middot; n ${o.n.toLocaleString()}</span></div>
+  </div>`;
+}
+function tkaLagToggleProv(p){tkaLagExp=tkaLagExp===p?null:p;tkaRenderLag();}
+/* ── ③ เคสข้ามปีงบ: แยก "ชนเส้นแบ่งรอบ" ออกจาก "ค้างจริง" (2026-08-03) ──
+   387 เคสนี้คือส่วนต่างระหว่างฐานผ่าตัด (2,335) กับฐานส่งเคลม (2,722) = ตัวที่ทำให้โควตาต่างกัน 387 เข่า
+   94% เป็นเคสจำหน่ายปลายปีงบ 68 ที่ส่งเคลมตามจังหวะปกติแต่วันส่งตกหลังเส้น 16 ก.ย. ไม่ใช่การส่งช้า */
+function tkaLagCrossBlock(){
+  const X=TKA_LAG.cross,mB=n=>(n/1e6).toFixed(1);
+  const seg=(o,col,ttl,dsc)=>`<div style="display:grid;grid-template-columns:96px 1fr auto;gap:12px;align-items:center;padding:7px 10px;border-radius:8px;background:var(--card2);margin-bottom:6px">
+      <div><b style="color:${col};font-family:monospace;font-size:16px">${o.n}</b> <span style="font-size:11px;color:var(--mut)">เคส (${Math.round(o.n/X.all.n*100)}%)</span></div>
+      <div style="font-size:11.5px;line-height:1.5"><b style="color:var(--ink)">${ttl}</b><br><span style="color:var(--mut)">${dsc}</span></div>
+      <div style="text-align:right;font-family:monospace;font-size:12px;color:${col};white-space:nowrap">${mB(o.baht)} ลบ.<br>
+        <span style="font-size:10px;color:var(--mut)">เฉลี่ย ${o.mean} วัน</span></div></div>`;
+  const bk=X.bucket.map(b=>`<span style="white-space:nowrap">${b.lbl} <b style="color:var(--ink);font-family:monospace">${b.n}</b></span>`).join(' &middot; ');
+  const hs=X.topHosp.map(r=>`${r.h} <b style="color:var(--ink)">${r.n}</b> (${r.mean} วัน)`).join(' &middot; ');
+  return `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+      <b style="font-size:12.5px;color:var(--ink)">&#128257; ${X.all.n} เคสที่ผ่าตัดปีงบ 2568 แต่มาส่งเคลมในรอบปีงบ 2569</b>
+      <span style="font-size:11px;color:var(--mut)">${mB(X.all.baht)} ลบ. &middot; <b style="color:#34d399">ได้รับเงินแล้ว ${X.all.paidPct}%</b></span></div>
+    ${seg(X.edge,'#22d3ee','ชนเส้นแบ่งรอบปีงบ &mdash; ไม่ใช่การส่งช้า','จำหน่าย ส.ค.&ndash;ก.ย.68 ส่งเคลมตามจังหวะปกติ แต่วันส่งไปตกหลังเส้น 16 ก.ย.')}
+    ${seg(X.stuck,'#f87171','ค้างจริง &mdash; ต้องตามเก็บ','จำหน่ายก่อน ส.ค.68 แต่เพิ่งส่งเคลมปีนี้')}
+    <div style="font-size:10.5px;color:var(--mut);line-height:1.75;padding:0 2px">
+      ราย รพ. ของกลุ่มค้างจริง: ${hs}<br>
+      การกระจายของทั้ง ${X.all.n} เคส: ${bk}<br>
+      <span style="color:var(--warn)">&#9888;&#65039; ${X.all.n} เคสนี้คือส่วนต่างระหว่างฐานผ่าตัด (${TKA_CLAIM.svc69.toLocaleString()}) กับฐานส่งเคลม (${TKA_CLAIM.total.toLocaleString()})
+      = โควตาที่ต่างกัน ${X.all.n} เข่า</span> &mdash; ยังรอ สปสช./ทีม M&amp;E ยืนยันว่าตัดโควตาตามปีที่ส่งเคลมหรือปีที่ให้บริการ
+    </div></div>`;
+}
+/* ── ① ทำไมการ์ดนี้แสดงเฉพาะปีงบ 2569 (ข้อมูลประกอบจากการตรวจย้อนหลัง 5 ปี) ── */
+function tkaLagWhy69(){
+  const B=TKA_LAG.batch,thy=s=>{const[y,m,d]=s.split('-');return `${+d} ${['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][+m-1]}${(+y+543)%100}`;};
+  return `<div style="margin-top:12px;padding:10px 12px;background:rgba(34,211,238,.05);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:11px;line-height:1.8;color:var(--mut)">
+    <b style="color:var(--accent);font-size:11.5px">&#8505;&#65039; ทำไมวัดเฉพาะปีงบ 2569 ไม่เทียบย้อนหลัง 5 ปี</b><br>
+    ตรวจข้อมูลย้อนหลังทั้ง ${B.nAll.toLocaleString()} เคสแล้วพบว่า &ldquo;วันที่ส่งข้อมูล&rdquo; ของปีเก่า<b style="color:var(--ink)">ไม่ใช่วันที่ รพ. ส่งเคลมรายเคส</b>
+    แต่เป็นการ<b style="color:var(--ink)">ส่งเป็นก้อนรอบปิดปีงบ</b> &mdash; <b style="color:var(--warn)">${B.nBig.toLocaleString()} เคส (${B.pctBig}%) ถูกส่งในเพียง ${B.days} วัน</b>
+    จาก ${B.sendDays.toLocaleString()} วันที่มีการส่งทั้งหมด · วันเดียวมากสุด <b style="color:var(--ink)">${thy(B.topDay)}</b> = <b style="color:var(--warn)">${B.topN.toLocaleString()} เคส</b>
+    ครอบคลุมเคสที่จำหน่ายตั้งแต่ ${thy(B.topFrom)} ถึง ${thy(B.topTo)}<br>
+    เอามาคิดค่าเฉลี่ยจะได้ ${B.bigMean} วัน ซึ่ง<b style="color:var(--ink)">ไม่ได้สะท้อนพฤติกรรมจริง</b> &mdash; ถ้าตัดก้อนเหล่านี้ออก
+    เคสที่ส่งตามปกติทั้ง 5 ปี เฉลี่ย <b style="color:var(--ink)">${B.normMean} วัน</b> (มัธยฐาน ${B.normMed})<br>
+    <b style="color:#34d399">&#10003; รอบปีงบ 2569 ไม่มีก้อนแบบนี้เลย</b> (วันเดียวมากสุดแค่ ${B.curMaxDay} เคส) ตัวเลขในการ์ดนี้จึงใช้เทียบ รพ. กันได้จริง
+  </div>`;
+}
+function tkaRenderLag(){
+  const bd=document.getElementById('tkaLagBody');if(!bd||!tkaLagOpen)return;
+  const L=TKA_LAG,isAll=tkaCurrProv==='ทั้งหมด';
+  const scope=isAll?L.all:(L.prov.find(r=>r.p===tkaCurrProv)||L.all);
+  document.getElementById('tkaLagSub').innerHTML=
+    `เคสที่ส่งเคลมในรอบปีงบ 2569 ทั้งหมด ${L.all.n.toLocaleString()} เคส &middot; `+
+    (isAll?'คลิกชื่อจังหวัดเพื่อดูรายหน่วยบริการ':`เฉพาะ จ.${tkaCurrProv}`);
+  const tile=(v,u,l,c)=>`<div class="lag-tile"><div class="v" style="color:${c||'var(--ink)'}">${v}<span class="u">${u}</span></div><div class="l">${l}</div></div>`;
+  const cmp=isAll?'':` <span style="color:var(--mut)">(เขตฯ ${L.all.mean})</span>`;
+  let h=`<div class="lag-tiles">
+    ${tile(scope.mean.toFixed(1),'วัน','ค่าเฉลี่ย '+(isAll?'ทั้งเขต':'จ.'+tkaCurrProv)+(isAll?'':'&nbsp;'),tkaLagColor(scope.mean))}
+    ${tile(scope.med,'วัน','มัธยฐาน (ครึ่งหนึ่งส่งเร็วกว่านี้)')}
+    ${tile(scope.p90,'วัน','p90 &mdash; ช้าสุดของ 90% แรก')}
+    ${tile(scope.w30.toFixed(1),'%','ส่งเคลมภายใน 30 วัน')}
+  </div>
+  <div class="lag-lgd">
+    <span><i style="background:#34d399"></i>&le;20 วัน</span><span><i style="background:#22d3ee"></i>21&ndash;30</span>
+    <span><i style="background:#fbbf24"></i>31&ndash;45</span><span><i style="background:#f87171"></i>&gt;45</span>
+    <span style="margin-left:4px"><i style="background:var(--mut);opacity:.35"></i>แถบจาง = p90</span>
+    <span><i style="border-left:1px solid rgba(251,191,36,.8);width:1px;height:11px"></i>เกณฑ์ 30 วัน</span>
+    <span><i style="border-left:1px dashed rgba(255,255,255,.6);width:1px;height:11px"></i>ค่าเฉลี่ยเขตฯ ${L.all.mean}</span>
+  </div>`;
+  if(isAll){
+    h+=L.prov.map(r=>{
+      let s=tkaLagRow(r,r.p,false,`tkaLagToggleProv('${r.p}')`);
+      if(tkaLagExp===r.p)s+=L.hosp.filter(x=>x.p===r.p).map(x=>tkaLagRow(x,x.h,true,'')).join('');
+      return s;}).join('');
+  }else{
+    const hs=L.hosp.filter(x=>x.p===tkaCurrProv);
+    h+=hs.length?hs.map(x=>tkaLagRow(x,x.h,false,'')).join('')
+      :`<div style="padding:14px 8px;color:var(--mut);font-size:12px">ไม่มีเคสที่ส่งเคลมในรอบปีงบ 2569 ของจังหวัดนี้</div>`;
+  }
+  if(isAll)h+=tkaLagCrossBlock()+tkaLagWhy69();
+  h+=`<div class="fn">เรียงจากช้าไปเร็ว &middot; <b>ค่าเฉลี่ย</b>ถูกดึงยาวโดยเคสตกค้างไม่กี่เคส จึงต้องอ่านคู่กับ<b>มัธยฐาน</b>เสมอ
+    (ทั้งเขตฯ เฉลี่ย ${L.all.mean} แต่มัธยฐานแค่ ${L.all.med} วัน &mdash; ช้าสุด ${L.all.max} วัน)<br>
+    เคสผ่าตัดปีงบ 2568 ที่เพิ่งส่งเคลมปีนี้ ${L.byFy['2568'].n} เคส ส่งช้าเฉลี่ย ${L.byFy['2568'].mean} วัน
+    ส่วนเคสผ่าตัดปีงบ 2569 เอง ${L.byFy['2569'].n.toLocaleString()} เคส เฉลี่ย ${L.byFy['2569'].mean} วัน<br>
+    ⚠️ จังหวัดในตารางนี้คือ<b>จังหวัดของหน่วยบริการที่ส่งเคลม</b> (คอลัมน์ &ldquo;จังหวัด hcode&rdquo;) ต่างจากตารางอื่นในหน้านี้
+    ที่ใช้จังหวัดของหน่วยบริการประจำผู้ป่วย (&ldquo;จังหวัด hmain&rdquo;) ยอดรายจังหวัดจึงต่างกันได้เล็กน้อย &middot; * = เคสน้อยกว่า 10 ค่าเฉลี่ยแกว่งง่าย</div>`;
+  bd.innerHTML=h;
+}
+function tkaToggleLag(){
+  tkaLagOpen=!tkaLagOpen;
+  document.getElementById('tkaLagBody').style.display=tkaLagOpen?'':'none';
+  document.getElementById('tkaLagFold').innerHTML=tkaLagOpen?'&#9662; ยุบ':'&#9656; ขยาย';
+  if(tkaLagOpen)tkaRenderLag();
+}
 /* การ์ดจัดสรรโควตา = ฐานเป้าที่กำหนดครั้งเดียว ไม่ต้องดูบ่อย → ยุบไว้เป็นค่าเริ่มต้น */
 let tkaQuotaOpen=false;
 function tkaToggleQuota(){

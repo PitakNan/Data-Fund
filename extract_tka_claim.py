@@ -56,12 +56,16 @@ for row in rows:
         try: sd = ps(row[SEND])
         except Exception: sd = None
         c = {'send': sd, 'disch': pd_(row[DIS]), 'fy': row[FY], 'prov': row[PROV], 'baht': 0.0,
-             'hc': row[HC], 'hcprov': row[HCPROV],
+             'hc': row[HC], 'hcprov': row[HCPROV], 'req': 0.0, 'paid': 0.0,
              'hname': HNAME.get(row[HC]) or row[HN].strip().replace('รพ. ', 'รพ.') or f'Hcode {row[HC]}'}
         cs[k] = c
-    if row[MNAME] == 'ยอดชดเชย(บาท)':
-        try: c['baht'] += float(row[MVAL])
-        except ValueError: pass
+    try: _v = float(row[MVAL])
+    except ValueError: _v = 0.0
+    # 'จำนวนขอเบิก Inst.' vs 'จำนวนจ่าย Inst.' = จำนวนอุปกรณ์ที่ขอเบิก vs ที่ สปสช. จ่ายจริง
+    # ใช้ตอบคำถาม "เคลมช้า/ข้ามปีงบ แล้วได้เงินหรือไม่"
+    if row[MNAME] == 'ยอดชดเชย(บาท)': c['baht'] += _v
+    elif row[MNAME] == 'จำนวนขอเบิก Inst.': c['req'] += _v
+    elif row[MNAME] == 'จำนวนจ่าย Inst.': c['paid'] += _v
 
 # ══ รอบปีงบเคลม 2569 = 16 ก.ย.2568 – 15 ก.ย.2569 ══
 CW0 = datetime(2025, 9, 16)
@@ -179,7 +183,59 @@ print(f"\n{'หน่วยบริการ':<36}{'จังหวัด':<12}
 for r in lag_hosp:
     print(f"  {r['h']:<34.34}{r['p']:<12}{r['n']:>6,}{r['mean']:>9.1f}{r['med']:>10}{r['p90']:>6}")
 
+# ── ③ เคสข้ามปีงบในรอบเคลมนี้ (ผ่าตัดปีงบก่อน แต่เพิ่งส่งเคลมรอบ 2569)
+# แยก "ชนเส้นแบ่งรอบ" ออกจาก "ค้างจริง": เคสที่จำหน่ายตั้งแต่ 1 ส.ค.68 คือเคสปลายปีงบ 68
+# ที่ส่งเคลมตามจังหวะปกติ แต่วันส่งไปตกหลังเส้น 16 ก.ย. → ไม่ใช่การส่งช้า
+EDGE = datetime(2025, 8, 1)
+cross = [(c, d) for c, d in lag_cases if c['fy'] != '2569']
+edge = [(c, d) for c, d in cross if c['disch'] >= EDGE]
+stuck = [(c, d) for c, d in cross if c['disch'] < EDGE]
+paid_pct = lambda g: round(sum(1 for c, _ in g if c['req'] > 0 and c['paid'] >= c['req'])/max(len(g),1)*100, 1)
+grp = lambda g: {'n': len(g), 'baht': round(sum(c['baht'] for c, _ in g)),
+                 'mean': round(sum(d for _, d in g)/max(len(g),1), 1), 'paidPct': paid_pct(g)}
+cross_out = {'all': grp(cross), 'edge': grp(edge), 'stuck': grp(stuck),
+             'bucket': [{'lbl': lb, 'n': sum(1 for _, d in cross if lo <= d <= hi)}
+                        for lb, lo, hi in [('≤30 วัน',0,30),('31–45',31,45),('46–90',46,90),('91–180',91,180),('>180',181,99999)]],
+             'topHosp': sorted(({'h': c['hname'], 'n': sum(1 for x, _ in stuck if x['hc'] == c['hc']),
+                                 'mean': round(sum(d for x, d in stuck if x['hc'] == c['hc'])/max(sum(1 for x,_ in stuck if x['hc']==c['hc']),1))}
+                                for c in {x['hc']: x for x, _ in stuck}.values()), key=lambda r: -r['n'])}
+print(f"\n{'═'*72}\n③ เคสข้ามปีงบในรอบเคลม 2569\n{'═'*72}")
+print(f"  ทั้งหมด {cross_out['all']['n']} เคส {cross_out['all']['baht']/1e6:.1f} ลบ. · จ่ายครบ {cross_out['all']['paidPct']}%")
+print(f"  ชนเส้นแบ่งรอบ (จำหน่าย >= 1 ส.ค.68): {cross_out['edge']['n']} เคส เฉลี่ย {cross_out['edge']['mean']} วัน")
+print(f"  ค้างจริง (จำหน่ายก่อน ส.ค.68)      : {cross_out['stuck']['n']} เคส เฉลี่ย {cross_out['stuck']['mean']} วัน "
+      f"{cross_out['stuck']['baht']/1e6:.1f} ลบ.")
+for r in cross_out['topHosp']: print(f"      {r['h']:<34}{r['n']:>4} เคส  เฉลี่ย {r['mean']:>4} วัน")
+
+# ── ① ข้อมูลประกอบ: ทำไมเทียบ lag ย้อนหลัง 5 ปีตรงๆ ไม่ได้
+# ปีเก่า "วันที่ส่งข้อมูล" จำนวนมากเป็นการส่งเป็นก้อน (batch) รอบปิดปีงบ ไม่ใช่วันส่งจริงรายเคส
+allc = [(c, (c['send']-c['disch']).days) for c in cs.values() if c['send'] and c['disch']]
+allc = [(c, d) for c, d in allc if d >= 0]
+byday = defaultdict(list)
+for c, d in allc: byday[c['send'].date()].append(d)
+BIG = 300
+bigdays = {k for k, v in byday.items() if len(v) >= BIG}
+inbig = [(c, d) for c, d in allc if c['send'].date() in bigdays]
+normal = [(c, d) for c, d in allc if c['send'].date() not in bigdays]
+topday = max(byday.items(), key=lambda kv: len(kv[1]))
+topday_cases = [c for c, _ in allc if c['send'].date() == topday[0]]
+batch = {'days': len(bigdays), 'sendDays': len(byday), 'nAll': len(allc),
+         'nBig': len(inbig), 'pctBig': round(len(inbig)/len(allc)*100, 1),
+         'topDay': str(topday[0]), 'topN': len(topday[1]),
+         'topFrom': str(min(c['disch'] for c in topday_cases).date()),
+         'topTo': str(max(c['disch'] for c in topday_cases).date()),
+         'bigMean': round(sum(d for _, d in inbig)/len(inbig), 1),
+         'normMean': round(sum(d for _, d in normal)/len(normal), 1),
+         'normMed': sorted(d for _, d in normal)[len(normal)//2],
+         'curMaxDay': max(Counter(c['send'].date() for c in claim).values())}
+print(f"\n{'═'*72}\n① เช็ค batch: ทำไมเทียบย้อนหลัง 5 ปีตรงๆ ไม่ได้\n{'═'*72}")
+print(f"  เคสทั้ง 5 ปี {batch['nAll']:,} · วันที่มีการส่ง {batch['sendDays']:,} วัน")
+print(f"  วันที่ส่งเกิน {BIG} เคส/วัน มี {batch['days']} วัน = {batch['nBig']:,} เคส ({batch['pctBig']}% ของทั้งหมด)")
+print(f"  วันเดียวมากสุด {batch['topDay']} = {batch['topN']:,} เคส (จำหน่าย {batch['topFrom']} ถึง {batch['topTo']})")
+print(f"  lag เฉลี่ย: ในก้อน {batch['bigMean']} วัน · ส่งตามปกติ {batch['normMean']} (มัธยฐาน {batch['normMed']})")
+print(f"  รอบปีงบ 2569 วันเดียวมากสุด {batch['curMaxDay']} เคส -> ไม่มีก้อนปน ✅")
+
 out = {
+    'cross': cross_out, 'batch': batch,
     'lag': {'all': lag_all, 'prov': lag_prov, 'hosp': lag_hosp,
             'by_fy': {fy: stats([d for c, d in lag_cases if c['fy'] == fy])
                       for fy in sorted({c['fy'] for c, _ in lag_cases})}},
