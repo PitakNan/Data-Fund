@@ -475,8 +475,9 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
     <div class="card-bd" id="tkaMxBody" style="overflow-x:auto"></div>
   </div>
   <div class="tka-card" style="margin-bottom:12px">
-    <div class="card-hd"><span class="card-title">&#128161; จุดสังเกตสำคัญ &mdash; อ่านตัวเลขหน้านี้อย่างไร</span></div>
-    <div class="card-bd" id="tkaNotes"></div>
+    <div class="card-hd" style="cursor:pointer" onclick="tkaToggleNotes()"><span class="card-title">&#128161; จุดสังเกตสำคัญ &mdash; อ่านตัวเลขหน้านี้อย่างไร</span>
+      <button class="tka-fold" id="tkaNotesFold" onclick="event.stopPropagation();tkaToggleNotes()">&#9656; ขยาย</button></div>
+    <div class="card-bd" id="tkaNotes" style="display:none"></div>
   </div>
   <div class="tka-card">
     <div class="tka-tab-bar">
@@ -2077,7 +2078,47 @@ function tkaRenderNotes(){
    ['&#128269;',`<b>ข้อจำกัดข้อมูล:</b> ไฟล์จาก สปสช. มีเฉพาะเคสที่<b>ส่งเคลมแล้ว</b> &mdash; เคสที่ผ่าตัดแล้วแต่ยังไม่ส่งเบิกเลยจะไม่ปรากฏในข้อมูลนี้ ตัวเลข "ค้างเคลม" ที่เห็นจึงเป็นเพียงความล่าช้าตามปกติ ไม่ใช่ยอดค้างทั้งหมดจริง`],
    ['&#10071;',`<b>ข้อสมมติที่รอยืนยันจาก สปสช./ทีม M&amp;E:</b> เคสที่ผ่าตัดปีงบก่อนแต่ส่งเคลมปีนี้ &mdash; กินโควตาปีนี้ (${C.total.toLocaleString()}) หรือปีที่ผ่าตัด (${C.svc69.toLocaleString()})? <b>ต่างกัน ${C.svcOld} เข่า</b> และเปลี่ยนข้อสรุปว่าโควตาพอหรือไม่พอ`]
   ];
-  document.getElementById('tkaNotes').innerHTML=N.map(([i,t])=>`<div class="tka-note"><span class="ic">${i}</span><span>${t}</span></div>`).join('');
+  document.getElementById('tkaNotes').innerHTML=
+    N.map(([i,t])=>`<div class="tka-note"><span class="ic">${i}</span><span>${t}</span></div>`).join('')+tkaNotesMxTable();
+}
+/* การ์ดจุดสังเกต = อ่านครั้งเดียวก็พอ ไม่ต้องเปิดค้าง → ยุบไว้เป็นค่าเริ่มต้น */
+let tkaNotesOpen=false;
+function tkaToggleNotes(){
+  tkaNotesOpen=!tkaNotesOpen;
+  document.getElementById('tkaNotes').style.display=tkaNotesOpen?'':'none';
+  document.getElementById('tkaNotesFold').innerHTML=tkaNotesOpen?'&#9662; ยุบ':'&#9656; ขยาย';
+}
+/* ตารางสรุปทั้งเขต 1 ท้ายกล่องจุดสังเกต — ย่อจากการ์ดตารางไขว้ให้เห็นภาพรวมในที่เดียว */
+function tkaNotesMxTable(){
+  const M=TKA_MX,R=M.region;
+  const cell=(v,dy,cy)=>{
+    if(!v)return '<td class="td-r" style="color:rgba(255,255,255,.13)">–</td>';
+    const g=cy-dy,col=g===0?'var(--accent)':g===1?'var(--warn)':'var(--danger)';
+    return `<td class="td-r" style="color:${col};font-weight:${g?700:400}">${v.toLocaleString()}</td>`;};
+  const lag=rows=>{const g=rows.filter(r=>r.nl),mn=Math.min(...g.map(r=>r.mn)),mx=Math.max(...g.map(r=>r.mx)),
+      av=g.reduce((s,r)=>s+r.sum,0)/g.reduce((s,r)=>s+r.nl,0),ac=av<=30?'#34d399':av<=60?'var(--warn)':'var(--danger)';
+    return `<td class="td-r" style="color:var(--mut);border-left:1px solid var(--line)">${mn}</td>`+
+      `<td class="td-r" style="color:${mx>180?'var(--danger)':'var(--mut)'}">${mx.toLocaleString()}</td>`+
+      `<td class="td-r" style="color:${ac};font-weight:700">${av.toFixed(1)}</td>`;};
+  return `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);overflow-x:auto">
+    <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px">&#129518; สรุปทั้งเขต 1 &mdash; เคสที่จำหน่ายปีไหน ไปส่งเคลมปีไหน</div>
+    <table style="min-width:700px"><thead>
+      <tr><th rowspan="2" style="vertical-align:bottom">ปีที่จำหน่าย</th>
+          <th rowspan="2" style="text-align:right;vertical-align:bottom">จำนวนเคส</th>
+          <th colspan="${M.cy.length}" style="text-align:center;background:rgba(255,255,255,.04)">ปีงบที่ส่งเคลม</th>
+          <th colspan="3" style="text-align:center;background:rgba(255,255,255,.04);border-left:1px solid var(--line)">ระยะเวลาในการส่งเคลมหลังจากจำหน่าย (วัน)</th></tr>
+      <tr>${M.cy.map(y=>`<th style="text-align:right">${y}</th>`).join('')}
+          <th style="text-align:right;border-left:1px solid var(--line)">MIN</th><th style="text-align:right">MAX</th><th style="text-align:right">AVG</th></tr></thead><tbody>
+    ${R.map(r=>`<tr><td>ปีงบ ${r.dy}</td><td class="td-r" style="color:var(--ink);font-weight:600">${r.tot.toLocaleString()}</td>`+
+        M.cy.map((cy,i)=>cell(r.c[i],r.dy,cy)).join('')+lag([r])+'</tr>').join('')}
+    <tr style="border-top:1px solid var(--line)"><td style="font-weight:700">รวมทุกปี</td>
+      <td class="td-r" style="font-weight:700;color:var(--ink)">${R.reduce((s,r)=>s+r.tot,0).toLocaleString()}</td>
+      ${M.cy.map((_,i)=>{const v=R.reduce((s,r)=>s+r.c[i],0);return `<td class="td-r" style="font-weight:700;color:var(--mut)">${v?v.toLocaleString():'–'}</td>`;}).join('')}
+      ${lag(R)}</tr></tbody></table>
+    <div style="font-size:10px;color:var(--mut);margin-top:8px;line-height:1.7">
+      <span style="color:var(--accent)">ฟ้า</span> = เคลมในปีงบเดียวกับที่จำหน่าย &middot;
+      <span style="color:var(--warn)">เหลือง</span> = ช้าไป 1 ปีงบ &middot; <span style="color:var(--danger)">แดง</span> = ช้าเกิน 1 ปีงบ &middot;
+      ดูแยกรายจังหวัด/รายหน่วยบริการได้ที่การ์ด &ldquo;ปีที่จำหน่าย × ปีที่เคลม&rdquo; ท้ายหน้า</div></div>`;
 }
 
 /* ── ตารางโควตารายจังหวัด (เกณฑ์จัดสรร 1) เทียบเคลมที่ส่งแล้ว — แสดงใต้แถบความก้าวหน้า ── */
