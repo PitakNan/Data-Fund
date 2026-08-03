@@ -245,12 +245,17 @@ mx_cases = [c for c in cs.values() if c['send']]
 DY = sorted({int(c['fy']) for c in mx_cases})
 CY = sorted({gb_num(c['gb']) for c in mx_cases})
 def mx_rows(pool):
+    """แต่ละแถวเก็บ mn/mx/sum ของระยะเวลา จำหน่าย→ส่งเคลม (วัน) ด้วย
+       เก็บ sum (ไม่ใช่ avg) เพื่อให้ฝั่งหน้าเว็บรวมข้ามแถว/ข้าม รพ. ได้ถูกต้อง (avg = Σsum/Σtot)"""
     out_rows = []
     for dy in DY:
         g = [c for c in pool if int(c['fy']) == dy]
         if not g: continue
         cnt = Counter(gb_num(c['gb']) for c in g)
-        out_rows.append({'dy': dy, 'tot': len(g), 'c': [cnt.get(y, 0) for y in CY]})
+        lg = [(c['send']-c['disch']).days for c in g if c['disch']]
+        r = {'dy': dy, 'tot': len(g), 'c': [cnt.get(y, 0) for y in CY]}
+        if lg: r.update({'mn': min(lg), 'mx': max(lg), 'sum': sum(lg), 'nl': len(lg)})
+        out_rows.append(r)
     return out_rows
 mx_hosp = []
 for hc in {c['hc'] for c in mx_cases}:
@@ -259,11 +264,16 @@ for hc in {c['hc'] for c in mx_cases}:
 mx_hosp.sort(key=lambda r: -r['tot'])
 matrix = {'dy': DY, 'cy': CY, 'region': mx_rows(mx_cases), 'hosp': mx_hosp}
 print(f"\n{'═'*72}\n④ ตารางไขว้ ปีจำหน่าย × ปีเคลม (ทั้งเขต, hmain=01)\n{'═'*72}")
-print('ปีจำหน่าย\\ปีเคลม'.ljust(18) + 'รวม'.rjust(8) + ''.join(str(y).rjust(9) for y in CY))
+print('ปีจำหน่าย\\ปีเคลม'.ljust(18) + 'รวม'.rjust(8) + ''.join(str(y).rjust(9) for y in CY)
+      + 'MIN'.rjust(7) + 'MAX'.rjust(7) + 'AVG'.rjust(8))
 for r in matrix['region']:
-    print(f"  ปีงบ {r['dy']}".ljust(18) + f"{r['tot']:,}".rjust(8) + ''.join((f"{v:,}" if v else '-').rjust(9) for v in r['c']))
-print('  รวม'.ljust(18) + f"{sum(r['tot'] for r in matrix['region']):,}".rjust(8)
-      + ''.join(f"{sum(r['c'][i] for r in matrix['region']):,}".rjust(9) for i in range(len(CY))))
+    print(f"  ปีงบ {r['dy']}".ljust(18) + f"{r['tot']:,}".rjust(8) + ''.join((f"{v:,}" if v else '-').rjust(9) for v in r['c'])
+          + f"{r['mn']}".rjust(7) + f"{r['mx']}".rjust(7) + f"{r['sum']/r['nl']:.1f}".rjust(8))
+R = matrix['region']
+print('  รวม'.ljust(18) + f"{sum(r['tot'] for r in R):,}".rjust(8)
+      + ''.join(f"{sum(r['c'][i] for r in R):,}".rjust(9) for i in range(len(CY)))
+      + f"{min(r['mn'] for r in R)}".rjust(7) + f"{max(r['mx'] for r in R)}".rjust(7)
+      + f"{sum(r['sum'] for r in R)/sum(r['nl'] for r in R):.1f}".rjust(8))
 
 out = {
     'cross': cross_out, 'batch': batch, 'matrix': matrix,
