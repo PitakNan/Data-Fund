@@ -616,7 +616,7 @@ const PROVPAL=['#38bdf8','#34d399','#fbbf24','#f472b6','#a78bfa','#fb7185','#4ad
 const ICOL={overview:'#22d3ee',tka:'#f472b6',nb:'#34d399',refer:'#38bdf8',psych:'#a78bfa',adjlow:'#fbbf24',ppfs:'#fb923c'};
 const ICON={overview:'📊',tka:'🦵',nb:'👶',refer:'🔁',psych:'🧠',adjlow:'📉',ppfs:'💊'};
 const TITLE={tka:'TKA ผ่าตัดข้อเข่าเทียม',nb:'NB น้ำหนักน้อย <1,500g',refer:'ส่งต่อออกนอก สป.สธ.',psych:'จิตเวช homeward',adjlow:'adjRW < 0.5 (ความซับซ้อนต่ำ)',ppfs:'PPFS กองทุน PP'};
-const DESC={tka:'โควตาปีงบ · ส่งเคลม · อายุ-เพศ · ผ่าซ้ำ',nb:'ศักยภาพ NICU ตามระดับหน่วย LOS',refer:'Flow ต้นทาง→ปลายทาง เงินรั่วออกนอกระบบ',psych:'Readmission ระดับหน่วย LOS',adjlow:'LOS_Group การกระจาย adjRW รายโรค',ppfs:'26 กองทุน เปรียบเทียบ 3 ปี รายหน่วยบริการ'};
+const DESC={tka:'โควตาปีงบ · ส่งเคลม · อายุ-เพศ · ผ่าซ้ำ',nb:'ศักยภาพ NICU ตามระดับหน่วย LOS',refer:'Flow ต้นทาง→ปลายทาง เงินรั่วออกนอกระบบ',psych:'Readmission ระดับหน่วย LOS',adjlow:'LOS_Group การกระจาย adjRW รายโรค',ppfs:'26 กองทุน + กลุ่มรอ สปสช. ระบุ · เทียบ 3 ปี · รายหน่วยบริการ'};
 const fmt=n=>Math.round(n).toLocaleString('en-US');
 const fmtB=n=>n>=1e9?(n/1e9).toFixed(2)+' พันล้าน':n>=1e6?(n/1e6).toFixed(1)+' ล้าน':fmt(n);
 const C=id=>document.getElementById(id);
@@ -3334,8 +3334,9 @@ function ppfsBuildHTML(){
     '<div id="ppfs-kpi" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px"></div>'+
     '<div class="card" id="ppfs-narr" style="margin-bottom:12px;border-left:3px solid #22d3ee"></div>'+
     '<div class="card" style="margin-bottom:12px">'+
-    '<h3>&#9201;&#65039; จังหวะการเบิกจ่าย 26 กองทุน ปีงบ 69 <span style="font-size:11px;font-weight:normal;color:var(--mut);margin-left:8px">คลิกชื่อกองทุนเพื่อเจาะรายหน่วยบริการ / คลิกหัวคอลัมน์เพื่อจัดเรียง</span></h3>'+
+    '<h3>&#9201;&#65039; จังหวะการเบิกจ่ายกองทุน PP ('+D.svcs.length+' รายการ) ปีงบ 69 <span style="font-size:11px;font-weight:normal;color:var(--mut);margin-left:8px">คลิกชื่อกองทุนเพื่อเจาะรายหน่วยบริการ / คลิกหัวคอลัมน์เพื่อจัดเรียง</span></h3>'+
     '<div class="hint" id="ppfs-pace-sub" style="margin-bottom:8px"></div>'+
+    (D.svcs.indexOf('(ยังไม่ระบุกิจกรรมหลัก — รอยืนยันจาก สปสช.)')>=0?'<div class="hint" style="margin-bottom:8px;color:var(--warn)">&#9888;&#65039; แถว <b>(ยังไม่ระบุกลุ่ม)</b> = บริการที่ต้นทาง สปสช. ยังไม่กำกับกิจกรรมหลักมา (คัดกรองปัจจัยเสี่ยงสุขภาพกาย/จิต, ชุดตรวจ HIV ด้วยตนเอง, ชุดคัดกรอง NCD) รวม 12.47 ลบ. 3 ปี &mdash; นับรวมในยอดทั้งหมดแล้ว แต่ยังไม่จัดเข้ากองทุนใดเพื่อเลี่ยงการเดาผิดกลุ่ม</div>':'')+
     '<div id="ppfs-pace" style="overflow-x:auto"></div></div>'+
     '<div class="card" style="margin-bottom:12px">'+
     '<h3>&#128506;&#65039; จังหวะรายจังหวัด &times; Top 12 กองทุน <span style="font-size:11px;font-weight:normal;color:var(--mut);margin-left:8px">เบิกจ่าย(บาท) ระดับเขตเสมอ · คลิกช่องเพื่อเจาะกองทุน+จังหวัดนั้น</span></h3>'+
@@ -3476,7 +3477,7 @@ function ppfsRenderHeatmap(){
   const s68=Array.from({length:P},()=>new Array(order.length).fill(0));
   const s69=Array.from({length:P},()=>new Array(order.length).fill(0));
   D.hosp.forEach(h=>{order.forEach((si,ci)=>{const d=h.d[String(si)];if(!d)return;s68[h.p][ci]+=d[5];s69[h.p][ci]+=d[8];});});
-  const shortLbl=si=>{const s=(D.svc_short&&D.svc_short[si])||D.svcs[si];const mm=s.match(/^[\d.]+/);return mm?mm[0].replace(/\.$/,''):s.slice(0,4);};
+  const shortLbl=si=>{const s=(D.svc_short&&D.svc_short[si])||D.svcs[si];const mm=s.match(/^[\d.]+/);return mm?mm[0].replace(/\.$/,''):'รอระบุ';};
   const cell=(a68,a69,click)=>{
     const on=click?' onclick="'+click+'"':'';
     if(a68<10000)return '<td'+on+' style="text-align:center;color:var(--mut)'+(click?';cursor:pointer':'')+'">–</td>';
