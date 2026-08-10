@@ -126,6 +126,8 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
 .mtx tr.tot td{font-weight:700;background:#0b1220}
 .mtx td.s.lnk{cursor:pointer;color:#7dd3fc;text-decoration:underline}
 .mtx td.s.lnk:hover{background:var(--accent);color:#08303a}
+.mtx th.lnk{cursor:pointer;color:#7dd3fc;text-decoration:underline}
+.mtx th.lnk:hover{color:var(--accent)}
 .heatwrap{overflow-x:auto}.heat td{text-align:center;font-size:11px;padding:4px 6px;border:1px solid var(--bg)}
 .heat th{font-size:11px;white-space:nowrap}.heat td.name{text-align:left;white-space:nowrap;color:var(--ink)}
 .med{height:290px}.tall{height:320px}
@@ -1190,7 +1192,10 @@ let rfFYears=null;   // Set<yr> | null=ทั้งหมด
 let rfFProvs=null;   // Set<provName ต้นทาง> | null
 let rfSelSrc=-1;     // src index | -1 ทั้งหมด
 let rfMeasure='c';   // c=ครั้ง rw=SumAdjRW b=บาท
-let rfMxDrill=-1;    // matrix drill: src index | -1
+let rfMxMode='top';  // matrix drill mode: 'top' | 'src' | 'dest'
+let rfMxDrillIdx=-1; // matrix drill: src index (mode='src') หรือ dest index (mode='dest')
+let rfMxSort={col:'tot',dir:'desc'}; // col: 'tot' | 'name' — ใช้เฉพาะตอน drill (แถว=โรค)
+let rfMxSearch='';   // ค้นหาชื่อ/รหัสโรค — ใช้เฉพาะตอน drill
 let rfDestSort={col:'cnt',dir:'desc'};
 let rfPdxSort={col:'cnt',dir:'desc'},rfPdxPage=0;
 const RF_PGSZ=20;
@@ -1296,8 +1301,8 @@ function rfToggleProv(idx){
   rfPdxPage=0;rfApply();
 }
 function rfSetM(m){rfMeasure=m;['c','rw','b'].forEach(k=>document.getElementById('rf-m-'+k)?.classList.toggle('on',k===m));rfApply();}
-function rfSetSrc(v){rfSelSrc=parseInt(v);rfMxDrill=-1;rfPdxPage=0;rfApply();}
-function rfReset(){rfFYears=null;rfFProvs=null;rfSelSrc=-1;rfMxDrill=-1;rfMeasure='c';rfPdxPage=0;
+function rfSetSrc(v){rfSelSrc=parseInt(v);rfMxMode='top';rfMxDrillIdx=-1;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfPdxPage=0;rfApply();}
+function rfReset(){rfFYears=null;rfFProvs=null;rfSelSrc=-1;rfMxMode='top';rfMxDrillIdx=-1;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfMeasure='c';rfPdxPage=0;
   const D=RF_DATA;const s=document.getElementById('rf-src');if(s)s.value='-1';
   document.getElementById('rf-yr-all')?.classList.add('on');D.years.forEach(y=>document.getElementById('rf-yr-'+y)?.classList.add('on'));
   document.getElementById('rf-pv-all')?.classList.add('on');D.provinces.forEach((p,i)=>document.getElementById('rf-pv-'+i)?.classList.add('on'));
@@ -1403,49 +1408,90 @@ function rfRenderProvChart(){
 }
 
 function rfMxVal(r){return rfMeasure==='c'?1:rfMeasure==='b'?r[RFI.b]:r[RFI.a];}
-function rfDrill(si){rfMxDrill=si;rfRenderMatrix(rfRows(true));}
-function rfMxBack(){rfMxDrill=-1;rfRenderMatrix(rfRows(true));}
+function rfDrillSrc(si){rfMxMode='src';rfMxDrillIdx=si;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfRenderMatrix(rfRows(true));}
+function rfDrillDest(di){rfMxMode='dest';rfMxDrillIdx=di;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfRenderMatrix(rfRows(true));}
+function rfMxBack(){rfMxMode='top';rfMxDrillIdx=-1;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfRenderMatrix(rfRows(true));}
+function rfMxSetSort(col,dir){rfMxSort={col,dir};rfRenderMatrix(rfRows(true));}
+function rfMxSetSearch(v){
+  rfMxSearch=v;
+  const prev=document.getElementById('rf-mx-search');const pos=prev?prev.selectionStart:null;
+  rfRenderMatrix(rfRows(true));
+  const cur=document.getElementById('rf-mx-search');
+  if(cur){cur.focus();if(pos!==null)cur.setSelectionRange(pos,pos);}
+}
 
 function rfRenderMatrix(rows){
   const el=document.getElementById('rf-mx'),sub=document.getElementById('rf-mx-sub'),title=document.getElementById('rf-mx-title');
   if(!el)return;
-  const D=RF_DATA;const drill=rfMxDrill>=0;
+  const D=RF_DATA;const mode=rfMxMode;
   const yrs=rfFYears?D.years.filter(y=>rfFYears.has(y)):D.years;
   const acc={},rowTot={},colTot={};let grand=0;
   rows.forEach(r=>{
-    if(drill&&r[RFI.s]!==rfMxDrill)return;
-    const rk=drill?r[RFI.x]:r[RFI.s];
-    const di=r[RFI.d],y=r[RFI.y],v=rfMxVal(r);
-    ((acc[rk]=acc[rk]||{})[di]=acc[rk][di]||{})[y]=(acc[rk][di][y]||0)+v;
+    if(mode==='src'&&r[RFI.s]!==rfMxDrillIdx)return;
+    if(mode==='dest'&&r[RFI.d]!==rfMxDrillIdx)return;
+    const rk=mode==='top'?r[RFI.s]:r[RFI.x];
+    const ck=mode==='dest'?r[RFI.s]:r[RFI.d];
+    const y=r[RFI.y],v=rfMxVal(r);
+    ((acc[rk]=acc[rk]||{})[ck]=acc[rk][ck]||{})[y]=(acc[rk][ck][y]||0)+v;
     rowTot[rk]=(rowTot[rk]||0)+v;
-    (colTot[di]=colTot[di]||{})[y]=(colTot[di][y]||0)+v;grand+=v;});
-  let rks=Object.keys(acc).sort((a,b)=>rowTot[b]-rowTot[a]);
+    (colTot[ck]=colTot[ck]||{})[y]=(colTot[ck][y]||0)+v;grand+=v;});
+  const rkName=rk=>mode==='top'?(D.srcs[+rk]?.n||''):(D.pdx_names[rk]||rk);
+  let rks=Object.keys(acc);
+  if(mode!=='top'&&rfMxSearch.trim()){
+    const q=rfMxSearch.trim().toLowerCase();
+    rks=rks.filter(rk=>rk.toLowerCase().includes(q)||(D.pdx_names[rk]||'').toLowerCase().includes(q));
+  }
+  if(mode!=='top'&&rfMxSort.col==='name'){
+    rks.sort((a,b)=>rkName(a).localeCompare(rkName(b),'th')*(rfMxSort.dir==='desc'?-1:1));
+  }else{
+    const dir=rfMxSort.dir==='asc'?1:-1;
+    rks.sort((a,b)=>(rowTot[a]-rowTot[b])*dir);
+  }
   const nRow=rks.length,CAP=200,capped=nRow>CAP;if(capped)rks=rks.slice(0,CAP);
-  const dsts=Object.keys(colTot).map(Number).sort((a,b)=>{
+  const cks=Object.keys(colTot).map(Number).sort((a,b)=>{
     const sa=yrs.reduce((s,y)=>s+(colTot[a][y]||0),0),sb=yrs.reduce((s,y)=>s+(colTot[b][y]||0),0);return sb-sa;});
-  title.innerHTML=drill?'&#128229; ต้นทาง: '+(D.srcs[rfMxDrill]?.n||'')+' — รายโรค (PDX) &nbsp;<span class="navbtn home" style="display:inline-block;font-size:12px" onclick="rfMxBack()">&#8592; กลับทุกโรงพยาบาล</span>'
-    :'&#128290; Matrix การส่งต่อ (ต้นทาง × หน่วยที่รับรักษา) <span style="font-size:11px;font-weight:normal;color:var(--mut)">คลิกชื่อ รพ.ต้นทาง เพื่อเจาะรายโรค</span>';
-  sub.textContent='แสดง '+RF_M_LBL[rfMeasure]+' · '+yrs.length+' ปีงบ · '+(drill?nRow+' โรค':nRow+' รพ.ต้นทาง')+' × '+dsts.length+' ปลายทาง'+(capped?' · (แสดง 200 แถวแรก)':'');
-  let mx=0;rks.forEach(rk=>dsts.forEach(di=>yrs.forEach(y=>{const v=acc[rk]?.[di]?.[y]||0;if(v>mx)mx=v;})));
+  const colName=ck=>mode==='dest'?(D.srcs[ck]?.n||''):(D.dests[ck]?.n||'');
+  title.innerHTML=mode==='top'
+    ?'&#128290; Matrix การส่งต่อ (ต้นทาง × หน่วยที่รับรักษา) <span style="font-size:11px;font-weight:normal;color:var(--mut)">คลิกชื่อ รพ.ต้นทาง หรือ รพ.รับรักษา เพื่อเจาะรายโรค</span>'
+    :mode==='src'
+    ?'&#128229; ต้นทาง: '+(D.srcs[rfMxDrillIdx]?.n||'')+' — รายโรค (PDX) &nbsp;<span class="navbtn home" style="display:inline-block;font-size:12px" onclick="rfMxBack()">&#8592; กลับ Matrix</span>'
+    :'&#127973; รับรักษา: '+(D.dests[rfMxDrillIdx]?.n||'')+' — รายโรค (PDX) &nbsp;<span class="navbtn home" style="display:inline-block;font-size:12px" onclick="rfMxBack()">&#8592; กลับ Matrix</span>';
+  let subHtml='แสดง '+RF_M_LBL[rfMeasure]+' · '+yrs.length+' ปีงบ · '+(mode==='top'?fmt(nRow)+' รพ.ต้นทาง':fmt(nRow)+' โรค')+' × '+cks.length+' '+(mode==='dest'?'ต้นทาง':'ปลายทาง')+(capped?' · (แสดง 200 แถวแรก)':'');
+  if(mode!=='top'){
+    subHtml+='<div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
+      '<input type="text" id="rf-mx-search" placeholder="&#128269; ค้นหาชื่อ/รหัสโรค…" value="'+rfMxSearch.replace(/"/g,'&quot;')+'" oninput="rfMxSetSearch(this.value)" style="background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-family:inherit;font-size:12px;min-width:180px">'+
+      '<span style="font-size:11px;color:var(--mut);margin-left:4px">เรียง:</span>'+
+      '<span class="pgsz-btn'+(rfMxSort.col==='tot'&&rfMxSort.dir==='desc'?' on':'')+'" onclick="rfMxSetSort(\'tot\',\'desc\')">รวม มาก&#8594;น้อย</span>'+
+      '<span class="pgsz-btn'+(rfMxSort.col==='tot'&&rfMxSort.dir==='asc'?' on':'')+'" onclick="rfMxSetSort(\'tot\',\'asc\')">รวม น้อย&#8594;มาก</span>'+
+      '<span class="pgsz-btn'+(rfMxSort.col==='name'&&rfMxSort.dir==='asc'?' on':'')+'" onclick="rfMxSetSort(\'name\',\'asc\')">ชื่อโรค A&#8594;Z</span>'+
+      '<span class="pgsz-btn'+(rfMxSort.col==='name'&&rfMxSort.dir==='desc'?' on':'')+'" onclick="rfMxSetSort(\'name\',\'desc\')">ชื่อโรค Z&#8594;A</span>'+
+    '</div>';
+  }
+  sub.innerHTML=subHtml;
+  let mx=0;rks.forEach(rk=>cks.forEach(ck=>yrs.forEach(y=>{const v=acc[rk]?.[ck]?.[y]||0;if(v>mx)mx=v;})));
   const multi=yrs.length>1;
+  const rowColLabel=mode==='top'?'ต้นทาง \\ รับรักษา':(mode==='dest'?'โรค (PDX) \\ ต้นทาง':'โรค (PDX) \\ รับรักษา');
   let h='<table class="mtx">';
   if(multi){
-    h+='<tr class="h"><th class="s" rowspan="2">'+(drill?'โรค (PDX) \\ รับรักษา':'ต้นทาง \\ รับรักษา')+'</th>';
-    dsts.forEach(di=>{h+='<th colspan="'+yrs.length+'">'+(''+D.dests[di].n).slice(0,22)+'</th>';});
+    h+='<tr class="h"><th class="s" rowspan="2">'+rowColLabel+'</th>';
+    cks.forEach(ck=>{const nm=(''+colName(ck)).slice(0,22);
+      h+=mode==='top'?'<th class="lnk" colspan="'+yrs.length+'" title="'+colName(ck).replace(/"/g,'')+'" onclick="rfDrillDest('+ck+')">'+nm+'</th>':'<th colspan="'+yrs.length+'">'+nm+'</th>';});
     h+='<th rowspan="2">รวม</th></tr><tr class="h2">';
-    dsts.forEach(()=>{yrs.forEach(y=>{h+='<th>'+y+'</th>';});});h+='</tr>';
+    cks.forEach(()=>{yrs.forEach(y=>{h+='<th>'+y+'</th>';});});h+='</tr>';
   }else{
-    h+='<tr class="h"><th class="s">'+(drill?'โรค (PDX) \\ รับรักษา':'ต้นทาง \\ รับรักษา')+'</th>';
-    dsts.forEach(di=>{h+='<th>'+(''+D.dests[di].n).slice(0,22)+'</th>';});h+='<th>รวม</th></tr>';
+    h+='<tr class="h"><th class="s">'+rowColLabel+'</th>';
+    cks.forEach(ck=>{const nm=(''+colName(ck)).slice(0,22);
+      h+=mode==='top'?'<th class="lnk" title="'+colName(ck).replace(/"/g,'')+'" onclick="rfDrillDest('+ck+')">'+nm+'</th>':'<th>'+nm+'</th>';});
+    h+='<th>รวม</th></tr>';
   }
   rks.forEach(rk=>{let lbl,tip,click='';
-    if(drill){const nm=D.pdx_names[rk]||'';lbl=rk+' '+(''+nm).slice(0,26);tip=rk+' '+nm;}
-    else{const s=D.srcs[+rk];lbl=(''+s.n).slice(0,34);tip=s.n;click=' onclick="rfDrill('+rk+')"';}
-    h+='<tr><td class="s'+(drill?'':' lnk')+'" title="'+tip.replace(/"/g,'')+'"'+click+'>'+lbl+'</td>';
-    dsts.forEach(di=>{yrs.forEach(y=>{const v=acc[rk]?.[di]?.[y]||0;const a=mx?v/mx:0;
+    if(mode==='top'){const s=D.srcs[+rk];lbl=(''+s.n).slice(0,34);tip=s.n;click=' onclick="rfDrillSrc('+rk+')"';}
+    else{const nm=D.pdx_names[rk]||'';lbl=rk+' '+(''+nm).slice(0,26);tip=rk+' '+nm;}
+    h+='<tr><td class="s'+(mode==='top'?' lnk':'')+'" title="'+tip.replace(/"/g,'')+'"'+click+'>'+lbl+'</td>';
+    cks.forEach(ck=>{yrs.forEach(y=>{const v=acc[rk]?.[ck]?.[y]||0;const a=mx?v/mx:0;
       h+='<td style="background:'+(v?'rgba(56,189,248,'+(0.1+a*0.7)+')':'transparent')+'">'+rfV(v)+'</td>';});});
     h+='<td style="font-weight:700">'+rfV(rowTot[rk])+'</td></tr>';});
-  h+='<tr class="tot"><td class="s">รวม</td>';dsts.forEach(di=>{yrs.forEach(y=>{h+='<td>'+rfV(colTot[di][y]||0)+'</td>';});});h+='<td>'+rfV(grand)+'</td></tr>';
+  h+='<tr class="tot"><td class="s">รวม</td>';cks.forEach(ck=>{yrs.forEach(y=>{h+='<td>'+rfV(colTot[ck][y]||0)+'</td>';});});h+='<td>'+rfV(grand)+'</td></tr>';
   el.innerHTML=h+'</table>';
   const _h1=el.querySelector('tr.h'),_h2=el.querySelector('tr.h2');
   if(_h1&&_h2){const t=_h1.offsetHeight||22;_h2.querySelectorAll('th').forEach(e=>{e.style.top=t+'px';});}
