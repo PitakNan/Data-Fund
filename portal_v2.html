@@ -1196,6 +1196,7 @@ let rfMxMode='top';  // matrix drill mode: 'top' | 'src' | 'dest'
 let rfMxDrillIdx=-1; // matrix drill: src index (mode='src') หรือ dest index (mode='dest')
 let rfMxSort={col:'tot',dir:'desc'}; // col: 'tot' | 'name' — ใช้เฉพาะตอน drill (แถว=โรค)
 let rfMxSearch='';   // ค้นหาชื่อ/รหัสโรค — ใช้เฉพาะตอน drill
+let rfMxYears=null;  // Set<yr> | null=ทั้งหมด — ตัวกรองปีงบเฉพาะตารางที่ drill (ไม่กระทบ KPI/กราฟอื่น)
 let rfDestSort={col:'cnt',dir:'desc'};
 let rfPdxSort={col:'cnt',dir:'desc'},rfPdxPage=0;
 const RF_PGSZ=20;
@@ -1301,8 +1302,8 @@ function rfToggleProv(idx){
   rfPdxPage=0;rfApply();
 }
 function rfSetM(m){rfMeasure=m;['c','rw','b'].forEach(k=>document.getElementById('rf-m-'+k)?.classList.toggle('on',k===m));rfApply();}
-function rfSetSrc(v){rfSelSrc=parseInt(v);rfMxMode='top';rfMxDrillIdx=-1;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfPdxPage=0;rfApply();}
-function rfReset(){rfFYears=null;rfFProvs=null;rfSelSrc=-1;rfMxMode='top';rfMxDrillIdx=-1;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfMeasure='c';rfPdxPage=0;
+function rfSetSrc(v){rfSelSrc=parseInt(v);rfMxMode='top';rfMxDrillIdx=-1;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfMxYears=null;rfPdxPage=0;rfApply();}
+function rfReset(){rfFYears=null;rfFProvs=null;rfSelSrc=-1;rfMxMode='top';rfMxDrillIdx=-1;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfMxYears=null;rfMeasure='c';rfPdxPage=0;
   const D=RF_DATA;const s=document.getElementById('rf-src');if(s)s.value='-1';
   document.getElementById('rf-yr-all')?.classList.add('on');D.years.forEach(y=>document.getElementById('rf-yr-'+y)?.classList.add('on'));
   document.getElementById('rf-pv-all')?.classList.add('on');D.provinces.forEach((p,i)=>document.getElementById('rf-pv-'+i)?.classList.add('on'));
@@ -1408,10 +1409,18 @@ function rfRenderProvChart(){
 }
 
 function rfMxVal(r){return rfMeasure==='c'?1:rfMeasure==='b'?r[RFI.b]:r[RFI.a];}
-function rfDrillSrc(si){rfMxMode='src';rfMxDrillIdx=si;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfRenderMatrix(rfRows(true));}
-function rfDrillDest(di){rfMxMode='dest';rfMxDrillIdx=di;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfRenderMatrix(rfRows(true));}
-function rfMxBack(){rfMxMode='top';rfMxDrillIdx=-1;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfRenderMatrix(rfRows(true));}
+function rfDrillSrc(si){rfMxMode='src';rfMxDrillIdx=si;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfMxYears=null;rfRenderMatrix(rfRows(true));}
+function rfDrillDest(di){rfMxMode='dest';rfMxDrillIdx=di;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfMxYears=null;rfRenderMatrix(rfRows(true));}
+function rfMxBack(){rfMxMode='top';rfMxDrillIdx=-1;rfMxSearch='';rfMxSort={col:'tot',dir:'desc'};rfMxYears=null;rfRenderMatrix(rfRows(true));}
 function rfMxSetSort(col,dir){rfMxSort={col,dir};rfRenderMatrix(rfRows(true));}
+function rfMxToggleYear(y){
+  const D=RF_DATA;const base=rfFYears?D.years.filter(yy=>rfFYears.has(yy)):D.years;
+  if(y===null){rfMxYears=null;}
+  else{if(!rfMxYears)rfMxYears=new Set(base);
+    if(rfMxYears.has(y)&&rfMxYears.size>1)rfMxYears.delete(y);else rfMxYears.add(y);
+    if(rfMxYears.size===base.length)rfMxYears=null;}
+  rfRenderMatrix(rfRows(true));
+}
 function rfMxSetSearch(v){
   rfMxSearch=v;
   const prev=document.getElementById('rf-mx-search');const pos=prev?prev.selectionStart:null;
@@ -1424,11 +1433,13 @@ function rfRenderMatrix(rows){
   const el=document.getElementById('rf-mx'),sub=document.getElementById('rf-mx-sub'),title=document.getElementById('rf-mx-title');
   if(!el)return;
   const D=RF_DATA;const mode=rfMxMode;
-  const yrs=rfFYears?D.years.filter(y=>rfFYears.has(y)):D.years;
+  let yrs=rfFYears?D.years.filter(y=>rfFYears.has(y)):D.years;
+  if(mode!=='top'&&rfMxYears)yrs=yrs.filter(y=>rfMxYears.has(y));
   const acc={},rowTot={},colTot={};let grand=0;
   rows.forEach(r=>{
     if(mode==='src'&&r[RFI.s]!==rfMxDrillIdx)return;
     if(mode==='dest'&&r[RFI.d]!==rfMxDrillIdx)return;
+    if(mode!=='top'&&rfMxYears&&!rfMxYears.has(r[RFI.y]))return;
     const rk=mode==='top'?r[RFI.s]:r[RFI.x];
     const ck=mode==='dest'?r[RFI.s]:r[RFI.d];
     const y=r[RFI.y],v=rfMxVal(r);
@@ -1458,6 +1469,12 @@ function rfRenderMatrix(rows){
     :'&#127973; รับรักษา: '+(D.dests[rfMxDrillIdx]?.n||'')+' — รายโรค (PDX) &nbsp;<span class="navbtn home" style="display:inline-block;font-size:12px" onclick="rfMxBack()">&#8592; กลับ Matrix</span>';
   let subHtml='แสดง '+RF_M_LBL[rfMeasure]+' · '+yrs.length+' ปีงบ · '+(mode==='top'?fmt(nRow)+' รพ.ต้นทาง':fmt(nRow)+' โรค')+' × '+cks.length+' '+(mode==='dest'?'ต้นทาง':'ปลายทาง')+(capped?' · (แสดง 200 แถวแรก)':'');
   if(mode!=='top'){
+    const yrBase=rfFYears?D.years.filter(y=>rfFYears.has(y)):D.years;
+    const yrBtns2='<span class="pgsz-btn'+(rfMxYears===null?' on':'')+'" onclick="rfMxToggleYear(null)">ทั้งหมด</span>'+
+      yrBase.map(y=>'<span class="pgsz-btn'+(rfMxYears===null||rfMxYears.has(y)?' on':'')+'" onclick="rfMxToggleYear(\''+y+'\')">ปีงบ '+y+'</span>').join('');
+    subHtml+='<div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
+      '<span style="font-size:11px;color:var(--mut);margin-right:4px">&#128197; ปีงบ (เฉพาะตารางนี้):</span>'+yrBtns2+
+    '</div>';
     subHtml+='<div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
       '<input type="text" id="rf-mx-search" placeholder="&#128269; ค้นหาชื่อ/รหัสโรค…" value="'+rfMxSearch.replace(/"/g,'&quot;')+'" oninput="rfMxSetSearch(this.value)" style="background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-family:inherit;font-size:12px;min-width:180px">'+
       '<span style="font-size:11px;color:var(--mut);margin-left:4px">เรียง:</span>'+
