@@ -485,9 +485,12 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
     <div class="tka-tab-bar">
       <button class="tka-tab-btn active" onclick="tkaSwitchTab(this,'tka-tab-pdx')">รายโรค (pdx)</button>
       <button class="tka-tab-btn" onclick="tkaSwitchTab(this,'tka-tab-hosp')">รายหน่วยบริการ</button>
+      <button class="tka-fold" id="tkaTblFold" style="margin-left:auto;align-self:center" onclick="tkaToggleTbl()">&#9656; ขยาย</button>
     </div>
+    <div id="tkaTblBody" style="display:none">
     <div id="tka-tab-pdx" class="tka-tab-pane active"><table><thead><tr><th>รหัส</th><th>คำวินิจฉัย</th><th style="text-align:right;color:var(--warn)">&lt;55</th><th style="text-align:right;color:#a78bfa">55-59</th><th style="text-align:right;color:var(--accent)">&#x2265;60</th><th style="width:180px">สัดส่วน</th></tr></thead><tbody id="tkaPdxTbody"></tbody></table><div class="fn">M17x = ข้อเข่าเสื่อม &middot; T84x = ภาวะแทรกซ้อนจากข้อเทียม &middot; นับ distinct PID</div></div>
     <div id="tka-tab-hosp" class="tka-tab-pane"><table><thead><tr><th id="tkaHospProvCol">จังหวัด</th><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right;color:var(--warn)">&lt;55</th><th style="text-align:right;color:#a78bfa">55-59</th><th style="text-align:right;color:var(--accent)">&#x2265;60</th><th style="width:150px">สัดส่วน</th></tr></thead><tbody id="tkaHospTbody"></tbody></table><div class="fn">นับ distinct PID per หน่วยบริการ</div></div>
+    </div>
   </div>
 </div>
 <div id="tkaQuotaWrap" style="padding:0 16px 16px">
@@ -2281,7 +2284,16 @@ function tkaRenderHosp(d,isAll){
   document.getElementById('tkaHospTbody').innerHTML=d.hospitals.map(h=>{const prov=HOSP_PROV[h.hosp]||'ทั้งหมด';const mdata=HOSP_MONTH_PDX[h.hosp]||{};let hLt55=0,hA5559=0,hGe60=0;Object.values(mdata).forEach(m=>{hLt55+=m.lt55;hA5559+=m.a5559||0;hGe60+=m.ge60||0;});return `<tr>${isAll?`<td>${HOSP_PROV[h.hosp]||'—'}</td>`:''}<td>${h.hosp}</td><td><span class="badge ${bmap[h.htype]||'b-o'}">${h.htype}</span></td><td class="td-r" style="color:var(--warn);font-weight:600">${hLt55||'-'}</td><td class="td-r" style="color:#a78bfa;font-weight:600">${hA5559||'-'}</td><td class="td-r" style="color:var(--accent);font-weight:600">${hGe60||'-'}</td><td><div class="ibar-wrap"><div class="ibar-track"><div class="ibar-fill" style="width:${(h.cases/max*100).toFixed(0)}%"></div></div><span style="font-family:monospace;font-size:10px;color:var(--mut);width:34px;text-align:right">${(h.cases/total*100).toFixed(1)}%</span></div></td></tr>`;}).join('');
 }
 
-function tkaSwitchTab(btn,id){document.querySelectorAll('.tka-tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tka-tab-pane').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById(id).classList.add('active');}
+/* ตารางรายโรค/รายหน่วยบริการ = ข้อมูลรายละเอียด ไม่ได้ดูทุกครั้ง → ยุบไว้เป็นค่าเริ่มต้น */
+let tkaTblOpen=false;
+function tkaToggleTbl(){
+  tkaTblOpen=!tkaTblOpen;
+  document.getElementById('tkaTblBody').style.display=tkaTblOpen?'':'none';
+  document.getElementById('tkaTblFold').innerHTML=tkaTblOpen?'&#9662; ยุบ':'&#9656; ขยาย';
+}
+function tkaSwitchTab(btn,id){
+  if(!tkaTblOpen)tkaToggleTbl();   // กดแท็บตอนยุบอยู่ = ตั้งใจจะดู → ขยายให้เลย
+document.querySelectorAll('.tka-tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tka-tab-pane').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById(id).classList.add('active');}
 
 /* ยอด "ส่งเคลมแล้ว" รายจังหวัด — ใช้เป็นฐานจัดสรรโควตาแทน PROV_DATA.total (ฐานผ่าตัด)
    เพราะโควตาถูกใช้เมื่อส่งเคลม ไม่ใช่เมื่อผ่าตัด (2026-08-03) */
