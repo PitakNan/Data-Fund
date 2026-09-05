@@ -492,7 +492,7 @@ th{color:var(--mut);font-weight:500}td.n{text-align:right;font-variant-numeric:t
 </div>
 <div id="tkaQuotaWrap" style="padding:0 16px 16px">
   <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;margin-top:12px">
-    <div class="card-hd" style="cursor:pointer" onclick="tkaToggleQuota()"><div><span class="card-title">&#128202; การจัดสรรโควต้าคงเหลือตามสัดส่วน</span><div style="font-size:10px;color:var(--mut);margin-top:2px">เป้ารายจังหวัดที่กำหนดไว้ตั้งแต่ต้น (ฐานอ้างอิง) · คลิกชื่อจังหวัดเพื่อดูรายหน่วยบริการ</div></div><div style="display:flex;gap:8px;align-items:center"><div class="quota-tog" onclick="event.stopPropagation()"><button class="quota-tog-btn on" id="qtog1" onclick="tkaSetQuotaMode(1)">จัดสรร 1</button><button class="quota-tog-btn" id="qtog2" onclick="tkaSetQuotaMode(2)">จัดสรร 2</button></div><button class="tka-fold" id="tkaQuotaFold" onclick="event.stopPropagation();tkaToggleQuota()">&#9656; ขยาย</button></div></div>
+    <div class="card-hd" style="cursor:pointer" onclick="tkaToggleQuota()"><div><span class="card-title">&#128202; การจัดสรรโควต้าคงเหลือตามสัดส่วน</span><div style="font-size:10px;color:var(--mut);margin-top:2px">เป้ารายจังหวัดที่กำหนดไว้ตั้งแต่ต้น (ฐานอ้างอิง) · คลิกชื่อจังหวัดเพื่อดูรายหน่วยบริการ</div></div><div style="display:flex;gap:8px;align-items:center"><div class="quota-tog" onclick="event.stopPropagation()"><button class="quota-tog-btn on" id="qtog1" onclick="tkaSetQuotaMode(1)">จัดสรร 1</button><button class="quota-tog-btn" id="qtog2" style="display:none" onclick="tkaSetQuotaMode(2)">จัดสรร 2</button></div><button class="tka-fold" id="tkaQuotaFold" onclick="event.stopPropagation();tkaToggleQuota()">&#9656; ขยาย</button></div></div>
     <div id="tkaQuotaContent" style="padding:8px 12px 12px;overflow-x:auto;display:none"></div>
   </div>
 </div>
@@ -2286,6 +2286,9 @@ function tkaSwitchTab(btn,id){document.querySelectorAll('.tka-tab-btn').forEach(
 /* ยอด "ส่งเคลมแล้ว" รายจังหวัด — ใช้เป็นฐานจัดสรรโควตาแทน PROV_DATA.total (ฐานผ่าตัด)
    เพราะโควตาถูกใช้เมื่อส่งเคลม ไม่ใช่เมื่อผ่าตัด (2026-08-03) */
 const TKA_CLAIMED=Object.fromEntries(TKA_CLAIM.prov.map(r=>[r.p,r.claimed]));
+// ยอดส่งเคลมรายหน่วยบริการใต้แต่ละจังหวัด (จังหวัด=hmain ของผู้ป่วย · หน่วยบริการ=รพ.ที่ผ่าตัด)
+// ผลรวมรายแห่ง = TKA_CLAIMED[จังหวัด] เสมอ — สร้างจาก extract_tka_claim.py (claim_data.json.hosp_prov)
+const TKA_CLAIM_HOSP={"เชียงราย":[{"h":"รพ.เชียงรายประชานุเคราะห์","ht":"รพศ.","n":356},{"h":"รพ.แม่จัน","ht":"รพช.","n":103},{"h":"รพ.พาน","ht":"รพช.","n":57},{"h":"รพ.แม่สาย","ht":"รพท.","n":43},{"h":"รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง","ht":"รพ.มหาวิทยาลัย","n":31},{"h":"รพ.พะเยา","ht":"รพท.","n":3},{"h":"รพ.มหาราชนครเชียงใหม่ มช.","ht":"รพ.มหาวิทยาลัย","n":2},{"h":"รพ.นครพิงค์","ht":"รพศ.","n":1},{"h":"รพ.สันทราย","ht":"รพท.","n":1},{"h":"รพ.เชียงคำ","ht":"รพท.","n":1}],"เชียงใหม่":[{"h":"รพ.นครพิงค์","ht":"รพศ.","n":206},{"h":"รพ.สันป่าตอง","ht":"รพท.","n":108},{"h":"รพ.ฝาง","ht":"รพท.","n":99},{"h":"รพ.จอมทอง","ht":"รพท.","n":84},{"h":"รพ.สันทราย","ht":"รพท.","n":81},{"h":"รพ.ลำพูน","ht":"รพท.","n":16},{"h":"รพ.มหาราชนครเชียงใหม่ มช.","ht":"รพ.มหาวิทยาลัย","n":12},{"h":"รพ.เชียงใหม่ใกล้หมอ","ht":"รพ.เอกชน","n":5},{"h":"รพ.ศิริเวช ลำพูน","ht":"รพ.เอกชน","n":2}],"ลำปาง":[{"h":"รพ.ลำปาง","ht":"รพศ.","n":340},{"h":"รพ.พะเยา","ht":"รพท.","n":2},{"h":"รพ.ลำพูน","ht":"รพท.","n":1}],"น่าน":[{"h":"รพ.น่าน","ht":"รพท.","n":200},{"h":"รพร.ปัว","ht":"รพช.","n":83},{"h":"รพ.เวียงสา","ht":"รพช.","n":39}],"ลำพูน":[{"h":"รพ.ลำพูน","ht":"รพท.","n":272},{"h":"รพ.ศิริเวช ลำพูน","ht":"รพ.เอกชน","n":10},{"h":"รพ.นครพิงค์","ht":"รพศ.","n":3},{"h":"รพ.มหาราชนครเชียงใหม่ มช.","ht":"รพ.มหาวิทยาลัย","n":2}],"พะเยา":[{"h":"รพ.พะเยา","ht":"รพท.","n":164},{"h":"รพ.เชียงคำ","ht":"รพท.","n":91},{"h":"รพ.เชียงรายประชานุเคราะห์","ht":"รพศ.","n":6},{"h":"รพ.มหาวิทยาลัยพะเยา","ht":"รพ.มหาวิทยาลัย","n":4}],"แพร่":[{"h":"รพ.แพร่","ht":"รพท.","n":196},{"h":"รพ.สูงเม่น","ht":"รพช.","n":57}],"แม่ฮ่องสอน":[{"h":"รพ.ศรีสังวาลย์","ht":"รพท.","n":35},{"h":"รพ.นครพิงค์","ht":"รพศ.","n":5},{"h":"รพ.จอมทอง","ht":"รพท.","n":1}]};
 function tkaComputeProvAllocs(){
   const target=TKA_TARGET_YEAR,remaining=target-TKA_CLAIM.total;
   // จำนวน TKA ปีงบ 68 รายจังหวัด (ใช้คำนวณสัดส่วนโควตา — เดิมมาจาก ME blob ที่ถูกถอดออก)
@@ -2340,45 +2343,40 @@ function tkaSetQuotaMode(m){
 }
 
 function tkaShowQuotaProv(prov){
-  const d=PROV_DATA[prov];if(!d)return;
-  const provTotal=d.total,mode=tkaQuotaMode;
+  if(!PROV_DATA[prov])return;
+  const mode=tkaQuotaMode;
   const {allocs}=tkaComputeProvAllocs();
   const pa=allocs.find(a=>a.prov===prov);if(!pa)return;
   const c4Prov=pa.c4,c5Prov=pa.c5;
-  // distribute among hospitals with rounding correction
-  const hosps=d.hospitals||[];
+  // ฐานรายหน่วยบริการ = ยอดส่งเคลมจริงรายแห่ง (ไม่ใช่ฐานผ่าตัด) เพื่อให้แถวรายแห่งรวมได้เท่าแถวจังหวัด
+  const hosps=(TKA_CLAIM_HOSP[prov]||[]).map(r=>({hosp:r.h,htype:r.ht,cases:r.n}));
+  const claimProv=hosps.reduce((s0,h)=>s0+h.cases,0);
   const hospBase=mode===1?c5Prov:c4Prov;
-  let hc4arr,hc5arr;
-  if(mode===1){
-    const hAqs=hosps.map(h=>Math.round(hospBase*h.cases/provTotal));
-    const diffH=hospBase-hAqs.reduce((s,v)=>s+v,0);
-    if(diffH!==0&&hAqs.length){const mi=hAqs.indexOf(Math.max(...hAqs));hAqs[mi]+=diffH;}
-    hc4arr=hosps.map((h,i)=>hAqs[i]-h.cases);
-    hc5arr=hAqs;
-  }else{
-    const hAls=hosps.map(h=>Math.round(hospBase*h.cases/provTotal));
-    const diffH=hospBase-hAls.reduce((s,v)=>s+v,0);
-    if(diffH!==0&&hAls.length){const mi=hAls.indexOf(Math.max(...hAls));hAls[mi]+=diffH;}
-    hc4arr=hAls;
-    hc5arr=hosps.map((h,i)=>h.cases+hAls[i]);
-  }
+  const share=h=>claimProv>0?Math.round(hospBase*h.cases/claimProv):0;
+  const hBase=hosps.map(share);
+  const diffH=hospBase-hBase.reduce((s0,v)=>s0+v,0);
+  if(diffH!==0&&hBase.length){const mi=hBase.indexOf(Math.max(...hBase));hBase[mi]+=diffH;}
+  const hc4arr=mode===1?hosps.map((h,i)=>hBase[i]-h.cases):hBase;
+  const hc5arr=mode===1?hBase:hosps.map((h,i)=>h.cases+hBase[i]);
   const s2html=mode===1?`ยอดจัดสรร &nbsp;<strong style="color:${c4Prov<0?'var(--danger)':'var(--warn)'};font-size:14px">${c4Prov<0?'−':''}${Math.abs(c4Prov).toLocaleString()}</strong> ราย`:`ยอดจัดสรร &nbsp;<strong style="color:var(--warn);font-size:14px">${c4Prov.toLocaleString()}</strong> ราย`;
   const c4lbl=`<span style="color:var(--warn)">ยอดจัดสรร</span>`,c5lbl=`<span style="color:var(--accent)">เป้ารวมทั้งปี</span>`;
-  const sc4foot=mode===1?(c4Prov<0?`<span style="color:var(--danger)">−${Math.abs(c4Prov).toLocaleString()}</span>`:`<span style="color:var(--warn)">${c4Prov.toLocaleString()}</span>`):`<span style="color:var(--warn)">${c4Prov.toLocaleString()}</span>`;
-  const fnNote=`จัดสรร ${mode} · แบ่งรายรพ. ตามสัดส่วนผลงาน ก.ย.68−เม.ย.69 · เศษจากการปัดเศษรวมที่รพ.ที่ได้รับมากที่สุด`;
+  const sc4foot=(mode===1&&c4Prov<0)?`<span style="color:var(--danger)">−${Math.abs(c4Prov).toLocaleString()}</span>`:`<span style="color:var(--warn)">${c4Prov.toLocaleString()}</span>`;
+  const nOver=hc4arr.filter(v=>v<0).length;
+  const fnNote=`จัดสรร ${mode} · แบ่งรายหน่วยบริการตามสัดส่วน<b>ยอดส่งเคลมจริง</b> (16 ก.ย.68−${TKA_CLAIM.cut}) · เศษจากการปัดเศษรวมที่ รพ. ที่ได้รับมากที่สุด`
+    +(mode===1?` · <span style="color:var(--danger)">เลขติดลบสีแดง = เคลมเกินโควตาที่ได้รับแล้ว</span>${nOver?` (${nOver} แห่ง)`:''}`:'');
   document.getElementById('tkaQMTitle').textContent='📊 '+prov+' — รายหน่วยบริการ';
-  document.getElementById('tkaQMSub').textContent='การจัดสรรโควต้าคงเหลือ (พ.ค.−ก.ย. 2569)';
-  document.getElementById('tkaQMSum').innerHTML=`<span>ผลงานจังหวัด &nbsp;<strong style="color:var(--accent);font-size:14px">${provTotal.toLocaleString()}</strong> ราย</span><span>${s2html}</span><span>เป้ารวมทั้งปี &nbsp;<strong style="color:var(--ink);font-size:14px">${c5Prov.toLocaleString()}</strong> ราย</span>`;
+  document.getElementById('tkaQMSub').textContent=`การจัดสรรโควต้าคงเหลือ · ฐานส่งเคลม 16 ก.ย.68 – ${TKA_CLAIM.cut}`;
+  document.getElementById('tkaQMSum').innerHTML=`<span>ส่งเคลมแล้ว &nbsp;<strong style="color:var(--accent);font-size:14px">${claimProv.toLocaleString()}</strong> ราย</span><span>${s2html}</span><span>เป้ารวมทั้งปี &nbsp;<strong style="color:var(--ink);font-size:14px">${c5Prov.toLocaleString()}</strong> ราย</span>`;
   const bmap={'รพศ.':'b-s','รพท.':'b-m','รพช./รพร.':'b-c','รพ.อื่น':'b-o'};
   const maxC=hosps[0]?.cases||1;
   const rows=hosps.map((h,i)=>{
-    const pct=(h.cases/provTotal*100).toFixed(1),barW=(h.cases/maxC*100).toFixed(0);
+    const pct=claimProv>0?(h.cases/claimProv*100).toFixed(1):'0.0',barW=(h.cases/maxC*100).toFixed(0);
     const hc4=hc4arr[i],hc5=hc5arr[i];
     const hc4html=mode===1?`<td class="td-r" style="color:${hc4<0?'var(--danger)':'var(--warn)'};font-weight:700">${hc4<0?'−':''}${Math.abs(hc4).toLocaleString()}</td>`:`<td class="td-r" style="color:var(--warn);font-weight:700">${hc4.toLocaleString()}</td>`;
     const hc5html=`<td class="td-r" style="color:var(--accent)">${hc5.toLocaleString()}</td>`;
     return `<tr><td>${h.hosp}</td><td><span class="badge ${bmap[h.htype]||'b-o'}">${h.htype}</span></td><td class="td-r">${h.cases.toLocaleString()}</td><td><div class="ibar-wrap"><div class="ibar-track"><div class="ibar-fill" style="width:${barW}%"></div></div><span style="font-family:monospace;font-size:10px;color:var(--mut);width:38px;text-align:right">${pct}%</span></div></td>${hc4html}${hc5html}</tr>`;
   }).join('');
-  document.getElementById('tkaQMContent').innerHTML=`<table><thead><tr><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right">ผลงาน</th><th style="min-width:120px">สัดส่วน</th><th style="text-align:right">${c4lbl}</th><th style="text-align:right">${c5lbl}</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="border-top:2px solid var(--line);font-weight:700"><td colspan="2">รวม</td><td class="td-r">${provTotal.toLocaleString()}</td><td></td><td class="td-r">${sc4foot}</td><td class="td-r" style="color:var(--accent)">${c5Prov.toLocaleString()}</td></tr></tfoot></table><div class="fn" style="margin-top:6px">${fnNote}</div>`;
+  document.getElementById('tkaQMContent').innerHTML=`<table><thead><tr><th>หน่วยบริการ</th><th>ระดับ</th><th style="text-align:right">ส่งเคลมแล้ว</th><th style="min-width:120px">สัดส่วน</th><th style="text-align:right">${c4lbl}</th><th style="text-align:right">${c5lbl}</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="border-top:2px solid var(--line);font-weight:700"><td colspan="2">รวม</td><td class="td-r">${claimProv.toLocaleString()}</td><td></td><td class="td-r">${sc4foot}</td><td class="td-r" style="color:var(--accent)">${c5Prov.toLocaleString()}</td></tr></tfoot></table><div class="fn" style="margin-top:6px">${fnNote}</div>`;
   document.getElementById('tkaQuotaModal').classList.add('show');
 }
 function tkaCloseQuotaModal(){document.getElementById('tkaQuotaModal').classList.remove('show');}

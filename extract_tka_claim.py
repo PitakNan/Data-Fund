@@ -124,6 +124,40 @@ print("-"*84)
 ta, tc, tb = sum(alloc.values()), len(claim), sum(c['baht'] for c in claim)
 print(f"{'รวมเขต 1':<14}{ta:>12,}{tc:>13,}{ta-tc:>10,}{tc/ta*100:>8.1f}%{tb/1e6:>9.1f}")
 
+# ── เคลมรายหน่วยบริการ ภายใต้แต่ละจังหวัด (สำหรับป็อปอัปตารางจัดสรรโควตา)
+# จังหวัด = PROV(hmain) เหมือนยอดจังหวัดด้านบน · หน่วยบริการ = รพ. ที่ผ่าตัด/ส่งเคลมจริง (hcode)
+# → ผลรวมรายแห่งเท่ากับยอดจังหวัดเสมอ (คนแพร่ไปผ่าที่ รพ.นครพิงค์ จะอยู่ในกลุ่มแพร่ ชื่อ รพ.นครพิงค์)
+# ชื่อ/ระดับต้องตรงกับ PROV_DATA.hospitals ของ extract_tka.py — ใช้ HNAME_CANON + คอลัมน์ประเภทหน่วยบริการ
+HNAME_CANON = {**HNAME,
+    '41509': 'รพ.ศูนย์การแพทย์มหาวิทยาลัยแม่ฟ้าหลวง',
+    '42186': 'รพ.เอกชน (Hcode 42186 ไม่พบในทำเนียบ)'}
+HTYPE_FB = {'41509':'รพ.มหาวิทยาลัย','13780':'รพ.มหาวิทยาลัย','14550':'รพ.เอกชน',
+            '14555':'รพ.เอกชน','41347':'รพ.มหาวิทยาลัย',
+            '11512':'รพ.ค่ายทหาร','42186':'รพ.เอกชน'}
+HTYPE = {}
+for row in rows:
+    if row[HMAIN] != '01': continue
+    t = row[5].strip()
+    if t: HTYPE.setdefault(row[HC], t)
+ch = defaultdict(lambda: defaultdict(lambda: [0, 0.0]))
+for c in claim:
+    e = ch[c['prov']][c['hc']]; e[0] += 1; e[1] += c['baht']
+hosp_prov = {p: sorted(({'h': HNAME_CANON.get(hc) or f'Hcode {hc}', 'hc': hc,
+                         'ht': HTYPE.get(hc) or HTYPE_FB.get(hc, 'รพ.อื่น'),
+                         'n': v[0], 'baht': round(v[1])}
+                        for hc, v in ch[p].items()), key=lambda r: -r['n'])
+             for p in PROVS}
+print()
+print("="*84)
+print("เคลมรายหน่วยบริการ (ใต้จังหวัดตาม hmain) — ตรวจว่ารวมได้เท่ายอดจังหวัด")
+print("="*84)
+for p in PROVS:
+    ssum = sum(r['n'] for r in hosp_prov[p]); pv = cp.get(p, [0,0.0,0])[0]
+    flag = 'OK' if ssum == pv else '<<< MISMATCH'
+    print(f"{p:<12} รวมรายแห่ง {ssum:>5,} / ยอดจังหวัด {pv:>5,}  {flag}")
+    for r in hosp_prov[p]:
+        print(f"     {r['h']:<38.38}{r['ht']:<16}{r['n']:>5,}")
+
 # ── กราฟ Gap: ปีงบบริการ 2569 — ผ่าตัด(จำหน่าย) vs ส่งเคลม รายเดือน
 svc69 = [c for c in cs.values() if c['fy'] == '2569']
 dm = defaultdict(int); sm = defaultdict(int)
@@ -285,7 +319,7 @@ out = {
     'claim_svc69': sum(1 for c in claim if c['fy'] == '2569'),
     'claim_svc_old': sum(1 for c in claim if c['fy'] != '2569'),
     'claim_months': claim_months, 'claim_cases': claim_cases, 'claim_baht_m': claim_baht,
-    'prov': prov_rows,
+    'prov': prov_rows, 'hosp_prov': hosp_prov,
     'gap_months': gap_months, 'gap_disch': gap_disch, 'gap_claim': gap_claim,
 }
 p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'claim_data.json')
